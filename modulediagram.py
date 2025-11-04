@@ -1,21 +1,8 @@
 import networkx as nx
-from itertools import combinations, chain
 import matplotlib.pyplot as plt
 from typing import Optional
-from submodule import Submodule
-from quotientmodule import QuotientModule
-import mod_graph_ops as mgo
 from collections import defaultdict
 from types import MappingProxyType
-
-def all_sublists(n: int):
-    L = list(range(n))
-    S = [subset for subset in chain.from_iterable(combinations(L, r) for r in range(1,len(L) + 1))]
-    S.sort(key=len)
-    return S
-
-def composition(m1 : dict, m2 : dict):
-    return {k: m2[v] for k, v in m1.items() if v in m2}
 
 class Arrow:
     def __init__(self, source : int, target : int, label : str):
@@ -82,6 +69,13 @@ class ModuleDiagram:
             radical_layers_to_nodes[layer].append(node)
         return dict(radical_layers_to_nodes)
     
+    def ordered_nodes_wrt_radical(self):
+        radical_layers_to_nodes = self.radical_layers_to_nodes()
+        ordered = []
+        for layer in range(len(radical_layers_to_nodes.items())):
+            ordered += radical_layers_to_nodes[layer]
+        return ordered
+    
     def num_radical_layers(self):
         return len(self.radical_layers_to_nodes().keys())
 
@@ -106,7 +100,12 @@ class ModuleDiagram:
         return list(nx.vf2pp_all_isomorphisms(self.basic_graph, other.basic_graph, node_label='label'))
 
     def node_bitmask(self):
-        return MappingProxyType({node : 1 << idx for idx, node in enumerate(self.nodes())})
+        bitmask = {}
+        nodes = self.ordered_nodes_wrt_radical()
+        for idx, node in enumerate(nodes):
+            self.basic_graph.nodes[node]["bitmask"] = 1 << idx
+            bitmask[node] = 1 << idx
+        return MappingProxyType(bitmask)
 
     def descendants_bitmask(self):
         """
@@ -118,11 +117,13 @@ class ModuleDiagram:
         Especially since more than one generating set can create the same submodule.
         """
         bitmask = self.node_bitmask()
-        descendants = {node : 0 for node in self.nodes()}
-        for node in self.nodes():
-            for des in nx.descendants(self.basic_graph, node):
-                descendants[node] += bitmask[des]
-        return MappingProxyType(descendants)
+        des_bitmask = {k : v for k, v in bitmask.items()}
+        radical_layers_to_nodes = self.radical_layers_to_nodes()
+        for _, node_list in sorted(radical_layers_to_nodes.items(), reverse=True):
+            for node in node_list:
+                for des in self.basic_graph.successors(node):
+                    des_bitmask[node] |= des_bitmask[des]
+        return MappingProxyType(des_bitmask)
     
     def create_submodule_bitmask(self, gen_nodes : list[int]):
         """
@@ -137,7 +138,16 @@ class ModuleDiagram:
             sub_bitmask |= des_bitmask[node]
         return [node for node in self.nodes() if (node_bitmask[node] & sub_bitmask) == node_bitmask[node]]
     
+    def is_submodule(self, elements : list[int]):
+        node_bitmask = self.node_bitmask()
+        des_bitmask = self.descendants_bitmask()
+        submod_bitmask = sum([node_bitmask[element] for element in elements])
+        return all((submod_bitmask & des_bitmask[node]) == des_bitmask[node] for node in elements)
+
     def generate_all_submodules_bitmask(self):
+        """
+        This generates all submodules not just indecomposable ones.
+        """
         node_bitmask = self.node_bitmask()
         des_bitmask = self.descendants_bitmask()
         submods = []
@@ -149,14 +159,15 @@ class ModuleDiagram:
             
     def ancestors_bitmask(self):
         """
-        Same idea as submodule except now quotient module.
         """
         bitmask = self.node_bitmask()
-        ancestors = {node : 0 for node in self.nodes()}
-        for node in self.nodes():
-            for des in nx.ancestors(self.basic_graph, node):
-                ancestors[node] += bitmask[des]
-        return MappingProxyType(ancestors)
+        anc_bitmask = {k : v for k, v in bitmask.items()}
+        radical_layers_to_nodes = self.radical_layers_to_nodes()
+        for _, node_list in sorted(radical_layers_to_nodes.items()):
+            for node in node_list:
+                for pred in self.basic_graph.predecessors(node):
+                    anc_bitmask[node] |= anc_bitmask[pred]
+        return MappingProxyType(anc_bitmask)
     
     def create_quotientmodule_bitmask(self, gen_nodes : list[int]):
         """
@@ -178,140 +189,93 @@ class ModuleDiagram:
             if all((n & anc_bitmask[node]) == anc_bitmask[node] for node in submod_elts):
                 submods.append([node for node, bitmask in node_bitmask.items() if (n & bitmask) == bitmask])
         return submods
-
-
-
-
-    # def create_quotient_module(self, gen_nodes : list[int]):
-    #     radical_layers_to_nodes = self.radical_layers_to_nodes()
-    #     for layer in radical_layers_to_nodes.keys():
-    #         layer_gen_nodes = [node for node in radical_layers_to_nodes[layer] if node in gen_nodes]
-    #         predecessors = []
-    #         for node in layer_gen_nodes:
-    #             predecessors += list(self.basic_graph.predecessors(node))
-    #         gen_nodes += predecessors
-    #         gen_nodes = list(set(gen_nodes))
-    #     return gen_nodes
-
-
-
-    # def generate_all_quotient_modules(self):
-    #     all_quotient_modules = [self.create_quotient_module([0])]
-    #     all_generating_vertices = all_sublists(self.num_vertices)
-    #     for generating_vertices in all_generating_vertices:
-    #         new_quotient_module = self.create_quotient_module(generating_vertices)
-    #         H = new_quotient_module[1].graph
-    #         G = H.to_undirected()
-    #         add = True
-    #         while add:
-    #             if nx.is_connected(G):
-    #                 for quotient in all_quotient_modules:
-    #                     if new_quotient_module[1].is_isomorphic_to(quotient[1]):
-    #                         add = False
-    #                 if add:
-    #                     all_quotient_modules += [new_quotient_module]
-    #                     add = False
-    #             else:
-    #                 add = False
-    #     return all_quotient_modules
-
-    # def homomorphism_group(self,other):
-    #     hom = []
-    #     for quotient in self.generate_all_quotient_modules():
-    #         for sub in other.generate_all_sub_modules():
-    #             for iso in quotient[1].is_isomorphic_to(sub[1]):
-    #                 mapping = composition(quotient[2], composition(iso, sub[2]))
-    #                 if mapping not in hom:
-    #                     hom += [mapping]
-    #     return hom
+    
 
 
 if __name__ == "__main__":
 
+    # Example 1: A4 0 -> 1 -> 2 -> 3
+    print("\n--- Example 1: A4 ---")
+    arrows = [
+        Arrow(0, 1, "a"),
+        Arrow(1, 2, "b"),
+        Arrow(2, 3, "c")
+    ]
+    diagram1 = ModuleDiagram(arrows)
+    diagram1.draw_radical_layers()
 
-    arrows = [Arrow(1, 2, "b"), Arrow(2, 3, "c"), Arrow(4, 3, "d"), Arrow(0, 1, "a"), Arrow(0, 4, "e")]
-    diagram = ModuleDiagram(arrows)
+    print("Nodes:", diagram1.nodes())
+    print("Radical layers:", diagram1.node_to_radical_layers())
+    print("All submodules:", diagram1.generate_all_submodules_bitmask())
+    print("All quotient modules:", diagram1.generate_all_quotientmodules_bitmask())
 
-    print(diagram.basic_graph.nodes(data=True))
-    print(diagram.basic_graph.edges(data=True))
-    print(diagram.radical_layers_to_nodes())
-    print("nodes", diagram.nodes())
-    bit = diagram.node_bitmask()
-    print("bitmask", bit)
-    des = diagram.descendants_bitmask()
-    print("descendants", des)
+    # Example 2: k[x,y] relations = {x^2=y^2, xy, yx}
+    print("\n--- Example 2: k[x,y] diamond ---")
+    arrows2 = [
+        Arrow(0, 1, "a"),
+        Arrow(0, 2, "b"),
+        Arrow(1, 3, "c"),
+        Arrow(2, 3, "d")
+    ]
+    diagram2 = ModuleDiagram(arrows2)
+    diagram2.draw_radical_layers()
 
-
-
-    print("\n All Submodules: ", diagram.generate_all_submodules_bitmask())
-
-#     MB = modulediagram(['2', '2', '1', '3', '1', '3'], [(1, 2), (1, 3), (1, 4), (2, 5), (3, 5), (3, 6), (4, 6)],[1,2,3,4,5,6])
-
-#     #print('vertices', MB.graph.nodes())
-#     #print('radical layers', MB.radical_layers)
-#     #print(MB.create_radical_labels())
-#     print(MB.create_submodule([2,2,3]).sub_vert)
-#     #print(MB.generate_all_sub_modules())
-#     #print(MB.graph.nodes())
-# #
-# #     G = nx.DiGraph()
-# #     G.add_edges_from([(0,1),(1,2),(2,3),(3,4),(4,5)])
-# #     print(source_induced_subgraph(G,[1]))
-# #     print(sink_induced_subgraph(G,[1]))
+    print("Nodes:", diagram2.nodes())
+    print("Radical layers:", diagram2.node_to_radical_layers())
+    print("All submodules:", diagram2.generate_all_submodules_bitmask())
+    print("All quotient modules:", diagram2.generate_all_quotientmodules_bitmask())
 
 
-# #### Old code
+    # Example 3: Y structure
+    print("\n--- Example 3: X structure ---")
+    arrows3 = [
+        Arrow(0, 2, "a"),
+        Arrow(1, 2, "b"),
+        Arrow(2, 3, "c"),
+        Arrow(3, 4, "d"),
+        Arrow(3, 5, "e")
+    ]
+    diagram3 = ModuleDiagram(arrows3)
+    diagram3.draw_radical_layers()
 
-#     #
-#     #
-#     # def create_radical_layers(self):
-#     #     return mgo.create_radical_layers(self.basic_graph)
-#     #
-#     # # def create_radical_layers(self):  # G is a graph in networkx
-#     # #     # A vertex is in radical layer l if it is l steps away from a vertex that is a source
-#     # #     G = self.basic_graph
-#     # #     sources = [x for x in G.nodes() if G.in_degree(x) == 0]
-#     # #     if sources == []:
-#     # #         print('This nx.DiGraph has no vertices that are sources.')
-#     # #         return False
-#     # #     radical_layers = [sources]
-#     # #     test_vertices = sources
-#     # #     vertices_left = list(G.nodes())
-#     # #     while vertices_left != []:  # This is to make sure each vertex is assigned a unique radical level
-#     # #         next_neighbors = []
-#     # #         for vertex in test_vertices:
-#     # #             next_neighbors += [x for x in G.neighbors(vertex) if x in vertices_left]
-#     # #             if vertex in vertices_left:
-#     # #                 vertices_left.remove(vertex)
-#     # #         if next_neighbors != []:
-#     # #             radical_layers += [next_neighbors]
-#     # #             test_vertices = next_neighbors
-#     # #         else:
-#     # #             return radical_layers
-#     #
-#     # # def create_radical_labels(self):
-#     # #     new_labels = []
-#     # #     for layer in range(len(self.radical_layers)):
-#     # #         vertices = self.radical_layers[layer]
-#     # #         print('vert', vertices)
-#     # #         print('mapping', self.indices_to_labels)
-#     # #         new_labels.append([self.indices_to_labels[vertex] for vertex in vertices])
-#     # #     return new_labels
-#     #
-#     # def find_top(self):
-#     #     # The top of a DiGraph is the set of vertices that are sources
-#     #     if self.radical_layers[0]:
-#     #         return self.radical_layers[0]
-#     #     else:
-#     #         print('This nxDiGraph has no vertices that are sources.')
-#     #         return False
-#     #
-#     # def find_socle(self):
-#     #     # The socle of a DiGraph is the set of vertices that are sinks
-#     #     G = self.basic_graph
-#     #     socle = [x for x in G.nodes() if G.out_degree(x) == 0]
-#     #     if socle == []:
-#     #         print('This nx.DiGraph has no vertices that are sinks.')
-#     #         return False
-#     #     else:
-#     #         return socle
+    print("Nodes:", diagram3.nodes())
+    print("Radical layers:", diagram3.node_to_radical_layers())
+    print("All submodules:", diagram3.generate_all_submodules_bitmask())
+    print("All quotient modules:", diagram3.generate_all_quotientmodules_bitmask())
+
+    # Example 4: weird radical
+    print("\n--- Example 4 ---")
+    arrows4 = [
+        Arrow(0, 1, "a"),
+        Arrow(1, 2, "b"),
+        Arrow(2, 3, "c"),
+        Arrow(3, 4, "d"),
+        Arrow(0, 5, "e"),
+        Arrow(5, 4, "f")
+    ]
+    diagram4 = ModuleDiagram(arrows4)
+    diagram4.draw_radical_layers()
+
+    print("Nodes:", diagram4.nodes())
+    print("Radical layers:", diagram4.node_to_radical_layers())
+    print("All submodules:", diagram4.generate_all_submodules_bitmask())
+    print("All quotient modules:", diagram4.generate_all_quotientmodules_bitmask())
+
+    # Example 5: product of modules
+    print("\n--- Example 5: product of modules ---")
+    arrows5 = [
+        Arrow(0, 1, "a1"),
+        Arrow(1, 2, "b1"),
+        Arrow(2, 3, "c1"),
+        Arrow(4, 5, "a2"),
+        Arrow(5, 6, "b2"),
+        Arrow(6, 7, "c2")
+    ]
+    diagram5 = ModuleDiagram(arrows5)
+    diagram5.draw_radical_layers()
+
+    print("Nodes:", diagram5.nodes())
+    print("Radical layers:", diagram5.node_to_radical_layers())
+    print("All submodules:", diagram5.generate_all_submodules_bitmask())
+    print("All quotient modules:", diagram5.generate_all_quotientmodules_bitmask())
+    
