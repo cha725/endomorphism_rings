@@ -16,9 +16,9 @@ class Arrow:
 class Path:
     def __init__(self,
                  arrows: tuple[Arrow,...] = (),
-                 stationary_vertex: int = None):
+                 stationary_vertex: int = -1):
         
-        if stationary_vertex is not None and arrows:
+        if stationary_vertex != -1 and arrows:
             raise ValueError("Path cannot have both arrows and stationary_vertex.")
 
         self.stationary_vertex = stationary_vertex
@@ -116,6 +116,9 @@ class MonomialQuiverAlgebra(PathAlgebra):
             raise ValueError(f"Invalid relations. {relations} must be a subset of {arrows}")
         self.relations = relations
         self.max_radical_length = max_radical_length
+
+    def all_paths(self):
+        return self.paths(self.max_radical_length)
 
     
 

@@ -20,18 +20,18 @@ class ModuleDiagram:
             # Add vertices with labels
             for vertex, label in vertex_labels.items():
                 G.add_node(vertex, label=label)
+
         for arrow in self.arrows:
             G.add_edge(arrow.source, arrow.target, label=arrow.label)
+
         if isolated_vertices is not None:
             for vertex in isolated_vertices:
                 G.add_node(vertex)
         self.basic_graph = G
         if not nx.is_directed_acyclic_graph(self.basic_graph):
             raise ValueError("Invalid module diagram. Cannot contain a cycle.")
-        if vertex_composition is None:
-            vertex_composition = {vertex : vertex for vertex in G.nodes}
         for vertex in self.basic_graph.nodes:
-            self.basic_graph.nodes[vertex]["composition"] = vertex_composition[vertex]
+            self.basic_graph.nodes[vertex]["composition"] = vertex_composition.get(vertex) if vertex_composition else None
         self.vertex_labels = self.basic_graph.nodes.keys()
         self.num_vertices = len(self.vertex_labels)
         self.num_arrows = len(arrows)
@@ -104,8 +104,10 @@ class ModuleDiagram:
 
     def __eq__(self, other : ModuleDiagram):
         def node_match(node1_att,node2_att):
-            return node1_att["composition"] == node2_att["composition"]
-        return nx.is_isomorphic(self.basic_graph,other.basic_graph,node_match=node_match)
+            return node1_att.get("composition") == node2_att.get("composition")
+        def edge_match(edge1_att,edge2_att):
+            return edge1_att.get("label") == edge2_att.get("label")
+        return nx.is_isomorphic(self.basic_graph,other.basic_graph,node_match=node_match,edge_match=edge_match)
     
     @cached_property
     def node_bitmask(self):
@@ -236,6 +238,10 @@ class ModuleDiagram:
         return hom
     
     def __repr__(self):
+        if not self.nodes:
+            return f"Module diagram with no vertices and no arrows."
+        if not self.arrows:
+            return f"Module diagram with vertices {self.nodes} and no arrows."
         return f"Module diagram with vertices {self.nodes} and arrows {self.arrows}."
 
 class QuotientModuleDiagram(ModuleDiagram):
