@@ -13,10 +13,13 @@ class Arrow:
     def __repr__(self):
         return f"Arrow({self.source}->{self.target})"
     
+    def __hash__(self):
+        return hash((self.source, self.target, self.label))
+    
 class Path:
     def __init__(self,
                  arrows: tuple[Arrow,...] = (),
-                 stationary_vertex: int = None):
+                 stationary_vertex: Optional[int] = None):
         
         if stationary_vertex is not None and arrows:
             raise ValueError("Path cannot have both arrows and stationary_vertex.")
@@ -87,6 +90,12 @@ class Path:
             return f"Stationary path at {self.stationary_vertex}"
         return f"Path = {self.arrows}"
     
+    def __hash__(self):
+        if self.is_stationary_path():
+            return hash(('stationary', self.stationary_vertex))
+        return hash(tuple(self.arrows))
+
+    
 class PathAlgebra:
     def __init__(self,
                  arrows : list[Arrow] = []):
@@ -124,6 +133,7 @@ class MonomialQuiverAlgebra(PathAlgebra):
             max_length = self.max_radical_length
 
         paths = [Path(stationary_vertex=start)]
+        connecting_edges = [Path(stationary_vertex=start)]
         seen = []
         results = []
         while paths:
@@ -138,12 +148,16 @@ class MonomialQuiverAlgebra(PathAlgebra):
                 new_path = path.extend_at_end(arrow)
                 if new_path:
                     paths.append(new_path)
-        return results
+                    connecting_edges.append((path, arrow, new_path))
+        return results, connecting_edges
     
-    def paths(self, length : Optional[int] = None):
+    def paths(self, length : Optional[int] = None, with_connections : bool = False):
         paths = {}
         for vertex in self.vertices():
-            paths[vertex] = self.depth_first_search_paths(vertex, length)
+            if with_connections:
+                paths[vertex] = self.depth_first_search_paths(vertex, length)[1]
+            else:
+                paths[vertex] = self.depth_first_search_paths(vertex, length)[0]
         return paths
 
     
@@ -160,5 +174,6 @@ if __name__ == "__main__":
     [Path((Arrow(0,1),Arrow(1,2)))]
     )
 
-    for vertex, paths in qa.paths().items():
-        print(f"{vertex}: {paths}.")
+    qa = MonomialQuiverAlgebra([Arrow(0,1), Arrow(1,2), Arrow(2,3)])
+    for vertex in qa.vertices():
+        print(qa.paths(with_connections=True)[vertex])

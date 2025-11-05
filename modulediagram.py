@@ -11,8 +11,8 @@ class ModuleDiagram:
     def __init__(self, 
                  arrows: list[Arrow] = [],
                  isolated_vertices : Optional[list[int]] = None,
-                 vertex_labels: Optional[dict[int,str]] = None,
-                 vertex_composition : Optional[dict[int,int]] = None):
+                 vertex_simples : Optional[dict[int,int]] = None,
+                 vertex_labels: Optional[dict[int,str]] = None):
         self.arrows = arrows
 
         G = nx.MultiDiGraph()
@@ -31,7 +31,7 @@ class ModuleDiagram:
         if not nx.is_directed_acyclic_graph(self.basic_graph):
             raise ValueError("Invalid module diagram. Cannot contain a cycle.")
         for vertex in self.basic_graph.nodes:
-            self.basic_graph.nodes[vertex]["composition"] = vertex_composition.get(vertex) if vertex_composition else None
+            self.basic_graph.nodes[vertex]["simples"] = vertex_simples.get(vertex) if vertex_simples else None
         self.vertex_labels = self.basic_graph.nodes.keys()
         self.num_vertices = len(self.vertex_labels)
         self.num_arrows = len(arrows)
@@ -104,7 +104,7 @@ class ModuleDiagram:
 
     def __eq__(self, other : ModuleDiagram):
         def node_match(node1_att,node2_att):
-            return node1_att.get("composition") == node2_att.get("composition")
+            return node1_att.get("simples") == node2_att.get("simples")
         def edge_match(edge1_att,edge2_att):
             return edge1_att.get("label") == edge2_att.get("label")
         return nx.is_isomorphic(self.basic_graph,other.basic_graph,node_match=node_match,edge_match=edge_match)
@@ -254,8 +254,8 @@ class QuotientModuleDiagram(ModuleDiagram):
         subgraph = parent.basic_graph.subgraph(vertices).copy()
         arrows = [Arrow(u, v, d.get("label")) for u, v, d in subgraph.edges(data=True)]
         vertex_labels = {n: subgraph.nodes[n].get("label") for n in subgraph.nodes}
-        vertex_composition = {n: parent.basic_graph.nodes[n]["composition"] for n in subgraph.nodes}
-        super().__init__(arrows=arrows, vertex_labels=vertex_labels, vertex_composition=vertex_composition)
+        vertex_simples = {n: parent.basic_graph.nodes[n]["simples"] for n in subgraph.nodes}
+        super().__init__(arrows=arrows, vertex_labels=vertex_labels, vertex_simples=vertex_simples)
 
 
 class SubModuleDiagram(ModuleDiagram):
@@ -268,8 +268,8 @@ class SubModuleDiagram(ModuleDiagram):
         subgraph = parent.basic_graph.subgraph(vertices).copy()
         arrows = [Arrow(u, v, d.get("label")) for u, v, d in subgraph.edges(data=True)]
         vertex_labels = {n: subgraph.nodes[n].get("label") for n in subgraph.nodes}
-        vertex_composition = {n: parent.basic_graph.nodes[n]["composition"] for n in subgraph.nodes}
-        super().__init__(arrows=arrows, vertex_labels=vertex_labels, vertex_composition=vertex_composition)
+        vertex_simples = {n: parent.basic_graph.nodes[n]["simples"] for n in subgraph.nodes}
+        super().__init__(arrows=arrows, vertex_labels=vertex_labels, vertex_simples=vertex_simples)
     
 
 
@@ -292,7 +292,7 @@ if __name__ == "__main__":
             "enabled": 1 in examples,  
             "arrows": [Arrow(0, 1, "a"), Arrow(1, 2, "b"), Arrow(2, 3, "c")],  
             "isolated_vertices": [],
-            "composition": {0:0,1:1,2:0,3:1}
+            "simples": {0:0,1:1,2:0,3:1}
         },  
         "Example 2: k[x,y] diamond": {  
             "enabled": 2 in examples,  
@@ -342,7 +342,7 @@ if __name__ == "__main__":
             print(f"\n--- {name} ---")  
             diagram = ModuleDiagram(data["arrows"],
                                     isolated_vertices=data.get("isolated_vertices", []),
-                                    vertex_composition=data.get("composition", []))  
+                                    vertex_simples=data.get("simples", []))  
 
             if draw:  
                 diagram.draw_radical_layers  
