@@ -16,9 +16,9 @@ class Arrow:
 class Path:
     def __init__(self,
                  arrows: tuple[Arrow,...] = (),
-                 stationary_vertex: int = -1):
+                 stationary_vertex: int = None):
         
-        if stationary_vertex != -1 and arrows:
+        if stationary_vertex is not None and arrows:
             raise ValueError("Path cannot have both arrows and stationary_vertex.")
 
         self.stationary_vertex = stationary_vertex
@@ -45,23 +45,47 @@ class Path:
     
     def extend_at_end(self, arrow : Arrow):
         if self.target() == arrow.source:
-            arrows = self.arrows + (arrow,)
-            return Path(arrows)
+            if self.arrows is not None:
+                arrows = self.arrows + (arrow,)
+            else:
+                arrows = (arrow,)
+        return Path(arrows)
     
     def extend_at_start(self, arrow : Arrow):
         if arrow.target == self.source():
-            arrows = (arrow,) + self.arrows
-            return Path(arrows)
+            if self.arrows is not None:
+                arrows = (arrow,) + self.arrows
+            else:
+                arrows = (arrow,)
+        return Path(arrows)
+        
+    def truncate(self, start_idx : int, end_idx : int):
+        arrows = self.arrows[start_idx:end_idx]
+        return Path(arrows)
+
+    def is_subpath(self, other: Path):
+        if len(self) == 0:
+            return True
+        if not(len(self) <= len(other)):
+            return False
+        if self.is_stationary_path():
+            return self == Path(stationary_vertex=other.source())
+        return any(other.truncate(i,i+len(self)) == self for i in range(len(other)-len(self)+1))
 
     def __len__(self):
         if self.is_stationary_path():
             return 0
         return len(self.arrows)
+    
+    def __eq__(self, other : Path):
+        if self.is_stationary_path():
+            return self.stationary_vertex == other.stationary_vertex
+        return self.arrows == other.arrows
 
     def __repr__(self):
         if self.is_stationary_path():
-            return f"Stationary path at {self.stationary_vertex})"
-        return f"Path = {self.arrows})"
+            return f"Stationary path at {self.stationary_vertex}"
+        return f"Path = {self.arrows}"
     
 class PathAlgebra:
     def __init__(self,
@@ -80,31 +104,6 @@ class PathAlgebra:
     def is_path_of(self, path : Path):
         return all(path.arrows[i] in self.arrows for i in range(len(path)))
     
-    def paths_from_fixed_pt_of_fixed_length(self, start : int, length : int):
-        path = Path(stationary_vertex=start)
-        paths = []
-        def depth_first_search(path):
-            if len(path) == length:
-                paths.append(path)
-                return
-            for arrow in [a for a in self.arrows if a.source == path.target()]:
-                new_path = path.extend_at_end(arrow)
-                if new_path:
-                    depth_first_search(new_path)
-        depth_first_search(path)
-        return paths
-        
-    def paths_from_fixed_pt(self, start : int, length : int = 8):
-        paths = []
-        for l in range(length+1):
-            paths  += self.paths_from_fixed_pt_of_fixed_length( start, l)
-        return paths
-    
-    def paths(self, length : int = 8):
-        paths = {}
-        for vertex in self.vertices():
-            paths[vertex] = self.paths_from_fixed_pt(vertex, length)
-        return paths
 
 class MonomialQuiverAlgebra(PathAlgebra):
     def __init__(self,
@@ -117,8 +116,35 @@ class MonomialQuiverAlgebra(PathAlgebra):
         self.relations = relations
         self.max_radical_length = max_radical_length
 
-    def all_paths(self):
-        return self.paths(self.max_radical_length)
+    def is_path(self, path : Path):
+        return all(not relation.is_subpath(path) for relation in self.relations)
+
+    def depth_first_search_paths(self, start: int, max_length: Optional[int] = None):
+        if max_length is None:
+            max_length = self.max_radical_length
+
+        paths = [Path(stationary_vertex=start)]
+        seen = []
+        results = []
+        while paths:
+            path = paths.pop()
+            if path in seen or not self.is_path(path):
+                continue
+            seen.append(path)
+            results.append(path)
+            if len(path) >= max_length:
+                continue
+            for arrow in [a for a in self.arrows if a.source == path.target()]:
+                new_path = path.extend_at_end(arrow)
+                if new_path:
+                    paths.append(new_path)
+        return results
+    
+    def paths(self, length : Optional[int] = None):
+        paths = {}
+        for vertex in self.vertices():
+            paths[vertex] = self.depth_first_search_paths(vertex, length)
+        return paths
 
     
 
@@ -127,7 +153,12 @@ class MonomialQuiverAlgebra(PathAlgebra):
 
 if __name__ == "__main__":
 
-    pa = PathAlgebra([Arrow(0,1),Arrow(1,2),Arrow(2,3),Arrow(3,0)])
-    for vertex, paths in pa.paths().items():
-        for path in paths:
-            print(f"{vertex}: {path}")
+    pa = PathAlgebra([Arrow(0,1),Arrow(1,2),Arrow(2,0)])
+
+    qa = MonomialQuiverAlgebra(
+    [Arrow(0,1),Arrow(1,2),Arrow(2,0)],
+    [Path((Arrow(0,1),Arrow(1,2)))]
+    )
+
+    for vertex, paths in qa.paths().items():
+        print(f"{vertex}: {paths}.")
