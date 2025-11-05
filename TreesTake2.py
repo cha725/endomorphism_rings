@@ -1,6 +1,6 @@
 from itertools import permutations
 
-from modulediagram import ModuleDiagram
+from modulediagram import ModuleDiagram, Arrow
 import networkx as nx
 from collections import deque
 import matplotlib.pyplot as plt
@@ -28,13 +28,16 @@ class AuslanderAlgebra:
         self.original_modules = self.args
         self.vertices = self.vertex_graph()
         self.vertices_explicit = self.vertex_graph().nodes(data=True)
-        self.all_edges_graph = self.all_edges_graph()
 
     def vertex_graph(self):
+        """
+        The vertices of the Auslander algebra are all the indecomposable summands
+        of the projective modules.
+        """
         G = nx.MultiDiGraph()
         counter = 0
         for mod in self.args:
-            for sub in mod.generate_all_sub_modules():
+            for sub in mod.generate_all_submodules():
                 if sub[1].is_isomorphic_to(mod):
                     G.add_node(counter, original = True, structure = sub, label = chr(counter+65))
                 else:
@@ -45,8 +48,6 @@ class AuslanderAlgebra:
 
     def all_edges_graph(self):
         G = self.vertex_graph()
-
-        # Add all possible homomorphisms as edges
         for node1, node2 in permutations(G.nodes(), 2):  # Iterate over all pairs
             struct1 = nx.get_node_attributes(G, "structure")[node1][1]
             struct2 = nx.get_node_attributes(G, "structure")[node2][1]
@@ -235,9 +236,16 @@ if __name__ == "__main__": # can import it to another file and nothing below thi
     #print('radical labels', M.radical_labels)
     #print('hom', M.homomorphism_group(M))
 
-    MA = ModuleDiagram(['1','1','3','2'], [(0,1),(0,2),(2,3)])
-    MB = ModuleDiagram(['2','2','1','3','1','3'], [(0,1),(0,2),(0,3),(1,4),(2,4),(2,5),(3,5)])
-    MC = ModuleDiagram(['3','1','2','3','1'], [(0,1),(0,2),(0,3),(1,4)])
+
+    MA = ModuleDiagram(
+        arrows=[Arrow(0,1), Arrow(0,1), Arrow(2,3)],
+        vertex_composition={0:1, 1:1, 2:3, 3:2})
+    MB = ModuleDiagram(
+        arrows=[Arrow(0,1), Arrow(0,2), Arrow(0,3), Arrow(1,4), Arrow(2,4), Arrow(2,5), Arrow(3,5)],
+        vertex_composition={0:2, 1:2, 2:1, 3:3, 4:1, 5:3})
+    MC = ModuleDiagram(
+        arrows=[Arrow(0,1), Arrow(0,2), Arrow(0,3), Arrow(1,4)],
+        vertex_composition={0:3, 1:1, 2:2, 3:3, 4:1})
 
 
 

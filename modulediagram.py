@@ -4,22 +4,15 @@ from typing import Optional
 from collections import defaultdict
 from types import MappingProxyType
 from functools import cached_property
+from quiver_algebra import Arrow
 
-class Arrow:
-    def __init__(self, source : int, target : int, label : Optional[str]=None):
-        self.source = source
-        self.target = target
-        self.label = label
-
-    def __repr__(self):
-        return f"Arrow(source={self.source}, target={self.target})"
 
 class ModuleDiagram:
     def __init__(self, 
                  arrows: list[Arrow] = [],
                  isolated_vertices : Optional[list[int]] = None,
                  vertex_labels: Optional[dict[int,str]] = None,
-                 vertex_as_simples: Optional[dict[int,int]] = None):
+                 vertex_composition : Optional[dict[int,int]] = None):
         self.arrows = arrows
 
         G = nx.MultiDiGraph()
@@ -27,7 +20,6 @@ class ModuleDiagram:
             # Add vertices with labels
             for vertex, label in vertex_labels.items():
                 G.add_node(vertex, label=label)
-        # Add edges with labels
         for arrow in self.arrows:
             G.add_edge(arrow.source, arrow.target, label=arrow.label)
         if isolated_vertices is not None:
@@ -36,10 +28,15 @@ class ModuleDiagram:
         self.basic_graph = G
         if not nx.is_directed_acyclic_graph(self.basic_graph):
             raise ValueError("Invalid module diagram. Cannot contain a cycle.")
+        if vertex_composition is None:
+            vertex_composition = {vertex : vertex for vertex in G.nodes}
+        for vertex in self.basic_graph.nodes:
+            self.basic_graph.nodes[vertex]["composition"] = vertex_composition[vertex]
         self.vertex_labels = self.basic_graph.nodes.keys()
         self.num_vertices = len(self.vertex_labels)
         self.num_arrows = len(arrows)
         self._add_radical_labels()
+        self.nodes = list(nx.topological_sort(self.basic_graph))
 
     def _add_radical_labels(self):
         """
@@ -57,9 +54,6 @@ class ModuleDiagram:
             node_layer = max(pred_layer, default=-1) + 1
             self.basic_graph.nodes[node]["radical_layer"] = node_layer
     
-    def nodes(self):
-        return list(self.basic_graph.nodes)
-
     @cached_property
     def node_to_radical_layers(self):
         """
@@ -109,8 +103,10 @@ class ModuleDiagram:
         plt.show()
 
     def __eq__(self, other : ModuleDiagram):
-        return list(nx.vf2pp_all_isomorphisms(self.basic_graph, other.basic_graph, node_label='label'))
-
+        def node_match(node1_att,node2_att):
+            return node1_att["composition"] == node2_att["composition"]
+        return nx.is_isomorphic(self.basic_graph,other.basic_graph,node_match=node_match)
+    
     @cached_property
     def node_bitmask(self):
         bitmask = {}
@@ -139,6 +135,22 @@ class ModuleDiagram:
                     des_bitmask[node] |= des_bitmask[des]
         return MappingProxyType(des_bitmask)
     
+    @cached_property
+    def ancestors_bitmask(self):
+        """
+        """
+        bitmask = self.node_bitmask
+        anc_bitmask = {k : v for k, v in bitmask.items()}
+        radical_layers_to_nodes = self.radical_layers_to_nodes
+        for _, node_list in sorted(radical_layers_to_nodes.items()):
+            for node in node_list:
+                for pred in self.basic_graph.predecessors(node):
+                    anc_bitmask[node] |= anc_bitmask[pred]
+        return MappingProxyType(anc_bitmask)
+
+            
+
+    
     def create_submodule_bitmask(self, gen_nodes : list[int]):
         """
         With the bitmasks should just take all descendant bitmasks and OR them.
@@ -150,7 +162,7 @@ class ModuleDiagram:
         for node in gen_nodes:
             sub_bitmask |= node_bitmask[node]
             sub_bitmask |= des_bitmask[node]
-        return [node for node in self.nodes() if (node_bitmask[node] & sub_bitmask) == node_bitmask[node]]
+        return [node for node in self.nodes if (node_bitmask[node] & sub_bitmask) == node_bitmask[node]]
     
     def is_submodule(self, elements : list[int]):
         node_bitmask = self.node_bitmask
@@ -185,19 +197,6 @@ class ModuleDiagram:
     def generate_all_submodules(self):
         return self.bitmask_to_nodes(self.generate_all_submodules_bitmask)
 
-    @cached_property
-    def ancestors_bitmask(self):
-        """
-        """
-        bitmask = self.node_bitmask
-        anc_bitmask = {k : v for k, v in bitmask.items()}
-        radical_layers_to_nodes = self.radical_layers_to_nodes
-        for _, node_list in sorted(radical_layers_to_nodes.items()):
-            for node in node_list:
-                for pred in self.basic_graph.predecessors(node):
-                    anc_bitmask[node] |= anc_bitmask[pred]
-        return MappingProxyType(anc_bitmask)
-    
     def create_quotientmodule_bitmask(self, gen_nodes : list[int]):
         """
         For every subgraph closed under predecessors, the complementary subgraph
@@ -213,7 +212,7 @@ class ModuleDiagram:
         for node in gen_nodes:
             sub_bitmask |= node_bitmask[node]
             sub_bitmask |= anc_bitmask[node]
-        return [node for node in self.nodes() if (node_bitmask[node] & sub_bitmask) == node_bitmask[node]]
+        return [node for node in self.nodes if (node_bitmask[node] & sub_bitmask) == node_bitmask[node]]
     
     @cached_property
     def generate_all_quotient_modules_bitmask(self):
@@ -226,53 +225,102 @@ class ModuleDiagram:
     def generate_all_quotient_modules(self):
         return self.bitmask_to_nodes(self.generate_all_quotient_modules_bitmask)
     
-
+    def hom_group(self, other: ModuleDiagram):
+        hom = []
+        for quotient in self.generate_all_quotient_modules():
+            quotdiagram = QuotientModuleDiagram(self,quotient)
+            for submod in other.generate_all_submodules():
+                submoddiagram = SubModuleDiagram(other,submod)
+                if quotdiagram == submoddiagram:
+                    hom.append((quotdiagram, submoddiagram))
+        return hom
     
+    def __repr__(self):
+        return f"Module diagram with vertices {self.nodes} and arrows {self.arrows}."
+
+class QuotientModuleDiagram(ModuleDiagram):
+    def __init__(self,
+                 parent : ModuleDiagram,
+                 vertices : list[int]):
+        if not set(vertices) <= set(parent.nodes):
+            raise ValueError(f"Invalid vertices. {vertices} must be a subset of {parent.nodes}")
+        self.parent = parent
+        subgraph = parent.basic_graph.subgraph(vertices).copy()
+        arrows = [Arrow(u, v, d.get("label")) for u, v, d in subgraph.edges(data=True)]
+        vertex_labels = {n: subgraph.nodes[n].get("label") for n in subgraph.nodes}
+        vertex_composition = {n: parent.basic_graph.nodes[n]["composition"] for n in subgraph.nodes}
+        super().__init__(arrows=arrows, vertex_labels=vertex_labels, vertex_composition=vertex_composition)
+
+
+class SubModuleDiagram(ModuleDiagram):
+    def __init__(self,
+                 parent : ModuleDiagram,
+                 vertices : list[int]):
+        if not set(vertices) <= set(parent.nodes):
+            raise ValueError(f"Invalid vertices. Must be a subset of {parent.nodes}")
+        self.parent = parent
+        subgraph = parent.basic_graph.subgraph(vertices).copy()
+        arrows = [Arrow(u, v, d.get("label")) for u, v, d in subgraph.edges(data=True)]
+        vertex_labels = {n: subgraph.nodes[n].get("label") for n in subgraph.nodes}
+        vertex_composition = {n: parent.basic_graph.nodes[n]["composition"] for n in subgraph.nodes}
+        super().__init__(arrows=arrows, vertex_labels=vertex_labels, vertex_composition=vertex_composition)
+    
+
+
+class ProjectiveModuleDiagram(ModuleDiagram):
+    def __init__(self,
+                 quiver_algebra,
+                 vertex):
+        pass
+
 
 
 if __name__ == "__main__":
     import random, time
     draw = False
 
+    examples = [1,2,3]
+
     examples = {  
         "Example 1: A4": {  
-            "enabled": False,  
+            "enabled": 1 in examples,  
             "arrows": [Arrow(0, 1, "a"), Arrow(1, 2, "b"), Arrow(2, 3, "c")],  
-            "isolated_vertices": []  
+            "isolated_vertices": [],
+            "composition": {0:0,1:1,2:0,3:1}
         },  
         "Example 2: k[x,y] diamond": {  
-            "enabled": False,  
+            "enabled": 2 in examples,  
             "arrows": [Arrow(0, 1, "a"), Arrow(0, 2, "b"), Arrow(1, 3, "c"), Arrow(2, 3, "d")],  
             "isolated_vertices": []  
         },  
         "Example 3: Y structure": {  
-            "enabled": False,  
+            "enabled": 3 in examples,  
             "arrows": [Arrow(0, 2, "a"), Arrow(1, 2, "b"), Arrow(2, 3, "c"), Arrow(3, 4, "d")],  
             "isolated_vertices": []  
         },  
         "Example 4: weird radical": {  
-            "enabled": False,  
+            "enabled": 4 in examples,  
             "arrows": [Arrow(0, 1, "a"), Arrow(1, 2, "b"), Arrow(2, 3, "c"), Arrow(3, 4, "d"), Arrow(0, 5, "e"), Arrow(5, 4, "f")],  
             "isolated_vertices": []  
         },  
         "Example 5: product of modules": {  
-            "enabled": False,  
+            "enabled": 5 in examples,  
             "arrows": [Arrow(0, 1, "a1"), Arrow(1, 2, "b1"), Arrow(2, 3, "c1"), Arrow(4, 5, "a2"), Arrow(5, 6, "b2"), Arrow(6, 7, "c2")],  
             "isolated_vertices": []  
         },  
         "Example 6: Algebra and dual": {  
-            "enabled": False,  
+            "enabled": 6 in examples,  
             "arrows": [Arrow(0, 1, "a1"), Arrow(0, 2, "b1"), Arrow(4, 5, "a2"), Arrow(6, 7, "b2")],  
             "isolated_vertices": [3]  
         },  
         "Example 7: Random graph": {  
-            "enabled": True,  
+            "enabled": 7 in examples,  
             "arrows": [],  # Generated below  
             "isolated_vertices": []  
         }  
     }  
 
-    rounds = 10
+    rounds = 1
     for round in range(rounds):
         if examples["Example 7: Random graph"]["enabled"]:  
             n = 20  
@@ -286,15 +334,20 @@ if __name__ == "__main__":
                 continue  
 
             print(f"\n--- {name} ---")  
-            diagram = ModuleDiagram(data["arrows"], isolated_vertices=data.get("isolated_vertices", []))  
+            diagram = ModuleDiagram(data["arrows"],
+                                    isolated_vertices=data.get("isolated_vertices", []),
+                                    vertex_composition=data.get("composition", []))  
 
             if draw:  
                 diagram.draw_radical_layers  
 
             start = time.time()  
-            print("Nodes:", diagram.nodes())  
+            print("Nodes:", diagram.nodes)  
             print("Radical layers:", diagram.node_to_radical_layers)  
-            print("All submodules:", len(diagram.generate_all_submodules()))  
-            print("All quotient modules:", len(diagram.generate_all_quotient_modules()))   
+            print("All submodules:", diagram.generate_all_submodules())  
+            print("All quotient modules:", diagram.generate_all_quotient_modules())
+            print("Endomorphism groups:")
+            for idx, hom in enumerate(diagram.hom_group(diagram)):
+                print(f"{idx}: {hom}")
             end = time.time()  
             print(f"Completed in {end - start:.4f} seconds.")  
