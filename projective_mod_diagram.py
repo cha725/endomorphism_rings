@@ -4,6 +4,16 @@ from modulediagram import ModuleDiagram
 import matplotlib.pyplot as plt
 
 class ProjectiveModuleDiagram(ModuleDiagram):
+    """
+    A module diagram representating an indecomposable projective module
+    of a MonomialQuiverAlgebra.
+
+    Attributes:
+        algebra (MonomialQuiverAlgebra):
+            The algebra over which to compute the projective module.
+        top_vertex (int):
+            The vertex of the quiver corresponding to the top of the projective.
+    """
     def __init__(self,
                  algebra : MonomialQuiverAlgebra,
                  top_vertex : int):
@@ -11,20 +21,28 @@ class ProjectiveModuleDiagram(ModuleDiagram):
             raise ValueError(f"Invalid vertex. Vertex {top_vertex} must be a quiver vertex {algebra.vertices()}")
         self.algebra = algebra
         self.top_vertex = top_vertex
+        self._construct_mod_diagram()
+        super().__init__(arrows=self.arrows, 
+                         vertex_simples=self.vertex_simples, 
+                         isolated_vertices=self.isolated_vertices)
+
+    def _construct_mod_diagram(self):
         self.vertex_simples = {}
         self.arrows = []
+        self.isolated_vertices = None
         path_to_vertex_id = {}
-        for idx, connection in enumerate(self.algebra.paths(with_connections=True)[top_vertex]):
-            if len(connection) < 3:
-                path_to_vertex_id[connection] = idx
-                self.vertex_simples[idx] = connection.target()
-            else:
-                path_to_vertex_id[connection[2]] = idx
-                self.vertex_simples[idx] = connection[2].target()
-                self.arrows.append(Arrow(path_to_vertex_id[connection[0]],target=path_to_vertex_id[connection[2]],label=connection[1]))
-        super().__init__(arrows=self.arrows, vertex_simples=self.vertex_simples)
-        # TODO: Not picking up the projective modules that are 1 dimensional
-        # Thinks there are no simples in them.
+        for idx, connection in enumerate(self.algebra.paths(with_connections=True)[self.top_vertex]):
+            path, arrow, concatenation = connection
+            path_to_vertex_id[concatenation] = idx
+            self.vertex_simples[idx] = concatenation.target()
+            if arrow is not None:
+                source = path_to_vertex_id[path]
+                target = path_to_vertex_id[concatenation]
+                label = arrow
+                self.arrows.append(Arrow(source,target,label))
+        if not self.arrows and self.vertex_simples:
+            self.isolated_vertices = list(range(len(self.vertex_simples))) 
+
 
 
 if __name__ == "__main__":

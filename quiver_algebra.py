@@ -1,20 +1,7 @@
 import networkx as nx
 from typing import Optional
+from bitmaskgraph import Arrow
 
-class Arrow:
-    def __init__(self, source : int, target : int, label : Optional[str]=None):
-        self.source = source
-        self.target = target
-        self.label = label
-
-    def __eq__(self, other : Arrow):
-        return (self.source == other.source) and (self.target == other.target) and (self.label == other.label)
-
-    def __repr__(self):
-        return f"Arrow({self.source}->{self.target})"
-    
-    def __hash__(self):
-        return hash((self.source, self.target, self.label))
     
 class Path:
     def __init__(self,
@@ -133,7 +120,7 @@ class MonomialQuiverAlgebra(PathAlgebra):
             max_length = self.max_radical_length
 
         paths = [Path(stationary_vertex=start)]
-        connecting_edges = [Path(stationary_vertex=start)]
+        connecting_edges = [(Path(stationary_vertex=start), None, Path(stationary_vertex=start))]
         seen = []
         results = []
         while paths:

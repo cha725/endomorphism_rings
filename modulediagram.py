@@ -2,9 +2,9 @@ import networkx as nx
 import matplotlib.pyplot as plt
 from typing import Optional
 from collections import defaultdict
-from types import MappingProxyType
 from functools import cached_property
 from quiver_algebra import Arrow
+from bitmaskgraph import BitmaskGraph
 
 
 class ModuleDiagram:
@@ -14,6 +14,7 @@ class ModuleDiagram:
                  vertex_simples : Optional[dict[int,int]] = None,
                  vertex_labels: Optional[dict[int,str]] = None):
         self.arrows = arrows
+        self.bitmaskgraph = BitmaskGraph(self.arrows)
 
         G = nx.MultiDiGraph()
         if vertex_labels is not None:
@@ -109,123 +110,89 @@ class ModuleDiagram:
             return edge1_att.get("label") == edge2_att.get("label")
         return nx.is_isomorphic(self.basic_graph,other.basic_graph,node_match=node_match,edge_match=edge_match)
     
-    @cached_property
-    def node_bitmask(self):
-        bitmask = {}
-        nodes = self.ordered_nodes_wrt_radical()
-        for idx, node in enumerate(nodes):
-            self.basic_graph.nodes[node]["bitmask"] = 1 << idx
-            bitmask[node] = 1 << idx
-        return MappingProxyType(bitmask)
-
-    @cached_property
-    def descendants_bitmask(self):
-        """
-        Need to be able to generate all submodules which is going to take forever.
-        Idea: Create a bitmask that stores in position n answer to the question:
-            Is descendant of node n?
-        This way only have to search through the graph once and submodule creation
-        comes down to bitwise operations.
-        Especially since more than one generating set can create the same submodule.
-        """
-        bitmask = self.node_bitmask
-        des_bitmask = {k : v for k, v in bitmask.items()}
-        radical_layers_to_nodes = self.radical_layers_to_nodes
-        for _, node_list in sorted(radical_layers_to_nodes.items(), reverse=True):
-            for node in node_list:
-                for des in self.basic_graph.successors(node):
-                    des_bitmask[node] |= des_bitmask[des]
-        return MappingProxyType(des_bitmask)
-    
-    @cached_property
-    def ancestors_bitmask(self):
-        """
-        """
-        bitmask = self.node_bitmask
-        anc_bitmask = {k : v for k, v in bitmask.items()}
-        radical_layers_to_nodes = self.radical_layers_to_nodes
-        for _, node_list in sorted(radical_layers_to_nodes.items()):
-            for node in node_list:
-                for pred in self.basic_graph.predecessors(node):
-                    anc_bitmask[node] |= anc_bitmask[pred]
-        return MappingProxyType(anc_bitmask)
-
-            
-
-    
-    def create_submodule_bitmask(self, gen_nodes : list[int]):
-        """
-        With the bitmasks should just take all descendant bitmasks and OR them.
-        Any element that is a descendant of some generator is in the submodule.
-        """
-        node_bitmask = self.node_bitmask
-        des_bitmask = self.descendants_bitmask
-        sub_bitmask = 0
-        for node in gen_nodes:
-            sub_bitmask |= node_bitmask[node]
-            sub_bitmask |= des_bitmask[node]
-        return [node for node in self.nodes if (node_bitmask[node] & sub_bitmask) == node_bitmask[node]]
-    
-    def is_submodule(self, elements : list[int]):
-        node_bitmask = self.node_bitmask
-        des_bitmask = self.descendants_bitmask
-        submod_bitmask = sum([node_bitmask[element] for element in elements])
-        return all((submod_bitmask & des_bitmask[node]) == des_bitmask[node] for node in elements)
-
-    @cached_property
-    def generate_all_submodules_bitmask(self):
-        """
-        This generates all submodules not just indecomposable ones.
-        """
-        node_bitmask = self.node_bitmask
-        des_bitmask = self.descendants_bitmask
-        submods = []
-        for n in range(sum(node_bitmask.values())+1):
-            submod_elts = [node for node, bitmask in node_bitmask.items() if (n & bitmask) == bitmask]
-            if all((n & des_bitmask[node]) == des_bitmask[node] for node in submod_elts):
-                submods.append(n)
-        return submods
-        
-    def bitmask_to_nodes(self, bitmask_list: list[int]):
-        """
-        Converts a list of submodule bitmasks to lists of nodes.
-        """
-        result = []
-        for bitmask in bitmask_list:
-            nodes = [node for node, value in self.node_bitmask.items() if (bitmask & value) == value]
-            result.append(nodes)
-        return result
 
     def generate_all_submodules(self):
-        return self.bitmask_to_nodes(self.generate_all_submodules_bitmask)
+        
 
-    def create_quotientmodule_bitmask(self, gen_nodes : list[int]):
-        """
-        For every subgraph closed under predecessors, the complementary subgraph
-        is closed under successors.
-        So finding all quotient modules comes down to taking the complementary
-        set for each subgraph.
-        Since generate all subgraphs is a cached property doing this will not recompute
-        the subgraphs.
-        """
-        node_bitmask = self.node_bitmask
-        anc_bitmask = self.ancestors_bitmask
-        sub_bitmask = 0
-        for node in gen_nodes:
-            sub_bitmask |= node_bitmask[node]
-            sub_bitmask |= anc_bitmask[node]
-        return [node for node in self.nodes if (node_bitmask[node] & sub_bitmask) == node_bitmask[node]]
+
     
-    @cached_property
-    def generate_all_quotient_modules_bitmask(self):
-        quotmods = []
-        n = self.num_vertices
-        for submod in self.generate_all_submodules_bitmask:
-            quotmods.append(submod ^ (2**n-1))
-        return quotmods
+    # def create_submodule_bitmask(self, gen_nodes : list[int]):
+    #     """
+    #     With the bitmasks should just take all descendant bitmasks and OR them.
+    #     Any element that is a descendant of some generator is in the submodule.
+    #     """
+    #     node_bitmask = self.node_bitmask
+    #     des_bitmask = self.descendants_bitmask
+    #     sub_bitmask = 0
+    #     for node in gen_nodes:
+    #         sub_bitmask |= node_bitmask[node]
+    #         sub_bitmask |= des_bitmask[node]
+    #     return [node for node in self.nodes if (node_bitmask[node] & sub_bitmask) == node_bitmask[node]]
     
-    def generate_all_quotient_modules(self):
-        return self.bitmask_to_nodes(self.generate_all_quotient_modules_bitmask)
+    # def is_submodule(self, elements : list[int]):
+    #     node_bitmask = self.node_bitmask
+    #     des_bitmask = self.descendants_bitmask
+    #     submod_bitmask = sum([node_bitmask[element] for element in elements])
+    #     return all((submod_bitmask & des_bitmask[node]) == des_bitmask[node] for node in elements)
+
+    # @cached_property
+    # def generate_all_submodules_bitmask(self):
+    #     """
+    #     This generates all submodules not just indecomposable ones.
+    #     """
+    #     node_bitmask = self.node_bitmask
+    #     total_node_bitmask = sum(node_bitmask.values())
+    #     des_bitmask = self.descendants_bitmask
+    #     submods = []
+    #     for n in range(total_node_bitmask+1):
+            
+
+
+    #         submod_elts = [node for node, bitmask in node_bitmask.items() if (n & bitmask) == bitmask]
+    #         if all((n & des_bitmask[node]) == des_bitmask[node] for node in submod_elts):
+    #             submods.append(n)
+    #     return submods
+        
+    # def bitmask_to_nodes(self, bitmask_list: list[int]):
+    #     """
+    #     Converts a list of submodule bitmasks to lists of nodes.
+    #     """
+    #     result = []
+    #     for bitmask in bitmask_list:
+    #         nodes = [node for node, value in self.node_bitmask.items() if (bitmask & value) == value]
+    #         result.append(nodes)
+    #     return result
+
+    # def generate_all_submodules(self):
+    #     return self.bitmask_to_nodes(self.generate_all_submodules_bitmask)
+
+    # def create_quotientmodule_bitmask(self, gen_nodes : list[int]):
+    #     """
+    #     For every subgraph closed under predecessors, the complementary subgraph
+    #     is closed under successors.
+    #     So finding all quotient modules comes down to taking the complementary
+    #     set for each subgraph.
+    #     Since generate all subgraphs is a cached property doing this will not recompute
+    #     the subgraphs.
+    #     """
+    #     node_bitmask = self.node_bitmask
+    #     anc_bitmask = self.ancestors_bitmask
+    #     sub_bitmask = 0
+    #     for node in gen_nodes:
+    #         sub_bitmask |= node_bitmask[node]
+    #         sub_bitmask |= anc_bitmask[node]
+    #     return [node for node in self.nodes if (node_bitmask[node] & sub_bitmask) == node_bitmask[node]]
+    
+    # @cached_property
+    # def generate_all_quotient_modules_bitmask(self):
+    #     quotmods = []
+    #     n = self.num_vertices
+    #     for submod in self.generate_all_submodules_bitmask:
+    #         quotmods.append(submod ^ (2**n-1))
+    #     return quotmods
+    
+    # def generate_all_quotient_modules(self):
+    #     return self.bitmask_to_nodes(self.generate_all_quotient_modules_bitmask)
     
     def hom_group(self, other: ModuleDiagram):
         hom = []
@@ -243,6 +210,8 @@ class ModuleDiagram:
         if not self.arrows:
             return f"Module diagram with vertices {self.nodes} and no arrows."
         return f"Module diagram with vertices {self.nodes} and arrows {self.arrows}."
+    
+    
 
 class QuotientModuleDiagram(ModuleDiagram):
     def __init__(self,
@@ -283,77 +252,79 @@ class ProjectiveModuleDiagram(ModuleDiagram):
 
 if __name__ == "__main__":
     import random, time
-    draw = False
+    # draw = False
 
-    examples = [1,2,3]
+    # examples = [1,2,3]
 
-    examples = {  
-        "Example 1: A4": {  
-            "enabled": 1 in examples,  
-            "arrows": [Arrow(0, 1, "a"), Arrow(1, 2, "b"), Arrow(2, 3, "c")],  
-            "isolated_vertices": [],
-            "simples": {0:0,1:1,2:0,3:1}
-        },  
-        "Example 2: k[x,y] diamond": {  
-            "enabled": 2 in examples,  
-            "arrows": [Arrow(0, 1, "a"), Arrow(0, 2, "b"), Arrow(1, 3, "c"), Arrow(2, 3, "d")],  
-            "isolated_vertices": []  
-        },  
-        "Example 3: Y structure": {  
-            "enabled": 3 in examples,  
-            "arrows": [Arrow(0, 2, "a"), Arrow(1, 2, "b"), Arrow(2, 3, "c"), Arrow(3, 4, "d")],  
-            "isolated_vertices": []  
-        },  
-        "Example 4: weird radical": {  
-            "enabled": 4 in examples,  
-            "arrows": [Arrow(0, 1, "a"), Arrow(1, 2, "b"), Arrow(2, 3, "c"), Arrow(3, 4, "d"), Arrow(0, 5, "e"), Arrow(5, 4, "f")],  
-            "isolated_vertices": []  
-        },  
-        "Example 5: product of modules": {  
-            "enabled": 5 in examples,  
-            "arrows": [Arrow(0, 1, "a1"), Arrow(1, 2, "b1"), Arrow(2, 3, "c1"), Arrow(4, 5, "a2"), Arrow(5, 6, "b2"), Arrow(6, 7, "c2")],  
-            "isolated_vertices": []  
-        },  
-        "Example 6: Algebra and dual": {  
-            "enabled": 6 in examples,  
-            "arrows": [Arrow(0, 1, "a1"), Arrow(0, 2, "b1"), Arrow(4, 5, "a2"), Arrow(6, 7, "b2")],  
-            "isolated_vertices": [3]  
-        },  
-        "Example 7: Random graph": {  
-            "enabled": 7 in examples,  
-            "arrows": [],  # Generated below  
-            "isolated_vertices": []  
-        }  
-    }  
+    # examples = {  
+    #     "Example 1: A4": {  
+    #         "enabled": 1 in examples,  
+    #         "arrows": [Arrow(0, 1, "a"), Arrow(1, 2, "b"), Arrow(2, 3, "c")],  
+    #         "isolated_vertices": [],
+    #         "simples": {0:0,1:1,2:0,3:1}
+    #     },  
+    #     "Example 2: k[x,y] diamond": {  
+    #         "enabled": 2 in examples,  
+    #         "arrows": [Arrow(0, 1, "a"), Arrow(0, 2, "b"), Arrow(1, 3, "c"), Arrow(2, 3, "d")],  
+    #         "isolated_vertices": []  
+    #     },  
+    #     "Example 3: Y structure": {  
+    #         "enabled": 3 in examples,  
+    #         "arrows": [Arrow(0, 2, "a"), Arrow(1, 2, "b"), Arrow(2, 3, "c"), Arrow(3, 4, "d")],  
+    #         "isolated_vertices": []  
+    #     },  
+    #     "Example 4: weird radical": {  
+    #         "enabled": 4 in examples,  
+    #         "arrows": [Arrow(0, 1, "a"), Arrow(1, 2, "b"), Arrow(2, 3, "c"), Arrow(3, 4, "d"), Arrow(0, 5, "e"), Arrow(5, 4, "f")],  
+    #         "isolated_vertices": []  
+    #     },  
+    #     "Example 5: product of modules": {  
+    #         "enabled": 5 in examples,  
+    #         "arrows": [Arrow(0, 1, "a1"), Arrow(1, 2, "b1"), Arrow(2, 3, "c1"), Arrow(4, 5, "a2"), Arrow(5, 6, "b2"), Arrow(6, 7, "c2")],  
+    #         "isolated_vertices": []  
+    #     },  
+    #     "Example 6: Algebra and dual": {  
+    #         "enabled": 6 in examples,  
+    #         "arrows": [Arrow(0, 1, "a1"), Arrow(0, 2, "b1"), Arrow(4, 5, "a2"), Arrow(6, 7, "b2")],  
+    #         "isolated_vertices": [3]  
+    #     },  
+    #     "Example 7: Random graph": {  
+    #         "enabled": 7 in examples,  
+    #         "arrows": [],  # Generated below  
+    #         "isolated_vertices": []  
+    #     }  
+    # }  
 
-    rounds = 1
-    for round in range(rounds):
-        if examples["Example 7: Random graph"]["enabled"]:  
-            n = 20  
-            for i in range(n):  
-                for j in range(i+1, n):  
-                    if random.random() < 0.2:  
-                        examples["Example 7: Random graph"]["arrows"].append(Arrow(i, j))  
+    # rounds = 1
+    # for round in range(rounds):
+    #     if examples["Example 7: Random graph"]["enabled"]:  
+    #         n = 20  
+    #         for i in range(n):  
+    #             for j in range(i+1, n):  
+    #                 if random.random() < 0.2:  
+    #                     examples["Example 7: Random graph"]["arrows"].append(Arrow(i, j))  
 
-        for name, data in examples.items():  
-            if not data["enabled"]:  
-                continue  
+    #     for name, data in examples.items():  
+    #         if not data["enabled"]:  
+    #             continue  
 
-            print(f"\n--- {name} ---")  
-            diagram = ModuleDiagram(data["arrows"],
-                                    isolated_vertices=data.get("isolated_vertices", []),
-                                    vertex_simples=data.get("simples", []))  
+    #         print(f"\n--- {name} ---")  
+    #         diagram = ModuleDiagram(data["arrows"],
+    #                                 isolated_vertices=data.get("isolated_vertices", []),
+    #                                 vertex_simples=data.get("simples", []))  
 
-            if draw:  
-                diagram.draw_radical_layers  
+    #         if draw:  
+    #             diagram.draw_radical_layers  
 
-            start = time.time()  
-            print("Nodes:", diagram.nodes)  
-            print("Radical layers:", diagram.node_to_radical_layers)  
-            print("All submodules:", diagram.generate_all_submodules())  
-            print("All quotient modules:", diagram.generate_all_quotient_modules())
-            print("Endomorphism groups:")
-            for idx, hom in enumerate(diagram.hom_group(diagram)):
-                print(f"{idx}: {hom}")
-            end = time.time()  
-            print(f"Completed in {end - start:.4f} seconds.")  
+    #         start = time.time()  
+    #         print("Nodes:", diagram.nodes)  
+    #         print("Radical layers:", diagram.node_to_radical_layers)  
+    #         print("All submodules:", diagram.generate_all_submodules())  
+    #         print("All quotient modules:", diagram.generate_all_quotient_modules())
+    #         print("Endomorphism groups:")
+    #         for idx, hom in enumerate(diagram.hom_group(diagram)):
+    #             print(f"{idx}: {hom}")
+    #         end = time.time()  
+    #         print(f"Completed in {end - start:.4f} seconds.")  
+
+
