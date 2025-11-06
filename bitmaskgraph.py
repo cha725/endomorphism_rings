@@ -18,6 +18,14 @@ class Arrow:
     
 
 class BitmaskGraph:
+    """
+    Represents arrows and vertices using bitmasks.
+
+    Attributes:
+
+    """
+
+
     def __init__(self,
                  arrows : list[Arrow]):
         self.arrows = arrows
@@ -232,6 +240,10 @@ class BitmaskGraph:
         return comp
     
     @cached_property
+    def is_connected(self):
+        return len(self._mask_des_verts_comp(self._mask_all_verts)) == 1
+
+    @cached_property
     def _mask_anc_closed(self):
         result = []
         mask_verts = self._mask_verts
@@ -273,19 +285,39 @@ class BitmaskGraph:
                         break
         return result
     
+    @cached_property
     def anc_closed(self):
         results = self._mask_anc_closed
-        anc_closed = []
+        anc_closed = [[]]
         for result in results:
             anc_closed.append(self._mask_to_verts(result))
         return anc_closed
     
+    @cached_property
     def des_closed(self):
-        results = self._mask_anc_closed
-        anc_closed = []
+        results = self._mask_des_closed
+        des_closed = [[]]
         for result in results:
-            anc_closed.append(self._mask_to_verts(result))
-        return anc_closed
+            des_closed.append(self._mask_to_verts(result))
+        return des_closed
+    
+    # TODO: this is not working
+    # @cached_property
+    # def anc_closed_from_des(self):
+    #     des_results = self._mask_des_closed
+    #     mask_all_verts = self._mask_all_verts
+    #     results = [self._mask_to_verts(mask_all_verts)]
+    #     for result in des_results:
+    #         new_comp = self._mask_des_verts_comp(result)
+    #         comp = []
+    #         for summand in new_comp:
+    #             new_summand = mask_all_verts & (~summand)
+    #             comp += self._mask_to_verts(new_summand)
+    #         results.append(comp)
+    #     return results
+
+
+        
 
 if __name__ == "__main__":
 
@@ -303,7 +335,7 @@ if __name__ == "__main__":
     #     print(i, bg._mask_adj_info(i))
     #     print(bg._mask_anc_info(i))
 
-    bg1 = BitmaskGraph([Arrow(0,1), Arrow(2,1), Arrow(2,3), Arrow(4,3)])
+    bg1 = BitmaskGraph([Arrow(0,1), Arrow(1,2), Arrow(2,3)])
     vert2 = bg1._mask_all_verts
     mask = bg1._mask_verts
     print(bg1._mask_info)
@@ -314,15 +346,19 @@ if __name__ == "__main__":
     # for i in bg1._mask_des_verts_comp(mask[2] | mask[4]):
     #     print(i, bg1._mask_to_verts(i))
     print("=== SUBMODS ===")
-    des_closed = bg1._mask_des_closed
+    des_closed = bg1.des_closed
     for i in des_closed:
-        print(i, bg1._mask_to_verts(i))
+        print(i)
 
     print("=== QUOTIENTS ===")
-    anc_closed = bg1.anc_closed()
+    anc_closed = bg1.anc_closed
     for i in anc_closed:
         print(i)
 
+    print("=== NEW ===")
+    anc_closed_from_des = bg1.anc_closed_from_des
+    for i in anc_closed_from_des:
+        print(i)
     
 
 

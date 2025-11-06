@@ -112,6 +112,17 @@ class ModuleDiagram:
     
 
     def generate_all_submodules(self):
+        return self.bitmaskgraph.des_closed
+    
+    def generate_all_quotients(self):
+        return self.bitmaskgraph.anc_closed
+    
+    # def generate_all_quotients_from_submod(self):
+    #     """
+    #     speeds up by an average of 35.49=time1/time2
+    #     compared to generate all quotients
+    #     """
+    #     return self.bitmaskgraph.anc_closed_from_des
         
 
 
@@ -196,7 +207,7 @@ class ModuleDiagram:
     
     def hom_group(self, other: ModuleDiagram):
         hom = []
-        for quotient in self.generate_all_quotient_modules():
+        for quotient in self.generate_all_quotients():
             quotdiagram = QuotientModuleDiagram(self,quotient)
             for submod in other.generate_all_submodules():
                 submoddiagram = SubModuleDiagram(other,submod)
@@ -252,79 +263,80 @@ class ProjectiveModuleDiagram(ModuleDiagram):
 
 if __name__ == "__main__":
     import random, time
-    # draw = False
+    examples = [1,2,3,4,5,6]
 
-    # examples = [1,2,3]
+    examples = {  
+        "Example 1: A4": {  
+            "enabled": 1 in examples,  
+            "arrows": [Arrow(0, 1, "a"), Arrow(1, 2, "b"), Arrow(2, 3, "c")],  
+            "isolated_vertices": [],
+            "simples": {0:0,1:1,2:0,3:1}
+        },  
+        "Example 2: k[x,y] diamond": {  
+            "enabled": 2 in examples,  
+            "arrows": [Arrow(0, 1, "a"), Arrow(0, 2, "b"), Arrow(1, 3, "c"), Arrow(2, 3, "d")],  
+            "isolated_vertices": []  
+        },  
+        "Example 3: Y structure": {  
+            "enabled": 3 in examples,  
+            "arrows": [Arrow(0, 2, "a"), Arrow(1, 2, "b"), Arrow(2, 3, "c"), Arrow(3, 4, "d")],  
+            "isolated_vertices": []  
+        },  
+        "Example 4: weird radical": {  
+            "enabled": 4 in examples,  
+            "arrows": [Arrow(0, 1, "a"), Arrow(1, 2, "b"), Arrow(2, 3, "c"), Arrow(3, 4, "d"), Arrow(0, 5, "e"), Arrow(5, 4, "f")],  
+            "isolated_vertices": []  
+        },  
+        "Example 5: product of modules": {  
+            "enabled": 5 in examples,  
+            "arrows": [Arrow(0, 1, "a1"), Arrow(1, 2, "b1"), Arrow(2, 3, "c1"), Arrow(4, 5, "a2"), Arrow(5, 6, "b2"), Arrow(6, 7, "c2")],  
+            "isolated_vertices": []  
+        },  
+        "Example 6: Algebra and dual": {  
+            "enabled": 6 in examples,  
+            "arrows": [Arrow(0, 1, "a1"), Arrow(0, 2, "b1"), Arrow(4, 5, "a2"), Arrow(6, 7, "b2")],  
+            "isolated_vertices": [3]  
+        },  
+        "Example 7: Random graph": {  
+            "enabled": 7 in examples,  
+            "arrows": [],  # Generated below  
+            "isolated_vertices": []  
+        }  
+    }  
 
-    # examples = {  
-    #     "Example 1: A4": {  
-    #         "enabled": 1 in examples,  
-    #         "arrows": [Arrow(0, 1, "a"), Arrow(1, 2, "b"), Arrow(2, 3, "c")],  
-    #         "isolated_vertices": [],
-    #         "simples": {0:0,1:1,2:0,3:1}
-    #     },  
-    #     "Example 2: k[x,y] diamond": {  
-    #         "enabled": 2 in examples,  
-    #         "arrows": [Arrow(0, 1, "a"), Arrow(0, 2, "b"), Arrow(1, 3, "c"), Arrow(2, 3, "d")],  
-    #         "isolated_vertices": []  
-    #     },  
-    #     "Example 3: Y structure": {  
-    #         "enabled": 3 in examples,  
-    #         "arrows": [Arrow(0, 2, "a"), Arrow(1, 2, "b"), Arrow(2, 3, "c"), Arrow(3, 4, "d")],  
-    #         "isolated_vertices": []  
-    #     },  
-    #     "Example 4: weird radical": {  
-    #         "enabled": 4 in examples,  
-    #         "arrows": [Arrow(0, 1, "a"), Arrow(1, 2, "b"), Arrow(2, 3, "c"), Arrow(3, 4, "d"), Arrow(0, 5, "e"), Arrow(5, 4, "f")],  
-    #         "isolated_vertices": []  
-    #     },  
-    #     "Example 5: product of modules": {  
-    #         "enabled": 5 in examples,  
-    #         "arrows": [Arrow(0, 1, "a1"), Arrow(1, 2, "b1"), Arrow(2, 3, "c1"), Arrow(4, 5, "a2"), Arrow(5, 6, "b2"), Arrow(6, 7, "c2")],  
-    #         "isolated_vertices": []  
-    #     },  
-    #     "Example 6: Algebra and dual": {  
-    #         "enabled": 6 in examples,  
-    #         "arrows": [Arrow(0, 1, "a1"), Arrow(0, 2, "b1"), Arrow(4, 5, "a2"), Arrow(6, 7, "b2")],  
-    #         "isolated_vertices": [3]  
-    #     },  
-    #     "Example 7: Random graph": {  
-    #         "enabled": 7 in examples,  
-    #         "arrows": [],  # Generated below  
-    #         "isolated_vertices": []  
-    #     }  
-    # }  
+    draw = False
 
-    # rounds = 1
-    # for round in range(rounds):
-    #     if examples["Example 7: Random graph"]["enabled"]:  
-    #         n = 20  
-    #         for i in range(n):  
-    #             for j in range(i+1, n):  
-    #                 if random.random() < 0.2:  
-    #                     examples["Example 7: Random graph"]["arrows"].append(Arrow(i, j))  
+  
+    time_ratio = []
+    rounds = 1
+    for round in range(rounds):
+        if examples["Example 7: Random graph"]["enabled"]:  
+            n = 5
+            for i in range(n):  
+                for j in range(i+1, n):  
+                    if random.random() < 0.2:  
+                        examples["Example 7: Random graph"]["arrows"].append(Arrow(i, j))  
 
-    #     for name, data in examples.items():  
-    #         if not data["enabled"]:  
-    #             continue  
+        for name, data in examples.items():  
+            if not data["enabled"]:  
+                continue  
+            print(round)
+            print(f"\n--- {name} ---")  
+            diagram = ModuleDiagram(data["arrows"],
+                                    isolated_vertices=data.get("isolated_vertices", []),
+                                    vertex_simples=data.get("simples", []))  
 
-    #         print(f"\n--- {name} ---")  
-    #         diagram = ModuleDiagram(data["arrows"],
-    #                                 isolated_vertices=data.get("isolated_vertices", []),
-    #                                 vertex_simples=data.get("simples", []))  
+            if draw:  
+                diagram.draw_radical_layers  
 
-    #         if draw:  
-    #             diagram.draw_radical_layers  
-
-    #         start = time.time()  
-    #         print("Nodes:", diagram.nodes)  
-    #         print("Radical layers:", diagram.node_to_radical_layers)  
-    #         print("All submodules:", diagram.generate_all_submodules())  
-    #         print("All quotient modules:", diagram.generate_all_quotient_modules())
-    #         print("Endomorphism groups:")
-    #         for idx, hom in enumerate(diagram.hom_group(diagram)):
-    #             print(f"{idx}: {hom}")
-    #         end = time.time()  
-    #         print(f"Completed in {end - start:.4f} seconds.")  
-
+            start = time.time()  
+            print("\nNodes:", diagram.nodes)  
+            print("\nRadical layers:", diagram.node_to_radical_layers)  
+            print("\nAll submodules:", diagram.generate_all_submodules())  
+            print("\nAll quotient modules:", diagram.generate_all_quotients())
+            print("\nEndomorphism groups:")
+            for idx, hom in enumerate(diagram.hom_group(diagram)):
+                print(f"{idx}: {hom}")
+            end = time.time()  
+            print(f"\nCompleted in {end - start:.4f} seconds.")  
 
