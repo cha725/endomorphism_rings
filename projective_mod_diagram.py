@@ -1,7 +1,5 @@
 from quiver_algebra import MonomialQuiverAlgebra, Arrow, Path
-import networkx as nx
 from modulediagram import ModuleDiagram
-import matplotlib.pyplot as plt
 
 class ProjectiveModuleDiagram(ModuleDiagram):
     """
@@ -18,7 +16,7 @@ class ProjectiveModuleDiagram(ModuleDiagram):
                  algebra : MonomialQuiverAlgebra,
                  top_vertex : int):
         if top_vertex not in algebra.vertices:
-            raise ValueError(f"Invalid vertex. Vertex {top_vertex} must be a quiver vertex {algebra.vertices()}")
+            raise ValueError(f"Invalid vertex. Vertex {top_vertex} must be a quiver vertex {algebra.vertices}")
         self.algebra = algebra
         self.top_vertex = top_vertex
         self._construct_mod_diagram()
@@ -29,11 +27,15 @@ class ProjectiveModuleDiagram(ModuleDiagram):
 
     def _construct_mod_diagram(self):
         """
-        Build the projective module diagram associated to the top_vertex.
-        Algbebraically each vertex corresponds to a simple composition factor of the module.
-        Computationally each vertex corresponds to a path in the dfs path search of the quiveralgebra.
-        Each arrow corresponds to the algebra action on the composition path.
-        That is just an arrow in the quiver algebra such that the source path then arrow = target path.
+        Build the projective module diagram for the given top vertex.
+        
+        Algebraically:
+            - Each vertex corresponds to a simple composition factor of the module.
+            - Each arrow represents the algebra action extending a path.
+        
+        Computationally:
+            - Each vertex corresponds to a path in the DFS search of the quiver algebra.
+            - Each arrow corresponds to a quiver arrow such that source_path + arrow = target_path.
         """
         self.vertex_simples = {} # node index to the simple factor
         self.vertex_labels = {} # node index to the path from dfs
@@ -42,9 +44,8 @@ class ProjectiveModuleDiagram(ModuleDiagram):
 
         path_to_vertex_id = {}
 
-        dfs_paths_with_connections = self.algebra.paths(with_connections=True)[self.top_vertex]
-        for connection in dfs_paths_with_connections:
-            path, arrow, new_path = connection
+        dfs_connections = self.algebra.paths(with_connections=True)[self.top_vertex]
+        for path, arrow, new_path in dfs_connections:
             print(f"path {path}, new path {new_path}")
 
             if new_path not in path_to_vertex_id:
@@ -86,7 +87,7 @@ class Examples:
             for vertex in quiver.vertices:
                 projective = ProjectiveModuleDiagram(quiver, vertex)
                 print(f"\n- Projective {projective} -")
-                #projective.draw_radical_layers
+                projective.draw_radical_layers
 
 
 
@@ -106,5 +107,11 @@ if __name__ == "__main__":
     examples.add(("Three cyclic",
                  MonomialQuiverAlgebra(arrows=[Arrow(0,1,"a"),Arrow(1,2,"b"),Arrow(2,0,"c")],
                                        relations=[Path((Arrow(0,1,"a"),Arrow(1,2,"b")))])))
+
+    examples.add(("Bigger",
+                 MonomialQuiverAlgebra( arrows=[Arrow(1,2,"a"), Arrow(2,3,"b"), Arrow(1,3,"c"),
+                                                Arrow(3,1,"d"), Arrow(2,2,"e")],
+                                        relations=[Path((Arrow(1,2,"a"), Arrow(2,2,"e")))],
+                                        max_radical_length=3)))
 
     examples.run()

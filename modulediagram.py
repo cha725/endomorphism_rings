@@ -101,28 +101,11 @@ class ModuleDiagram:
             for x, node in zip(x_coord, nodes):
                 pos[node] = (x, -layer)
 
-        # nx.draw(self.basic_graph, pos,
-        #     node_size=1000, node_color='lightblue',
-        #     font_weight='bold')
-        # nx.draw_networkx_labels(self.basic_graph, pos, labels=labels,
-        #                     font_size=10, font_weight='bold')  
-
-        nx.draw(
-            self.basic_graph, pos,
+        nx.draw(self.basic_graph, pos,
             node_size=1000, node_color='lightblue',
-            font_weight='bold'
-        )
-
-        # Draw vertex labels
-        nx.draw_networkx_labels(
-            self.basic_graph, pos,
-            labels=self.vertex_simples, font_size=10, font_weight='bold'
-        )
-
-        # --------------------------------
-        # BUILD ARROW LABELS (edge labels)
-        # --------------------------------
-        # For MultiDiGraph, need keys:
+            font_weight='bold')
+        nx.draw_networkx_labels(self.basic_graph, pos, labels=self.vertex_simples,
+                            font_size=10, font_weight='bold')  
         edge_labels = {
             (u, v, k): d.get("label")
             for u, v, k, d in self.basic_graph.edges(keys=True, data=True)
@@ -169,6 +152,7 @@ class ModuleDiagram:
             return f"Module diagram with vert={self.vertex_labels} and no arrows."
         return f"Module diagram with vert={self.vertex_labels} and arrows = {self.arrows}"
     
+
     
 
 class QuotientModuleDiagram(ModuleDiagram):
@@ -197,93 +181,78 @@ class SubModuleDiagram(ModuleDiagram):
         vertex_labels = {n: subgraph.nodes[n].get("label") for n in subgraph.nodes}
         vertex_simples = {n: parent.basic_graph.nodes[n]["simples"] for n in subgraph.nodes}
         super().__init__(arrows=arrows, vertex_labels=vertex_labels, vertex_simples=vertex_simples)
-    
-
-
-class ProjectiveModuleDiagram(ModuleDiagram):
-    def __init__(self,
-                 quiver_algebra,
-                 vertex):
-        pass
 
 
 
-if __name__ == "__main__":
-    import random, time
-    examples = [1,2,3,4,5,6]
 
-    examples = {  
-        "Example 1: A4": {  
-            "enabled": 1 in examples,  
-            "arrows": [Arrow(0, 1, "a"), Arrow(1, 2, "b"), Arrow(2, 3, "c")],  
-            "isolated_vertices": [],
-            "simples": {0:0,1:1,2:0,3:1}
-        },  
-        "Example 2: k[x,y] diamond": {  
-            "enabled": 2 in examples,  
-            "arrows": [Arrow(0, 1, "a"), Arrow(0, 2, "b"), Arrow(1, 3, "c"), Arrow(2, 3, "d")],  
-            "isolated_vertices": []  
-        },  
-        "Example 3: Y structure": {  
-            "enabled": 3 in examples,  
-            "arrows": [Arrow(0, 2, "a"), Arrow(1, 2, "b"), Arrow(2, 3, "c"), Arrow(3, 4, "d")],  
-            "isolated_vertices": []  
-        },  
-        "Example 4: weird radical": {  
-            "enabled": 4 in examples,  
-            "arrows": [Arrow(0, 1, "a"), Arrow(1, 2, "b"), Arrow(2, 3, "c"), Arrow(3, 4, "d"), Arrow(0, 5, "e"), Arrow(5, 4, "f")],  
-            "isolated_vertices": []  
-        },  
-        "Example 5: product of modules": {  
-            "enabled": 5 in examples,  
-            "arrows": [Arrow(0, 1, "a1"), Arrow(1, 2, "b1"), Arrow(2, 3, "c1"), Arrow(4, 5, "a2"), Arrow(5, 6, "b2"), Arrow(6, 7, "c2")],  
-            "isolated_vertices": []  
-        },  
-        "Example 6: Algebra and dual": {  
-            "enabled": 6 in examples,  
-            "arrows": [Arrow(0, 1, "a1"), Arrow(0, 2, "b1"), Arrow(4, 5, "a2"), Arrow(6, 7, "b2")],  
-            "isolated_vertices": [3]  
-        },  
-        "Example 7: Random graph": {  
-            "enabled": 7 in examples,  
-            "arrows": [],  # Generated below  
-            "isolated_vertices": []  
-        }  
-    }  
+class Examples:
+    """
+    Class to store examples of module diagrams.
+    """
+    def __init__(self, 
+                 examples: dict[str, dict]):
+        self.examples = examples
 
-    draw = False
+    def add(self, 
+            name: str, 
+            arrows: list, 
+            isolated_vertices: Optional[list] = None, 
+            vertex_simples: Optional[dict] = None):
+        self.examples[name] = {
+            "arrows": arrows,
+            "isolated_vertices": isolated_vertices or [],
+            "vertex_simples": vertex_simples or {}
+        }
 
-  
-    time_ratio = []
-    rounds = 1
-    for round in range(rounds):
-        if examples["Example 7: Random graph"]["enabled"]:  
-            n = 5
-            for i in range(n):  
-                for j in range(i+1, n):  
-                    if random.random() < 0.2:  
-                        examples["Example 7: Random graph"]["arrows"].append(Arrow(i, j))  
+    def run(self, draw: bool = False):
+        for name, data in self.examples.items():
+            print(f"\n=== Example: {name} ===")
+            diagram = ModuleDiagram(arrows=data["arrows"],
+                                    isolated_vertices=data["isolated_vertices"],
+                                    vertex_simples=data["vertex_simples"])
 
-        for name, data in examples.items():  
-            if not data["enabled"]:  
-                continue  
-            print(round)
-            print(f"\n--- {name} ---")  
-            diagram = ModuleDiagram(data["arrows"],
-                                    isolated_vertices=data.get("isolated_vertices", []),
-                                    vertex_simples=data.get("simples", []))  
+            if draw:
+                diagram.draw_radical_layers
 
-            if draw:  
-                diagram.draw_radical_layers  
-
-            start = time.time()  
-            print("\nNodes:", diagram.nodes)  
-            print("\nRadical layers:", diagram.node_to_radical_layers)  
-            print("\nAll submodules:", diagram.generate_all_submodules())  
+            print("\nNodes:", diagram.nodes)
+            print("\nRadical layers:", diagram.node_to_radical_layers)
+            print("\nAll submodules:", diagram.generate_all_submodules())
             print("\nAll quotient modules:", diagram.generate_all_quotients())
-            print("\nEndomorphism groups:")
+            print("\nEndomorphisms:")
             for idx, hom in enumerate(diagram.hom_group(diagram)):
                 print(f"{idx}: {hom}")
-            end = time.time()  
-            print(f"\nCompleted in {end - start:.4f} seconds.")  
+
+# TODO: make the print out prettier.
+
+if __name__ == "__main__":
+
+    examples = Examples({})
+
+    examples.add("Example 1: A4",
+                        arrows=[Arrow(0,1,"a"), Arrow(1,2,"b"), Arrow(2,3,"c")],
+                        vertex_simples={0:0, 1:1, 2:0, 3:1})
+
+    examples.add("Example 2: Diamond",
+                        arrows=[Arrow(0,1,"a"), Arrow(0,2,"b"), Arrow(1,3,"c"), Arrow(2,3,"d")])
+
+    examples.add("Example 3: Y structure",
+                        arrows=[Arrow(0,2,"a"), Arrow(1,2,"b"), Arrow(2,3,"c"), Arrow(3,4,"d")])
+
+    examples.add("Example 4: weird radical",
+                        arrows=[Arrow(0,1,"a"), Arrow(1,2,"b"), Arrow(2,3,"c"), Arrow(3,4,"d"),
+                                Arrow(0,5,"e"), Arrow(5,4,"f")])
+
+    # examples.add("Example 5: product of modules",
+    #                     arrows=[Arrow(0,1,"a1"), Arrow(1,2,"b1"), Arrow(2,3,"c1"),
+    #                             Arrow(4,5,"a2"), Arrow(5,6,"b2"), Arrow(6,7,"c2")])
+
+    # examples.add("Example 6: Algebra and dual",
+    #                     arrows=[Arrow(0,1,"a1"), Arrow(0,2,"b1"), Arrow(4,5,"a2"), Arrow(6,7,"b2")],
+    #                     isolated_vertices=[3])
+
+    # examples.add("Example 7: Random graph",
+    #                     arrows=[],  
+    #                     isolated_vertices=[])
+    
+    examples.run()
 

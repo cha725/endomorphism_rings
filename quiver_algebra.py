@@ -115,6 +115,7 @@ class PathAlgebra:
     def is_path_of(self, path : Path):
         return all(a in self.arrows for a in path.arrows)
     
+# TODO: could make this take in gap code, then can use the quiver applet.
 
 class MonomialQuiverAlgebra(PathAlgebra):
     def __init__(self,
@@ -150,7 +151,7 @@ class MonomialQuiverAlgebra(PathAlgebra):
             max_length = self.max_radical_length
 
         paths = [Path(stationary_vertex=vertex)]
-        connecting_edges = {Path(stationary_vertex=vertex):
+        connecting_edges : dict[Path, tuple[Path, Optional[Arrow],Path]] = {Path(stationary_vertex=vertex):
                             (Path(stationary_vertex=vertex), None, Path(stationary_vertex=vertex))}
         seen = set(self.relations)
         results = []
@@ -209,7 +210,7 @@ class Examples:
             print(f" Arrows = {quiver.arrows}")
             print(f" Relations = {quiver.relations}")
             print(f"\n-- Paths in quiver --")
-            for vertex, paths in quiver.paths(with_connections=True).items():
+            for vertex, paths in quiver.paths().items():
                 print(f"\n- Starting at vertex {vertex} -")
                 for path in paths:
                     print(f"• {path}")
