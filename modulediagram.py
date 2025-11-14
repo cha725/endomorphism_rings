@@ -20,7 +20,7 @@ class ModuleDiagram:
         G = nx.MultiDiGraph()
         if self.vertex_labels is not None:
             # Add vertices with labels
-            for vertex, label in vertex_labels.items():
+            for vertex, label in self.vertex_labels.items():
                 G.add_node(vertex, label=label)
 
         for arrow in self.arrows:
@@ -164,7 +164,7 @@ class QuotientModuleDiagram(ModuleDiagram):
         self.parent = parent
         subgraph = parent.basic_graph.subgraph(vertices).copy()
         arrows = [Arrow(u, v, d.get("label")) for u, v, d in subgraph.edges(data=True)]
-        vertex_labels = {n: subgraph.nodes[n].get("label") for n in subgraph.nodes}
+        vertex_labels : dict = {n: subgraph.nodes[n].get("label") for n in subgraph.nodes}
         vertex_simples = {n: parent.basic_graph.nodes[n]["simples"] for n in subgraph.nodes}
         super().__init__(arrows=arrows, vertex_labels=vertex_labels, vertex_simples=vertex_simples)
 
@@ -178,7 +178,7 @@ class SubModuleDiagram(ModuleDiagram):
         self.parent = parent
         subgraph = parent.basic_graph.subgraph(vertices).copy()
         arrows = [Arrow(u, v, d.get("label")) for u, v, d in subgraph.edges(data=True)]
-        vertex_labels = {n: subgraph.nodes[n].get("label") for n in subgraph.nodes}
+        vertex_labels :dict = {n: subgraph.nodes[n].get("label") for n in subgraph.nodes}
         vertex_simples = {n: parent.basic_graph.nodes[n]["simples"] for n in subgraph.nodes}
         super().__init__(arrows=arrows, vertex_labels=vertex_labels, vertex_simples=vertex_simples)
 
