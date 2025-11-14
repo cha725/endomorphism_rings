@@ -33,6 +33,11 @@ class Path:
             return self.stationary_vertex
         return self.arrows[-1].target
     
+    def vertices(self) -> list:
+        if self.is_stationary_path():
+            return [self.stationary_vertex]
+        return [self.source()] + [a.target for a in self.arrows]
+    
     def extend_at_end(self, arrow : Arrow):
         if self.target() != arrow.source:
             return None
@@ -50,11 +55,20 @@ class Path:
     def is_subpath(self, other: Path):
         if len(self) == 0:
             return True
-        if not(len(self) <= len(other)):
-            return False
         if self.is_stationary_path():
             return self == Path(stationary_vertex=other.source())
         return any(other.truncate(i,i+len(self)) == self for i in range(len(other)-len(self)+1))
+    
+    def fancy_label(self):
+        if self.is_stationary_path():
+            return f"e({self.source})"
+        return "".join(str(a.label) for a in self.arrows)
+    
+    def fancy_vertices(self):
+        if self.is_stationary_path():
+            return f"Stationary path at {self.source()}"
+        return "->".join(str(v) for v in self.vertices())
+        
 
     def __len__(self):
         if self.is_stationary_path():
@@ -69,7 +83,7 @@ class Path:
     def __repr__(self):
         if self.is_stationary_path():
             return f"Stationary path at {self.stationary_vertex}"
-        return f"Path{self.arrows}"
+        return f"{self.fancy_label()} : {self.fancy_vertices()}"
     
     def __hash__(self):
         if self.is_stationary_path():
@@ -79,66 +93,97 @@ class Path:
     
 class PathAlgebra:
     def __init__(self,
-                 arrows : list[Arrow] = []):
-        self.arrows = arrows
+                 arrows : Optional[list[Arrow]] = None,
+                 vertices : Optional[list[int]] = None):
+        
+        if arrows is None and vertices is None:
+            raise ValueError("Path algebra cannot be empty.")
+        self.arrows = arrows or []
+        self.arrow_vertices = {a.source for a in self.arrows} | {a.target for a in self.arrows}
+        if vertices is None:
+            self.vertices = list(self.arrow_vertices)
+        else:
+            self.vertices = list(self.arrow_vertices | set(vertices))
 
     def graph(self):
-        return nx.MultiDiGraph([(arrow.source, arrow.target) for arrow in self.arrows])
+        return nx.MultiDiGraph([(a.source, a.target) for a in self.arrows])
     
-    def vertices(self):
-        return self.graph().nodes
-    
-    def stationary_paths(self):
-        return [Arrow(vertex,vertex,"stationary") for vertex in self.vertices()]
+    # TODO: dont like this - isn't rally mathematically accurate
+    # def stationary_paths(self):
+    #     return [Arrow(v,v,"stationary") for v in self.vertices]
     
     def is_path_of(self, path : Path):
-        return all(path.arrows[i] in self.arrows for i in range(len(path)))
+        return all(a in self.arrows for a in path.arrows)
     
 
 class MonomialQuiverAlgebra(PathAlgebra):
     def __init__(self,
-                 arrows : list[Arrow] = [],
-                 relations : list[Path] = [],
+                 arrows : Optional[list[Arrow]] = None,
+                 relations : Optional[list[Path]] = None,
+                 vertices : Optional[list[int]] = None,
                  max_radical_length : int = 20):
-        super().__init__(arrows)
-        if not all(self.is_path_of(relations[i]) for i in range(len(relations))):
+        super().__init__(arrows, vertices)
+        self.relations = relations or []
+        if not all(self.is_path_of(r) for r in self.relations):
             raise ValueError(f"Invalid relations. {relations} must be a subset of {arrows}")
-        self.relations = relations
         self.max_radical_length = max_radical_length
 
     def is_path(self, path : Path):
         return all(not relation.is_subpath(path) for relation in self.relations)
 
-    def depth_first_search_paths(self, start: int, max_length: Optional[int] = None):
+    def is_path_extension_valid(self, path : Path, arrow : Arrow):
+        """
+        Given a valid path, check if the extension by an arrow is killed by the relations.
+        """
+        new_path = path.extend_at_end(arrow)
+        if new_path is None:
+            return False
+        for rel in self.relations:
+            if len(rel) <= len(new_path):
+                if rel == new_path.truncate(len(new_path)-len(rel),len(new_path)):
+                    return False
+        return True
+
+
+    def dfs_paths_from_vertex(self, vertex: int, max_length: Optional[int] = None):
         if max_length is None:
             max_length = self.max_radical_length
 
-        paths = [Path(stationary_vertex=start)]
-        connecting_edges = [(Path(stationary_vertex=start), None, Path(stationary_vertex=start))]
-        seen = []
+        paths = [Path(stationary_vertex=vertex)]
+        connecting_edges = {Path(stationary_vertex=vertex):
+                            (Path(stationary_vertex=vertex), None, Path(stationary_vertex=vertex))}
+        seen = set(self.relations)
         results = []
+        connections = []
+
         while paths:
             path = paths.pop()
-            if path in seen or not self.is_path(path):
+            if path in seen:
+                # if path seen move onto next path in paths
                 continue
-            seen.append(path)
+            # otherwise add to results and seen
             results.append(path)
+            connections.append(connecting_edges[path])
+            seen.add(path)
             if len(path) >= max_length:
+                # if path is maximum length move onto next path in paths
                 continue
+            # otherwise extend by arrows
             for arrow in [a for a in self.arrows if a.source == path.target()]:
                 new_path = path.extend_at_end(arrow)
-                if new_path:
+                if new_path and self.is_path(new_path):
                     paths.append(new_path)
-                    connecting_edges.append((path, arrow, new_path))
-        return results, connecting_edges
+                    connecting_edges[new_path] = (path, arrow, new_path)
+        return results, connections
     
-    def paths(self, length : Optional[int] = None, with_connections : bool = False) -> dict[int,list]:
+    def paths(self, length : Optional[int] = None, with_connections : bool = False) -> dict[int,list[Path]]:
         paths = {}
-        for vertex in self.vertices():
+        for vertex in self.vertices:
+            results, connections = self.dfs_paths_from_vertex(vertex, length)
             if with_connections:
-                paths[vertex] = self.depth_first_search_paths(vertex, length)[1]
+                paths[vertex] = connections
             else:
-                paths[vertex] = self.depth_first_search_paths(vertex, length)[0]
+                paths[vertex] = results
         return paths
 
     
@@ -160,11 +205,11 @@ class Examples:
     def run(self):
         for name, quiver in self.examples.items():
             print(f"\n=== Example: {name} ===")
-            print(f"\n Vertices = {quiver.vertices()}")
+            print(f"\n Vertices = {quiver.vertices}")
             print(f" Arrows = {quiver.arrows}")
             print(f" Relations = {quiver.relations}")
             print(f"\n-- Paths in quiver --")
-            for vertex, paths in quiver.paths().items():
+            for vertex, paths in quiver.paths(with_connections=True).items():
                 print(f"\n- Starting at vertex {vertex} -")
                 for path in paths:
                     print(f"• {path}")
@@ -189,3 +234,8 @@ if __name__ == "__main__":
                                        relations=[Path((Arrow(0,1,"a"),Arrow(1,2,"b")))])))
 
     examples.run()
+
+    qa = MonomialQuiverAlgebra(arrows=[Arrow(0,1,"a"),Arrow(1,2,"b"),Arrow(2,3,"c")],
+                               relations = [Path((Arrow(0,1,"a"),Arrow(1,2,"b"))),
+                                            Path((Arrow(1,2,"b"),Arrow(2,3,"c")))])
+    

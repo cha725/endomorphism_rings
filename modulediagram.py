@@ -15,9 +15,10 @@ class ModuleDiagram:
                  vertex_labels: Optional[dict[int,str]] = None):
         self.arrows = arrows
         self.bitmaskgraph = BitmaskGraph(self.arrows)
+        self.vertex_labels = vertex_labels
 
         G = nx.MultiDiGraph()
-        if vertex_labels is not None:
+        if self.vertex_labels is not None:
             # Add vertices with labels
             for vertex, label in vertex_labels.items():
                 G.add_node(vertex, label=label)
@@ -33,9 +34,8 @@ class ModuleDiagram:
             raise ValueError("Invalid module diagram. Cannot contain a cycle.")
         for vertex in self.basic_graph.nodes:
             self.basic_graph.nodes[vertex]["simples"] = vertex_simples.get(vertex) if vertex_simples else None
-        self.vertex_labels = self.basic_graph.nodes.keys()
         self.vertex_simples = vertex_simples
-        self.num_vertices = len(self.vertex_labels)
+        self.num_vertices = len(self.basic_graph.nodes)
         self.num_arrows = len(arrows)
         self._add_radical_labels()
         self.nodes = list(nx.topological_sort(self.basic_graph))
@@ -166,8 +166,8 @@ class ModuleDiagram:
         if not self.nodes:
             return f"Module diagram with no vertices and no arrows."
         if not self.arrows:
-            return f"Module diagram with vertices {self.nodes} and no arrows."
-        return f"Module diagram with vertices {self.nodes} and arrows {self.arrows}."
+            return f"Module diagram with vert={self.vertex_labels} and no arrows."
+        return f"Module diagram with vert={self.vertex_labels} and arrows = {self.arrows}"
     
     
 
