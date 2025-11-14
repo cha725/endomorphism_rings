@@ -34,20 +34,14 @@ class Path:
         return self.arrows[-1].target
     
     def extend_at_end(self, arrow : Arrow):
-        if self.target() == arrow.source:
-            if self.arrows is not None:
-                arrows = self.arrows + (arrow,)
-            else:
-                arrows = (arrow,)
-        return Path(arrows)
+        if self.target() != arrow.source:
+            return None
+        return Path(self.arrows + (arrow,))
     
     def extend_at_start(self, arrow : Arrow):
-        if arrow.target == self.source():
-            if self.arrows is not None:
-                arrows = (arrow,) + self.arrows
-            else:
-                arrows = (arrow,)
-        return Path(arrows)
+        if arrow.target != self.source():
+            return None
+        return Path((arrow,) + self.arrows)
         
     def truncate(self, start_idx : int, end_idx : int):
         arrows = self.arrows[start_idx:end_idx]
@@ -75,7 +69,7 @@ class Path:
     def __repr__(self):
         if self.is_stationary_path():
             return f"Stationary path at {self.stationary_vertex}"
-        return f"Path = {self.arrows}"
+        return f"Path{self.arrows}"
     
     def __hash__(self):
         if self.is_stationary_path():
@@ -138,7 +132,7 @@ class MonomialQuiverAlgebra(PathAlgebra):
                     connecting_edges.append((path, arrow, new_path))
         return results, connecting_edges
     
-    def paths(self, length : Optional[int] = None, with_connections : bool = False):
+    def paths(self, length : Optional[int] = None, with_connections : bool = False) -> dict[int,list]:
         paths = {}
         for vertex in self.vertices():
             if with_connections:
@@ -149,18 +143,49 @@ class MonomialQuiverAlgebra(PathAlgebra):
 
     
 
-    
+
+# TODO: Is this standard practice?
+
+class Examples:
+    """
+    Class to store examples of quivers.
+    """
+    def __init__(self,
+                    examples : dict[str,MonomialQuiverAlgebra]):
+        self.examples = examples
+
+    def add(self, example : tuple[str, MonomialQuiverAlgebra]):
+        self.examples[example[0]] = example[1]
+
+    def run(self):
+        for name, quiver in self.examples.items():
+            print(f"\n=== Example: {name} ===")
+            print(f"\n Vertices = {quiver.vertices()}")
+            print(f" Arrows = {quiver.arrows}")
+            print(f" Relations = {quiver.relations}")
+            print(f"\n-- Paths in quiver --")
+            for vertex, paths in quiver.paths().items():
+                print(f"\n- Starting at vertex {vertex} -")
+                for path in paths:
+                    print(f"• {path}")
+                      
 
 
 if __name__ == "__main__":
 
-    pa = PathAlgebra([Arrow(0,1),Arrow(1,2),Arrow(2,0)])
+    examples = Examples({})
 
-    qa = MonomialQuiverAlgebra(
-    [Arrow(0,1),Arrow(1,2),Arrow(2,0)],
-    [Path((Arrow(0,1),Arrow(1,2)))]
-    )
+    examples.add(("Type A no relations",
+                  MonomialQuiverAlgebra(arrows=[Arrow(0,1,"a"),Arrow(1,2,"b"),Arrow(2,3,"c")],
+                                        relations = [])))
+    
+    examples.add(("Type A rad2 relations",
+                  MonomialQuiverAlgebra(arrows=[Arrow(0,1,"a"),Arrow(1,2,"b"),Arrow(2,3,"c")],
+                                        relations = [Path((Arrow(0,1,"a"),Arrow(1,2,"b"))),
+                                                     Path((Arrow(1,2,"b"),Arrow(2,3,"c")))])))
 
-    qa = MonomialQuiverAlgebra([Arrow(0,1), Arrow(1,2), Arrow(2,3)])
-    for vertex in qa.vertices():
-        print(qa.paths(with_connections=True)[vertex])
+    examples.add(("Three cyclic",
+                 MonomialQuiverAlgebra(arrows=[Arrow(0,1,"a"),Arrow(1,2,"b"),Arrow(2,0,"c")],
+                                       relations=[Path((Arrow(0,1,"a"),Arrow(1,2,"b")))])))
+
+    examples.run()

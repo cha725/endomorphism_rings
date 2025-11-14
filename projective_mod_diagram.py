@@ -24,15 +24,18 @@ class ProjectiveModuleDiagram(ModuleDiagram):
         self._construct_mod_diagram()
         super().__init__(arrows=self.arrows, 
                          vertex_simples=self.vertex_simples, 
-                         isolated_vertices=self.isolated_vertices)
+                         isolated_vertices=self.isolated_vertices,
+                         vertex_labels=self.vertex_labels)
 
     def _construct_mod_diagram(self):
         self.vertex_simples = {}
         self.arrows = []
         self.isolated_vertices = None
         path_to_vertex_id = {}
+        self.vertex_labels = {}
         for idx, connection in enumerate(self.algebra.paths(with_connections=True)[self.top_vertex]):
             path, arrow, concatenation = connection
+            print(f"vertex {vertex}, connection {connection}")
             path_to_vertex_id[concatenation] = idx
             self.vertex_simples[idx] = concatenation.target()
             if arrow is not None:
@@ -47,15 +50,25 @@ class ProjectiveModuleDiagram(ModuleDiagram):
 
 if __name__ == "__main__":
 
-    qa = MonomialQuiverAlgebra([Arrow(0,1), Arrow(1,2), Arrow(2,3)])
-    for vertex in qa.vertices():
-        print(ProjectiveModuleDiagram(qa, vertex))
+    "Three cyclic quiver"
+    qa = MonomialQuiverAlgebra(arrows=[Arrow(0,1),Arrow(1,2),Arrow(2,0)],
+                               relations=[Path((Arrow(0,1),Arrow(1,2)))])
 
-    qa2 = MonomialQuiverAlgebra(
-    [Arrow(0,1),Arrow(1,2),Arrow(2,0)],
-    [Path((Arrow(0,1),Arrow(1,2)))]
-    )
+    for vertex in qa.vertices():
+        projective = ProjectiveModuleDiagram(qa, vertex)
+        # projective.draw_radical_layers
+        # print(f"Vertex {vertex} : Projective {projective}")
+
+    "Type A with rad2 relations"
+    qa2 = MonomialQuiverAlgebra(arrows=[Arrow(0,1),Arrow(1,2),Arrow(2,3)],
+                               relations=[Path((Arrow(0,1),Arrow(1,2))),
+                                          Path((Arrow(1,2),Arrow(2,3)))])
+    print(qa2.paths())
     for vertex in qa2.vertices():
-        print(ProjectiveModuleDiagram(qa2, vertex))
+        projective = ProjectiveModuleDiagram(qa2, vertex)
+        projective.draw_radical_layers
+        print(projective.arrows)
+
+        # print(f"Vertex {vertex} : Projective {ProjectiveModuleDiagram(qa2, vertex)}")
 
 

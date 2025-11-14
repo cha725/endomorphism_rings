@@ -34,6 +34,7 @@ class ModuleDiagram:
         for vertex in self.basic_graph.nodes:
             self.basic_graph.nodes[vertex]["simples"] = vertex_simples.get(vertex) if vertex_simples else None
         self.vertex_labels = self.basic_graph.nodes.keys()
+        self.vertex_simples = vertex_simples
         self.num_vertices = len(self.vertex_labels)
         self.num_arrows = len(arrows)
         self._add_radical_labels()
@@ -99,8 +100,42 @@ class ModuleDiagram:
                 x_coord = [i / (n - 1) for i in range(n)]
             for x, node in zip(x_coord, nodes):
                 pos[node] = (x, -layer)
-        nx.draw(self.basic_graph, pos, node_size=1000, node_color='lightblue', font_size=10,
-                font_weight='bold')
+
+        # nx.draw(self.basic_graph, pos,
+        #     node_size=1000, node_color='lightblue',
+        #     font_weight='bold')
+        # nx.draw_networkx_labels(self.basic_graph, pos, labels=labels,
+        #                     font_size=10, font_weight='bold')  
+
+        nx.draw(
+            self.basic_graph, pos,
+            node_size=1000, node_color='lightblue',
+            font_weight='bold'
+        )
+
+        # Draw vertex labels
+        nx.draw_networkx_labels(
+            self.basic_graph, pos,
+            labels=self.vertex_simples, font_size=10, font_weight='bold'
+        )
+
+        # --------------------------------
+        # BUILD ARROW LABELS (edge labels)
+        # --------------------------------
+        # For MultiDiGraph, need keys:
+        edge_labels = {
+            (u, v, k): d.get("label")
+            for u, v, k, d in self.basic_graph.edges(keys=True, data=True)
+            if d.get("label") is not None
+        }
+
+        nx.draw_networkx_edge_labels(
+            self.basic_graph, pos,
+            edge_labels=edge_labels,
+            font_size=9,
+            label_pos=0.5,
+            rotate=False
+        )      
         plt.show()
 
     def __eq__(self, other : ModuleDiagram):
@@ -116,95 +151,7 @@ class ModuleDiagram:
     
     def generate_all_quotients(self):
         return self.bitmaskgraph.anc_closed
-    
-    # def generate_all_quotients_from_submod(self):
-    #     """
-    #     speeds up by an average of 35.49=time1/time2
-    #     compared to generate all quotients
-    #     """
-    #     return self.bitmaskgraph.anc_closed_from_des
         
-
-
-    
-    # def create_submodule_bitmask(self, gen_nodes : list[int]):
-    #     """
-    #     With the bitmasks should just take all descendant bitmasks and OR them.
-    #     Any element that is a descendant of some generator is in the submodule.
-    #     """
-    #     node_bitmask = self.node_bitmask
-    #     des_bitmask = self.descendants_bitmask
-    #     sub_bitmask = 0
-    #     for node in gen_nodes:
-    #         sub_bitmask |= node_bitmask[node]
-    #         sub_bitmask |= des_bitmask[node]
-    #     return [node for node in self.nodes if (node_bitmask[node] & sub_bitmask) == node_bitmask[node]]
-    
-    # def is_submodule(self, elements : list[int]):
-    #     node_bitmask = self.node_bitmask
-    #     des_bitmask = self.descendants_bitmask
-    #     submod_bitmask = sum([node_bitmask[element] for element in elements])
-    #     return all((submod_bitmask & des_bitmask[node]) == des_bitmask[node] for node in elements)
-
-    # @cached_property
-    # def generate_all_submodules_bitmask(self):
-    #     """
-    #     This generates all submodules not just indecomposable ones.
-    #     """
-    #     node_bitmask = self.node_bitmask
-    #     total_node_bitmask = sum(node_bitmask.values())
-    #     des_bitmask = self.descendants_bitmask
-    #     submods = []
-    #     for n in range(total_node_bitmask+1):
-            
-
-
-    #         submod_elts = [node for node, bitmask in node_bitmask.items() if (n & bitmask) == bitmask]
-    #         if all((n & des_bitmask[node]) == des_bitmask[node] for node in submod_elts):
-    #             submods.append(n)
-    #     return submods
-        
-    # def bitmask_to_nodes(self, bitmask_list: list[int]):
-    #     """
-    #     Converts a list of submodule bitmasks to lists of nodes.
-    #     """
-    #     result = []
-    #     for bitmask in bitmask_list:
-    #         nodes = [node for node, value in self.node_bitmask.items() if (bitmask & value) == value]
-    #         result.append(nodes)
-    #     return result
-
-    # def generate_all_submodules(self):
-    #     return self.bitmask_to_nodes(self.generate_all_submodules_bitmask)
-
-    # def create_quotientmodule_bitmask(self, gen_nodes : list[int]):
-    #     """
-    #     For every subgraph closed under predecessors, the complementary subgraph
-    #     is closed under successors.
-    #     So finding all quotient modules comes down to taking the complementary
-    #     set for each subgraph.
-    #     Since generate all subgraphs is a cached property doing this will not recompute
-    #     the subgraphs.
-    #     """
-    #     node_bitmask = self.node_bitmask
-    #     anc_bitmask = self.ancestors_bitmask
-    #     sub_bitmask = 0
-    #     for node in gen_nodes:
-    #         sub_bitmask |= node_bitmask[node]
-    #         sub_bitmask |= anc_bitmask[node]
-    #     return [node for node in self.nodes if (node_bitmask[node] & sub_bitmask) == node_bitmask[node]]
-    
-    # @cached_property
-    # def generate_all_quotient_modules_bitmask(self):
-    #     quotmods = []
-    #     n = self.num_vertices
-    #     for submod in self.generate_all_submodules_bitmask:
-    #         quotmods.append(submod ^ (2**n-1))
-    #     return quotmods
-    
-    # def generate_all_quotient_modules(self):
-    #     return self.bitmask_to_nodes(self.generate_all_quotient_modules_bitmask)
-    
     def hom_group(self, other: ModuleDiagram):
         hom = []
         for quotient in self.generate_all_quotients():

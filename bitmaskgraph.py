@@ -11,7 +11,7 @@ class Arrow:
         return (self.source == other.source) and (self.target == other.target) and (self.label == other.label)
 
     def __repr__(self):
-        return f"Arrow({self.source}->{self.target})"
+        return f"{self.label}: {self.source}->{self.target}"
     
     def __hash__(self):
         return hash((self.source, self.target, self.label))
