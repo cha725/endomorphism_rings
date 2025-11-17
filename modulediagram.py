@@ -4,7 +4,7 @@ from typing import Optional
 from collections import defaultdict
 from functools import cached_property
 from quiver_algebra import Arrow
-from bitmaskgraph import BitmaskGraph
+from OLD.bitmaskgraph_with_arrows import BitmaskGraph
 
 
 class ModuleDiagram:
@@ -128,18 +128,25 @@ class ModuleDiagram:
             return edge1_att.get("label") == edge2_att.get("label")
         return nx.is_isomorphic(self.basic_graph,other.basic_graph,node_match=node_match,edge_match=edge_match)
     
-
+    @cached_property
     def generate_all_submodules(self):
         return self.bitmaskgraph.des_closed
     
+    @cached_property
     def generate_all_quotients(self):
         return self.bitmaskgraph.anc_closed
+    
+    def is_submodule(self, other : ModuleDiagram):
+        return other in self.generate_all_submodules
+    
+    def is_quotient(self, other : ModuleDiagram):
+        return other in self.generate_all_quotients
         
-    def hom_group(self, other: ModuleDiagram):
+    def hom_group(self, other : ModuleDiagram):
         hom = []
-        for quotient in self.generate_all_quotients():
+        for quotient in self.generate_all_quotients:
             quotdiagram = QuotientModuleDiagram(self,quotient)
-            for submod in other.generate_all_submodules():
+            for submod in other.generate_all_submodules:
                 submoddiagram = SubModuleDiagram(other,submod)
                 if quotdiagram == submoddiagram:
                     hom.append((quotdiagram, submoddiagram))
@@ -151,9 +158,6 @@ class ModuleDiagram:
         if not self.arrows:
             return f"Module diagram with vert={self.vertex_labels} and no arrows."
         return f"Module diagram with vert={self.vertex_labels} and arrows = {self.arrows}"
-    
-
-    
 
 class QuotientModuleDiagram(ModuleDiagram):
     def __init__(self,
@@ -216,8 +220,8 @@ class Examples:
 
             print("\nNodes:", diagram.nodes)
             print("\nRadical layers:", diagram.node_to_radical_layers)
-            print("\nAll submodules:", diagram.generate_all_submodules())
-            print("\nAll quotient modules:", diagram.generate_all_quotients())
+            print("\nAll submodules:", diagram.generate_all_submodules)
+            print("\nAll quotient modules:", diagram.generate_all_quotients)
             print("\nEndomorphisms:")
             for idx, hom in enumerate(diagram.hom_group(diagram)):
                 print(f"{idx}: {hom}")
