@@ -1,6 +1,6 @@
 import networkx as nx
 from typing import Optional
-from OLD.bitmaskgraph_with_arrows import Arrow
+from bitmask_subgraph import Arrow
 
     
 class Path:

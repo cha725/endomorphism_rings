@@ -4,7 +4,7 @@ from typing import Optional
 from collections import defaultdict
 from functools import cached_property
 from quiver_algebra import Arrow
-from OLD.bitmaskgraph_with_arrows import BitmaskGraph
+from bitmask_subgraph import BitmaskSubgraph
 
 
 class ModuleDiagram:
@@ -130,11 +130,11 @@ class ModuleDiagram:
     
     @cached_property
     def generate_all_submodules(self):
-        return self.bitmaskgraph.des_closed
+        return self.bitmaskgraph.compute_succ_closed_subsets
     
     @cached_property
     def generate_all_quotients(self):
-        return self.bitmaskgraph.anc_closed
+        return self.bitmaskgraph.compute_pred_closed_subsets
     
     def is_submodule(self, other : ModuleDiagram):
         return other in self.generate_all_submodules
@@ -222,9 +222,9 @@ class Examples:
             print("\nRadical layers:", diagram.node_to_radical_layers)
             print("\nAll submodules:", diagram.generate_all_submodules)
             print("\nAll quotient modules:", diagram.generate_all_quotients)
-            print("\nEndomorphisms:")
-            for idx, hom in enumerate(diagram.hom_group(diagram)):
-                print(f"{idx}: {hom}")
+            # print("\nEndomorphisms:")
+            # for idx, hom in enumerate(diagram.hom_group(diagram)):
+            #     print(f"{idx}: {hom}")
 
 # TODO: make the print out prettier.
 
