@@ -120,6 +120,17 @@ class BitmaskSubgraph:
         return [adj_mask["p"] for adj_mask in self.adj_mask]
 
     @cached_property
+    def sources(self) -> list[bool]:
+        """
+        Create list of vertices that are sources.
+            i.e. No predecessors.
+
+        Returns:
+            list: index i = True if vertex i is a source.
+        """
+        return [True if pred == 0 else False for pred in self.pred_mask]
+
+    @cached_property
     def succ_mask(self) -> list[int]:
         """
         Create list of successor masks for each vertex.
@@ -129,6 +140,99 @@ class BitmaskSubgraph:
         """
         return [adj_mask["s"] for adj_mask in self.adj_mask]
     
+    @cached_property
+    def sinks(self) -> list[bool]:
+        """
+        Create list of vertices that are sinks.
+            i.e. No successors.
+
+        Returns:
+            list: index i = True if vertex i is a sink.
+        """
+        return [True if succ == 0 else False for succ in self.succ_mask]
+    
+    @cached_property
+    def radical_layer_mask(self) -> list[int]:
+        """
+        Create list of radical layers as bitmasks.
+            i.e. minimum number of steps from a source.
+
+        Returns:
+            list: index i = vertex bitmask of radical layer i.
+        """
+        radical_layers = []
+        succ_mask = self.succ_mask
+        next_layer = 0
+
+        for idx, is_source in enumerate(self.sources):
+            if is_source:
+                next_layer |= 1 << idx
+
+        while next_layer:
+            radical_layers.append(next_layer)
+            
+            remaining = next_layer
+            new_layer = 0
+            while remaining:
+                v = remaining & -remaining
+                v_idx = v.bit_length() - 1
+                new_layer |= succ_mask[v_idx]
+                remaining &= ~v
+            next_layer = new_layer
+        return radical_layers
+    
+    @cached_property
+    def radical_layer_vertices(self):
+        """
+        Create list of radical layers as lists of vertices.
+            i.e. minimum number of steps from a source.
+
+        Returns:
+            list: index i = all vertices in radical layer i.
+        """
+        return [self.mask_to_vertices[layer] for layer in self.radical_layer_mask]
+
+    @cached_property
+    def socle_layers_mask(self) -> list[int]:
+        """
+        Create list of socle layers as bitmasks.
+            i.e. minimum number of steps from a sink.
+
+        Returns:
+            list: index i = vertex bitmask of socle layer i.
+        """
+        socle_layers = []
+        pred_mask = self.pred_mask
+        next_layer = 0
+
+        for idx, is_sink in enumerate(self.sinks):
+            if is_sink:
+                next_layer |= 1 << idx
+
+        while next_layer:
+            socle_layers.append(next_layer)
+
+            remaining = next_layer
+            new_layer = 0
+            while remaining:
+                v = remaining & -remaining
+                v_idx = v.bit_length() - 1
+                new_layer |= pred_mask[v_idx]
+                remaining &= ~v
+            next_layer = new_layer
+
+        return socle_layers
+    
+    @cached_property
+    def socle_layer_vertices(self):
+        """
+        Create list of socle layers.
+
+        Returns:
+            list: index i = all vertices in socle layer i.
+        """
+        return [self.mask_to_vertices[layer] for layer in self.socle_layers_mask]
+
     @cached_property
     def undirected_adj_mask(self) -> list[int]:
         """
@@ -201,9 +305,7 @@ class BitmaskSubgraph:
         succ_closed = [False for _ in range(full_mask + 1)]
 
         for mask in range(1, full_mask + 1):
-            if not self.is_connected(mask):
-                continue
-
+            connected = False
             p_closed = True
             s_closed = True
 
@@ -220,18 +322,113 @@ class BitmaskSubgraph:
                 if not(p_closed or s_closed):
                     break
 
-            pred_closed[mask] = p_closed
-            succ_closed[mask] = s_closed
+            if p_closed or s_closed:
+                if self.is_connected(mask):
+                    connected = True
+
+            pred_closed[mask] = p_closed and connected
+            succ_closed[mask] = s_closed and connected
 
         return (pred_closed, succ_closed)
     
     @cached_property
-    def pred_closed_subsets(self):
+    def connected_closed_subsets(self):
+        """
+        Compute connected predecessor-closed and successor-closed subsets efficiently.
+
+        TODO: Why is this slower than the original function?
+        """
+        n = len(self.vertex_mask)
+        full_mask = self.full_vertex_mask
+        pred = self.pred_mask
+        succ = self.succ_mask
+        undir = self.undirected_adj_mask
+
+        pred_missing = [0] * (full_mask + 1)
+        succ_missing = [0] * (full_mask + 1)
+        pred_closed = [False] * (full_mask + 1)
+        succ_closed = [False] * (full_mask + 1)
+        connected_comp = [0] * (full_mask + 1)
+
+        pred_results = [False] * (full_mask + 1)
+        succ_results = [False] * (full_mask + 1)
+
+        # mask 0 is trivially closed and connected
+        pred_closed[0] = succ_closed[0] = True
+        connected_comp[0] = 0
+        pred_results[0] = succ_results[0] = True
+
+        # Process masks in increasing number of vertices in mask
+        masks_by_size = [[] for _ in range(n + 1)]
+        for mask in range(1, full_mask + 1):
+            size = bin(mask).count("1")
+            masks_by_size[size].append(mask)
+
+        for size in range(1, n + 1):
+            for mask in masks_by_size[size]:
+                v = mask & -mask
+                prev_mask = mask & (mask - 1)
+                v_idx = v.bit_length() - 1
+
+                # Check predecessor / successor closure
+                p_missing = (pred[v_idx] & ~mask) | (pred_missing[prev_mask] & ~v)
+                s_missing = (succ[v_idx] & ~mask) | (succ_missing[prev_mask] & ~v)
+                pred_missing[mask] = p_missing
+                succ_missing[mask] = s_missing
+
+                if p_missing == 0 and (pred_closed[prev_mask] or pred_missing[prev_mask] == v):
+                    pred_closed[mask] = True
+                if s_missing == 0 and (succ_closed[prev_mask] or succ_missing[prev_mask] == v):
+                    succ_closed[mask] = True
+                if not pred_closed[mask] and not succ_closed[mask]:
+                    continue  # move on if neither pred or succ closed
+
+                # Connectivity
+                prev_comp = connected_comp[prev_mask]
+                if prev_mask == 0:
+                    new_comp = mask
+                else:
+                    # Only check connectivity if mask is potentially closed
+                    if prev_comp & undir[v_idx]:
+                        # BFS to expand component
+                        visited = prev_comp | v
+                        remaining = visited
+                        while remaining:
+                            bit = remaining & -remaining
+                            remaining ^= bit
+                            idx = bit.bit_length() - 1
+                            neighbors = (mask & undir[idx]) & ~visited
+                            visited |= neighbors
+                            remaining |= neighbors
+                        new_comp = visited
+                    else:
+                        new_comp = prev_comp  # disconnected
+
+                connected_comp[mask] = new_comp
+                is_conn = new_comp == mask
+
+                pred_results[mask] = pred_closed[mask] and is_conn
+                succ_results[mask] = succ_closed[mask] and is_conn
+
+        return pred_results, succ_results
+    
+
+    @cached_property
+    def pred_closed_index_subsets(self):
         return [idx for idx, is_closed in enumerate(self.closed_subsets[0]) if is_closed]
     
     @cached_property
-    def succ_closed_subsets(self):
+    def succ_closed_index_subsets(self):
         return [idx for idx, is_closed in enumerate(self.closed_subsets[1]) if is_closed]
+    
+    @cached_property
+    def pred_closed_vertex_subsets(self):
+        return [self.mask_to_vertices[mask] for mask in self.pred_closed_index_subsets]
+    
+    @cached_property
+    def succ_closed_vertex_subsets(self):
+        return [self.mask_to_vertices[mask] for mask in self.succ_closed_index_subsets]
+    
 
 class Examples:
     """
@@ -255,7 +452,7 @@ class Examples:
                     arrows.append(Arrow(i, j))
         self.add(name, arrows)
 
-    def run(self):
+    def run(self, verbose : bool = False):
         times = []
         for name, arrows in self.examples.items():
             print(f"\n=== BitmaskGraph Example: {name} ===")
@@ -267,27 +464,42 @@ class Examples:
             print(f"\nTime to initialise graph: {init_time:.4f} seconds")
 
             start_time = time.time()
-            pred_closed = graph.pred_closed_subsets
-            succ_closed = graph.succ_closed_subsets
+            rad_layers = graph.radical_layer_vertices
+            soc_layers = graph.socle_layer_vertices
+            layer_time = time.time() - start_time
+
+            print(f"Time to compute radical or socle layers {layer_time:.4f} seconds")
+
+            start_time = time.time()
+            pred_closed = graph.pred_closed_index_subsets
+            succ_closed = graph.succ_closed_index_subsets
             compute_time = time.time() - start_time
 
             print(f"Time to compute closed subsets: {compute_time:.4f} seconds")
             
-            print("\nVertices (with masks):")
-            for vert, mask in graph.vertex_mask.items():
-                print(f" Vertex: {vert} -> Mask: {mask} = {bin(mask)} (binary)")
+            if verbose:
 
-            mask_to_vertices = graph.mask_to_vertices
+                print("\nVertices (with masks):")
+                for vert, mask in graph.vertex_mask.items():
+                    print(f" Vertex: {vert} -> Mask: {mask} = {bin(mask)} (binary)")
+                
+                print("\nRadical layers")
+                for idx, layer in enumerate(rad_layers):
+                    print(f" Radical layer: {idx} = Vertices: {layer}")
 
-            print("\nSubmodules:")
-            for s in succ_closed:
-                print(f" Mask: {s} = {bin(s)} -> Vertices: {mask_to_vertices[s]}")
+                print("\nSocle layers")
+                for idx, layer in enumerate(soc_layers):
+                    print(f" Socle layer: {idx} = Vertices: {layer}")
 
-            print("\nQuotients:")
-            for q in pred_closed:
-                print(f" Mask: {q} = {bin(q)} -> Vertices: {mask_to_vertices[q]}")
+                print("\nSubmodules:")
+                for s in succ_closed:
+                    print(f" Mask: {s} = {bin(s)} -> Vertices: ")
 
-            times.append((init_time, compute_time))
+                print("\nQuotients:")
+                for q in pred_closed:
+                    print(f" Mask: {q} = {bin(q)} -> Vertices: ")
+
+            times.append((init_time, layer_time, compute_time))
 
         return times
 
@@ -302,12 +514,12 @@ if __name__ == "__main__":
     # examples.add("Diamond", [Arrow(0,1), Arrow(0,2), Arrow(1,3), Arrow(2,3)])
 
     for i in range(10):
-        examples.add_random_graph(f"Random graph {i}", 20, 0.25)
+        examples.add_random_graph(f"Random graph {i}", 10, 0.4)
 
     times = examples.run()
     for idx, t in enumerate(times):
         print(f"\n=== Example {idx} ===")
-        print(f"\n Initialisation time {t[0]:.4f} seconds; \n Computation time {t[1]:.4f} seconds.")
-
-
+        print(f"\n Initialisation time {t[0]:.4f} seconds;")
+        #print(f"\n Layer time {t[1]:.4f} seconds.")
+        print(f"\n Computation time {t[2]:.4f} seconds.")
 
