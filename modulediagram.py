@@ -5,6 +5,7 @@ from collections import defaultdict
 from functools import cached_property
 from quiver_algebra import Arrow
 from bitmask_subgraph import BitmaskSubgraph
+import time, random
 
 
 class ModuleDiagram:
@@ -13,8 +14,15 @@ class ModuleDiagram:
                  isolated_vertices : Optional[list[int]] = None,
                  vertex_simples : Optional[dict[int,int]] = None,
                  vertex_labels: Optional[dict[int,str]] = None):
+        
         self.arrows = arrows
-        self.bitmaskgraph = BitmaskGraph(self.arrows)
+        self.bitmask = BitmaskSubgraph(self.arrows)
+        self.radical_layers = [rl + isolated_vertices if idx == 0 
+                               else rl 
+                               for idx, rl in enumerate(self.bitmask.radical_layer_vertices)]
+        self.socle_layers = [sl + isolated_vertices if idx == 0 
+                             else sl 
+                             for idx, sl in enumerate(self.bitmask.socle_layer_vertices)]
         self.vertex_labels = vertex_labels
 
         G = nx.MultiDiGraph()
@@ -130,11 +138,11 @@ class ModuleDiagram:
     
     @cached_property
     def generate_all_submodules(self):
-        return self.bitmaskgraph.compute_succ_closed_subsets
+        return self.bitmask.succ_closed_vertex_subsets
     
     @cached_property
     def generate_all_quotients(self):
-        return self.bitmaskgraph.compute_pred_closed_subsets
+        return self.bitmask.pred_closed_vertex_subsets
     
     def is_submodule(self, other : ModuleDiagram):
         return other in self.generate_all_submodules
@@ -142,15 +150,15 @@ class ModuleDiagram:
     def is_quotient(self, other : ModuleDiagram):
         return other in self.generate_all_quotients
         
-    def hom_group(self, other : ModuleDiagram):
-        hom = []
-        for quotient in self.generate_all_quotients:
-            quotdiagram = QuotientModuleDiagram(self,quotient)
-            for submod in other.generate_all_submodules:
-                submoddiagram = SubModuleDiagram(other,submod)
-                if quotdiagram == submoddiagram:
-                    hom.append((quotdiagram, submoddiagram))
-        return hom
+    # def hom_group(self, other : ModuleDiagram):
+    #     hom = []
+    #     for quotient in self.generate_all_quotients:
+    #         quotdiagram = QuotientModuleDiagram(self,quotient)
+    #         for submod in other.generate_all_submodules:
+    #             submoddiagram = SubModuleDiagram(other,submod)
+    #             if quotdiagram == submoddiagram:
+    #                 hom.append((quotdiagram, submoddiagram))
+    #     return hom
     
     def __repr__(self):
         if not self.nodes:
@@ -208,23 +216,50 @@ class Examples:
             "vertex_simples": vertex_simples or {}
         }
 
-    def run(self, draw: bool = False):
+    def add_random_diagram(self, name: str, num_vertices : int, edge_prob: float):
+        """
+        Add a random directed tree with num_vertices vertices and edge probability edge_prob.
+        """
+        arrows = []
+        for i in range(num_vertices):
+            for j in range(i+1,num_vertices):
+                if random.random() < edge_prob:
+                    arrows.append(Arrow(i, j))
+        self.add(name, arrows)
+
+    def run(self, verbose : bool = False, draw: bool = False):
+        times = []
         for name, data in self.examples.items():
             print(f"\n=== Example: {name} ===")
+
+            start_time = time.time()
             diagram = ModuleDiagram(arrows=data["arrows"],
                                     isolated_vertices=data["isolated_vertices"],
                                     vertex_simples=data["vertex_simples"])
+            init_time = time.time() - start_time
+
+            start_time = time.time()
+            submods = diagram.generate_all_submodules
+            quotients = diagram.generate_all_quotients
+            subgraph_time = time.time() - start_time
 
             if draw:
                 diagram.draw_radical_layers
 
-            print("\nNodes:", diagram.nodes)
-            print("\nRadical layers:", diagram.node_to_radical_layers)
-            print("\nAll submodules:", diagram.generate_all_submodules)
-            print("\nAll quotient modules:", diagram.generate_all_quotients)
-            # print("\nEndomorphisms:")
-            # for idx, hom in enumerate(diagram.hom_group(diagram)):
-            #     print(f"{idx}: {hom}")
+            if verbose:
+                print("\nNodes:", diagram.nodes)
+                print("\nArrows:", diagram.arrows)
+                print("\nRadical layers:", diagram.radical_layers_to_nodes)
+                print("\nAll submodules:", submods)
+                print("\nAll quotient modules:", quotients)
+
+                # print("\nEndomorphisms:")
+                # for idx, hom in enumerate(diagram.hom_group(diagram)):
+                #     print(f"{idx}: {hom}")
+        
+            times.append((init_time, subgraph_time))
+
+        return times
 
 # TODO: make the print out prettier.
 
@@ -232,19 +267,32 @@ if __name__ == "__main__":
 
     examples = Examples({})
 
-    examples.add("Example 1: A4",
-                        arrows=[Arrow(0,1,"a"), Arrow(1,2,"b"), Arrow(2,3,"c")],
-                        vertex_simples={0:0, 1:1, 2:0, 3:1})
+    for n in range(1):
+        examples.add_random_diagram(f"Example {n}", 25, 0.4)
 
-    examples.add("Example 2: Diamond",
-                        arrows=[Arrow(0,1,"a"), Arrow(0,2,"b"), Arrow(1,3,"c"), Arrow(2,3,"d")])
+    times = examples.run(draw=True, verbose=True)
 
-    examples.add("Example 3: Y structure",
-                        arrows=[Arrow(0,2,"a"), Arrow(1,2,"b"), Arrow(2,3,"c"), Arrow(3,4,"d")])
+    for idx, t in enumerate(times):
+        print(f"\n=== Example {idx} ===")
+        print(f"Initialisation time: {t[0]:.4f}")
+        print(f"Subgraph time: {t[1]:.4f}")
 
-    examples.add("Example 4: weird radical",
-                        arrows=[Arrow(0,1,"a"), Arrow(1,2,"b"), Arrow(2,3,"c"), Arrow(3,4,"d"),
-                                Arrow(0,5,"e"), Arrow(5,4,"f")])
+
+
+
+    # examples.add("Example 1: A4",
+    #                     arrows=[Arrow(0,1,"a"), Arrow(1,2,"b"), Arrow(2,3,"c")],
+    #                     vertex_simples={0:0, 1:1, 2:0, 3:1})
+
+    # examples.add("Example 2: Diamond",
+    #                     arrows=[Arrow(0,1,"a"), Arrow(0,2,"b"), Arrow(1,3,"c"), Arrow(2,3,"d")])
+
+    # examples.add("Example 3: Y structure",
+    #                     arrows=[Arrow(0,2,"a"), Arrow(1,2,"b"), Arrow(2,3,"c"), Arrow(3,4,"d")])
+
+    # examples.add("Example 4: weird radical",
+    #                     arrows=[Arrow(0,1,"a"), Arrow(1,2,"b"), Arrow(2,3,"c"), Arrow(3,4,"d"),
+    #                             Arrow(0,5,"e"), Arrow(5,4,"f")])
 
     # examples.add("Example 5: product of modules",
     #                     arrows=[Arrow(0,1,"a1"), Arrow(1,2,"b1"), Arrow(2,3,"c1"),
@@ -258,5 +306,4 @@ if __name__ == "__main__":
     #                     arrows=[],  
     #                     isolated_vertices=[])
     
-    examples.run()
 
