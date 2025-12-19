@@ -108,7 +108,7 @@ class PathAlgebra:
     def graph(self):
         return nx.MultiDiGraph([(a.source, a.target) for a in self.arrows])
     
-    # TODO: dont like this - isn't rally mathematically accurate
+    # TODO: dont like this - isn't mathematically accurate
     # def stationary_paths(self):
     #     return [Arrow(v,v,"stationary") for v in self.vertices]
     
