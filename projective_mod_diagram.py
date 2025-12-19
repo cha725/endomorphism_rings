@@ -87,9 +87,9 @@ class Examples:
             for vertex in quiver.vertices:
                 projective = ProjectiveModuleDiagram(quiver, vertex)
                 print(f"\n- Projective {projective} -")
-                projective.draw_radical_layers
-
-
+                #projective.draw_radical_layers
+            for submod in projective.generate_all_submodules:
+                print(f"submod {submod}")
 
 if __name__ == "__main__":
 
