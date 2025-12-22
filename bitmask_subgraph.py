@@ -493,11 +493,11 @@ class Examples:
 
                 print("\nSubmodules:")
                 for s in succ_closed:
-                    print(f" Mask: {s} = {bin(s)} -> Vertices: ")
+                    print(f" Mask: {s} = {bin(s)} -> Vertices: {graph.mask_to_indices[s]}")
 
                 print("\nQuotients:")
                 for q in pred_closed:
-                    print(f" Mask: {q} = {bin(q)} -> Vertices: ")
+                    print(f" Mask: {q} = {bin(q)} -> Vertices: {graph.mask_to_indices[s]}")
 
             times.append((init_time, layer_time, compute_time))
 
@@ -509,17 +509,8 @@ if __name__ == "__main__":
 
     examples = Examples({})
 
-    # examples.add("Type A", [Arrow(0,1), Arrow(1,2), Arrow(2,3)])
-
-    # examples.add("Diamond", [Arrow(0,1), Arrow(0,2), Arrow(1,3), Arrow(2,3)])
-
     for i in range(10):
         examples.add_random_graph(f"Random graph {i}", 10, 0.4)
 
-    times = examples.run()
-    for idx, t in enumerate(times):
-        print(f"\n=== Example {idx} ===")
-        print(f"\n Initialisation time {t[0]:.4f} seconds;")
-        #print(f"\n Layer time {t[1]:.4f} seconds.")
-        print(f"\n Computation time {t[2]:.4f} seconds.")
+    times = examples.run(verbose=True)
 
