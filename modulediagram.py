@@ -10,89 +10,84 @@ import time, random
 
 class ModuleDiagram:
     def __init__(self, 
-                 arrows: list[Arrow] = [],
-                 isolated_vertices : Optional[list[int]] = None,
-                 vertex_simples : Optional[dict[int,int]] = None,
-                 vertex_labels: Optional[dict[int,str]] = None):
+                 composition_factors: tuple[int,...],
+                 vertex_labels: Optional[tuple[str,...]] = None,
+                 arrows: Optional[tuple[Arrow,...]] = None):
         
-        self.arrows = arrows
-        self.bitmask = BitmaskSubgraph(self.arrows)
-        self.radical_layers = [rl + isolated_vertices if idx == 0 
-                               else rl 
-                               for idx, rl in enumerate(self.bitmask.radical_layer_vertices)]
-        self.socle_layers = [sl + isolated_vertices if idx == 0 
-                             else sl 
-                             for idx, sl in enumerate(self.bitmask.socle_layer_vertices)]
-        self.vertex_labels = vertex_labels
+        self.composition_factors = composition_factors
+        self.num_vertices = len(self.composition_factors)
+        self.vertices = list(range(self.num_vertices))
+        self.vertex_labels = vertex_labels or tuple(['']*self.num_vertices)
+        self.arrows = arrows or tuple([])
+        self.num_arrows = len(self.arrows)
+        self.arrow_bitmask = BitmaskSubgraph(self.arrows)
+        self.sources = [i for i, flag in enumerate(self.arrow_bitmask.sources) if flag]        
+        self.sinks = self.arrow_bitmask.sinks
+        self.pred_list = self.arrow_bitmask.pred_list
+        self.succ_list = self.arrow_bitmask.succ_list
+        self.graph = self._create_radical_layer_graph()
 
-        G = nx.MultiDiGraph()
-        if self.vertex_labels is not None:
-            # Add vertices with labels
-            for vertex, label in self.vertex_labels.items():
-                G.add_node(vertex, label=label)
-
-        for arrow in self.arrows:
-            G.add_edge(arrow.source, arrow.target, label=arrow.label)
-
-        if isolated_vertices is not None:
-            for vertex in isolated_vertices:
-                G.add_node(vertex)
-        self.basic_graph = G
-        if not nx.is_directed_acyclic_graph(self.basic_graph):
-            raise ValueError("Invalid module diagram. Cannot contain a cycle.")
-        for vertex in self.basic_graph.nodes:
-            self.basic_graph.nodes[vertex]["simples"] = vertex_simples.get(vertex) if vertex_simples else None
-        self.vertex_simples = vertex_simples
-        self.num_vertices = len(self.basic_graph.nodes)
-        self.num_arrows = len(arrows)
-        self._add_radical_labels()
-        self.nodes = list(nx.topological_sort(self.basic_graph))
-
-    def _add_radical_labels(self):
+    @cached_property
+    def radical_labels(self):
         """
-        Add a 'radical_layer' label to each node in the graph.
-        Nodes in sources get layer 0, and each target node gets a layer
+        Create a 'radical_layer' label to each node in the graph.
+        vertices in sources get layer 0, and each target node gets a layer
         one higher than the maximum of its predecessors.
         """
-        # Process nodes in topological order
-        sorted_nodes = nx.topological_sort(self.basic_graph)
-        for node in sorted_nodes:
-            # Layer is max of (predecessor layer + 1) or 0 if no predecessors
-            pred_layer = []
-            for pred in self.basic_graph.predecessors(node):
-                pred_layer.append(self.basic_graph.nodes[pred].get("radical_layer",0))
-            node_layer = max(pred_layer, default=-1) + 1
-            self.basic_graph.nodes[node]["radical_layer"] = node_layer
+        r_labels = [-1] * self.num_vertices
+        vertices = list(range(self.num_vertices))
+        sources = self.sources.copy()
+        for s in sources:
+            r_labels[s] = 0
+        seen = set(sources)
+        left_to_check = [v for v in vertices if v not in seen]
+        while left_to_check:
+            updated = False
+            next_left_to_check = []
+            for v in left_to_check:
+                preds = self.pred_list[v]
+                if all(r_labels[p] != -1 for p in preds):
+                    r_labels[v] = max([r_labels[p] for p in preds], default=-1) + 1
+                    seen.add(v)
+                    updated = True
+                else:
+                    next_left_to_check.append(v)
+            if not updated:
+                raise ValueError("Graph has a cycle; cannot assign radical layers.")
+            left_to_check = next_left_to_check
+        return r_labels
     
-    @cached_property
-    def node_to_radical_layers(self):
+    def num_radical_layers(self) -> int:
         """
-        Returns:
-            dict[int, int]: A dictionary from the node to its radical layer.
+        Returns number of radical layers.
         """
-        return {node : self.basic_graph.nodes[node]["radical_layer"] for node in self.basic_graph.nodes}
+        return max(self.radical_labels) + 1
 
     @cached_property
-    def radical_layers_to_nodes(self):
+    def radical_layer_to_vertices(self) -> list[list[int]]:
         """
         Returns:
-            dict[int, list[int]]: A dictionary from the radical layer to a list of nodes at that layer.
+            list[list[int]]: A list entry i = all vertices in radical layer i.
         """
-        node_to_radical_layers = self.node_to_radical_layers
-        radical_layers_to_nodes = defaultdict(list)
-        for node, layer in node_to_radical_layers.items():
-            radical_layers_to_nodes[layer].append(node)
-        return dict(radical_layers_to_nodes)
-    
-    def ordered_nodes_wrt_radical(self):
-        radical_layers_to_nodes = self.radical_layers_to_nodes
-        ordered = []
-        for layer in range(len(radical_layers_to_nodes.items())):
-            ordered += radical_layers_to_nodes[layer]
-        return ordered
-    
-    def num_radical_layers(self):
-        return len(self.radical_layers_to_nodes.keys())
+        r_labels = self.radical_labels
+        r_layers = [[] for _ in range(self.num_radical_layers())]
+        for v, lay in enumerate(r_labels):
+            r_layers[lay].append(v)
+        return r_layers
+
+    def _create_radical_layer_graph(self):
+        """
+        Create graph with vertex labels: composition factor, vertex label, radical layer
+        """
+        G = nx.MultiDiGraph()
+        for idx, v in enumerate(self.composition_factors):
+            if self.vertex_labels:
+                v_label = self.vertex_labels[idx]
+            r_label = self.radical_labels[idx]
+            G.add_node(idx, comp_factor=v, label=v_label, rad_layer=r_label)
+        for arrow in self.arrows:
+            G.add_edge(arrow.source, arrow.target, label=arrow.label)
+        return G
 
     @cached_property
     def draw_radical_layers(self):
@@ -100,28 +95,33 @@ class ModuleDiagram:
         Draw the nxgraph lined up with radical layers.
         """
         pos = {}
-        for layer, nodes in self.radical_layers_to_nodes.items():
-            n = len(nodes)
+        for layer, vertices in enumerate(self.radical_layer_to_vertices):
+            n = len(vertices)
             if n == 1:
                 x_coord = [0.5]
             else:
                 x_coord = [i / (n - 1) for i in range(n)]
-            for x, node in zip(x_coord, nodes):
+            for x, node in zip(x_coord, vertices):
                 pos[node] = (x, -layer)
 
-        nx.draw(self.basic_graph, pos,
-            node_size=1000, node_color='lightblue',
-            font_weight='bold')
-        nx.draw_networkx_labels(self.basic_graph, pos, labels=self.vertex_simples,
-                            font_size=10, font_weight='bold')  
+        G = self._create_radical_layer_graph()
+        nx.draw(G,
+                pos=pos,
+                node_size=1000, 
+                node_color='lightblue',
+                font_weight='bold')
+        nx.draw_networkx_labels(G, 
+                                pos, 
+                                font_size=10, 
+                                font_weight='bold')  
         edge_labels = {
             (u, v, k): d.get("label")
-            for u, v, k, d in self.basic_graph.edges(keys=True, data=True)
+            for u, v, k, d in self.graph.edges(keys=True, data=True)
             if d.get("label") is not None
         }
 
         nx.draw_networkx_edge_labels(
-            self.basic_graph, pos,
+            self.graph, pos,
             edge_labels=edge_labels,
             font_size=9,
             label_pos=0.5,
@@ -134,68 +134,45 @@ class ModuleDiagram:
             return node1_att.get("simples") == node2_att.get("simples")
         def edge_match(edge1_att,edge2_att):
             return edge1_att.get("label") == edge2_att.get("label")
-        return nx.is_isomorphic(self.basic_graph,other.basic_graph,node_match=node_match,edge_match=edge_match)
+        return nx.is_isomorphic(self.graph,other.graph,node_match=node_match,edge_match=edge_match)
     
     @cached_property
     def generate_all_submodules(self):
-        return self.bitmask.succ_closed_vertex_subsets
+        return self.arrow_bitmask.succ_closed_vertex_subsets
     
     @cached_property
     def generate_all_quotients(self):
-        return self.bitmask.pred_closed_vertex_subsets
+        return self.arrow_bitmask.pred_closed_vertex_subsets
     
     def is_submodule(self, other : ModuleDiagram):
         return other in self.generate_all_submodules
     
     def is_quotient(self, other : ModuleDiagram):
         return other in self.generate_all_quotients
-        
-    # def hom_group(self, other : ModuleDiagram):
-    #     hom = []
-    #     for quotient in self.generate_all_quotients:
-    #         quotdiagram = QuotientModuleDiagram(self,quotient)
-    #         for submod in other.generate_all_submodules:
-    #             submoddiagram = SubModuleDiagram(other,submod)
-    #             if quotdiagram == submoddiagram:
-    #                 hom.append((quotdiagram, submoddiagram))
-    #     return hom
     
     def __repr__(self):
-        if not self.nodes:
+        if not self.vertices:
             return f"Module diagram with no vertices and no arrows."
         if not self.arrows:
             return f"Module diagram with vert={self.vertex_labels} and no arrows."
         return f"Module diagram with vert={self.vertex_labels} and arrows = {self.arrows}"
 
-class QuotientModuleDiagram(ModuleDiagram):
+class ModuleSubDiagram(ModuleDiagram):
     def __init__(self,
                  parent : ModuleDiagram,
                  vertices : list[int]):
-        if not set(vertices) <= set(parent.nodes):
-            raise ValueError(f"Invalid vertices. {vertices} must be a subset of {parent.nodes}")
+        if not set(vertices) <= set(parent.vertices):
+            raise ValueError(f"Invalid vertices. Must be a subset of {parent.vertices}")
         self.parent = parent
-        subgraph = parent.basic_graph.subgraph(vertices).copy()
-        arrows = [Arrow(u, v, d.get("label")) for u, v, d in subgraph.edges(data=True)]
-        vertex_labels : dict = {n: subgraph.nodes[n].get("label") for n in subgraph.nodes}
-        vertex_simples = {n: parent.basic_graph.nodes[n]["simples"] for n in subgraph.nodes}
-        super().__init__(arrows=arrows, vertex_labels=vertex_labels, vertex_simples=vertex_simples)
-
-
-class SubModuleDiagram(ModuleDiagram):
-    def __init__(self,
-                 parent : ModuleDiagram,
-                 vertices : list[int]):
-        if not set(vertices) <= set(parent.nodes):
-            raise ValueError(f"Invalid vertices. Must be a subset of {parent.nodes}")
-        self.parent = parent
-        subgraph = parent.basic_graph.subgraph(vertices).copy()
-        arrows = [Arrow(u, v, d.get("label")) for u, v, d in subgraph.edges(data=True)]
-        vertex_labels :dict = {n: subgraph.nodes[n].get("label") for n in subgraph.nodes}
-        vertex_simples = {n: parent.basic_graph.nodes[n]["simples"] for n in subgraph.nodes}
-        super().__init__(arrows=arrows, vertex_labels=vertex_labels, vertex_simples=vertex_simples)
-
-
-
+        comp_fac = parent.composition_factors
+        composition_factors = tuple([comp_fac[v] for v in vertices])
+        v_lab = parent.vertex_labels
+        vertex_labels = tuple([v_lab[v] for v in vertices])
+        arr = parent.arrows
+        arrows = tuple([a for a in arr if a.source in vertices and a.target in vertices])
+        super().__init__(composition_factors,
+                         vertex_labels,
+                         arrows)
 
 class Examples:
     """
@@ -207,25 +184,26 @@ class Examples:
 
     def add(self, 
             name: str, 
-            arrows: list, 
-            isolated_vertices: Optional[list] = None, 
-            vertex_simples: Optional[dict] = None):
-        self.examples[name] = {
-            "arrows": arrows,
-            "isolated_vertices": isolated_vertices or [],
-            "vertex_simples": vertex_simples or {}
-        }
+            composition_factors: tuple[int,...],
+            vertex_labels: Optional[tuple[str,...]] = None,
+            arrows: Optional[tuple[Arrow,...]] = None):
+        self.examples[name] = { "composition_factors" : composition_factors,
+                                "vertex_labels" : vertex_labels,
+                                "arrows" : arrows}
 
     def add_random_diagram(self, name: str, num_vertices : int, edge_prob: float):
         """
         Add a random directed tree with num_vertices vertices and edge probability edge_prob.
         """
+        composition_factors = tuple([0]*num_vertices)
+        vertex_labels = tuple(['']*num_vertices)
         arrows = []
         for i in range(num_vertices):
             for j in range(i+1,num_vertices):
                 if random.random() < edge_prob:
                     arrows.append(Arrow(i, j))
-        self.add(name, arrows)
+        arrows = tuple(arrows)
+        self.add(name, composition_factors, vertex_labels, arrows)
 
     def run(self, verbose : bool = False, draw: bool = False):
         times = []
@@ -233,9 +211,9 @@ class Examples:
             print(f"\n=== Example: {name} ===")
 
             start_time = time.time()
-            diagram = ModuleDiagram(arrows=data["arrows"],
-                                    isolated_vertices=data["isolated_vertices"],
-                                    vertex_simples=data["vertex_simples"])
+            diagram = ModuleDiagram(composition_factors=data["composition_factors"],
+                                    vertex_labels=data["vertex_labels"],
+                                    arrows=data["arrows"])
             init_time = time.time() - start_time
 
             start_time = time.time()
@@ -247,15 +225,12 @@ class Examples:
                 diagram.draw_radical_layers
 
             if verbose:
-                print("\nNodes:", diagram.nodes)
+                print("\nVertices:", diagram.vertices)
                 print("\nArrows:", diagram.arrows)
-                print("\nRadical layers:", diagram.radical_layers_to_nodes)
+                print("\nSources:", diagram.sources)
+                print("\nRadical layers:", diagram.radical_layer_to_vertices)
                 print("\nAll submodules:", submods)
                 print("\nAll quotient modules:", quotients)
-
-                # print("\nEndomorphisms:")
-                # for idx, hom in enumerate(diagram.hom_group(diagram)):
-                #     print(f"{idx}: {hom}")
         
             times.append((init_time, subgraph_time))
 
@@ -268,7 +243,7 @@ if __name__ == "__main__":
     examples = Examples({})
 
     for n in range(1):
-        examples.add_random_diagram(f"Example {n}", 25, 0.4)
+        examples.add_random_diagram(f"Example {n}", 10, 0.4)
 
     times = examples.run(draw=True, verbose=True)
 
@@ -301,9 +276,5 @@ if __name__ == "__main__":
     # examples.add("Example 6: Algebra and dual",
     #                     arrows=[Arrow(0,1,"a1"), Arrow(0,2,"b1"), Arrow(4,5,"a2"), Arrow(6,7,"b2")],
     #                     isolated_vertices=[3])
-
-    # examples.add("Example 7: Random graph",
-    #                     arrows=[],  
-    #                     isolated_vertices=[])
     
 
