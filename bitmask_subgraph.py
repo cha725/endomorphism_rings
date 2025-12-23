@@ -29,7 +29,7 @@ class BitmaskSubgraph:
     TODO: combine connectivity and closure functions for efficiency.
     """
     def __init__(self,
-                 arrows : Optional[list[Arrow]] = None):
+                 arrows : Optional[tuple[Arrow,...]] = None):
         if arrows is None:
             raise ValueError(f"Graph must contain at least one arrow.")
         self.arrows = arrows
@@ -118,6 +118,16 @@ class BitmaskSubgraph:
             list: index i = predecessor vertex mask of vertex i.
         """
         return [adj_mask["p"] for adj_mask in self.adj_mask]
+    
+    @cached_property
+    def pred_list(self) -> list[list[int]]:
+        """
+        Convert pred mask into lists of vertices.
+
+        Returns:
+            list: index i = predecessors of vertex i.
+        """
+        return [self.mask_to_vertices[p] for p in self.pred_mask]
 
     @cached_property
     def sources(self) -> list[bool]:
@@ -139,6 +149,16 @@ class BitmaskSubgraph:
             list: index i = successor vertex mask of vertex i.
         """
         return [adj_mask["s"] for adj_mask in self.adj_mask]
+    
+    @cached_property
+    def succ_list(self) -> list[list[int]]:
+        """
+        Convert succ mask into lists of vertices.
+
+        Returns:
+            list: index i = successors of vertex i.
+        """
+        return [self.mask_to_vertices[s] for s in self.succ_mask]
     
     @cached_property
     def sinks(self) -> list[bool]:
@@ -435,10 +455,10 @@ class Examples:
     Class to store examples of bitmask graphs.
     """
     def __init__(self, 
-                 examples: dict[str, list[Arrow]]):
+                 examples: dict[str, tuple[Arrow]]):
         self.examples = examples
 
-    def add(self, name: str, arrows: list[Arrow]):
+    def add(self, name: str, arrows: tuple[Arrow]):
         self.examples[name] = arrows
 
     def add_random_graph(self, name: str, num_vertices: int, edge_prob: float):
@@ -450,7 +470,7 @@ class Examples:
             for j in range(i+1,num_vertices):
                 if random.random() < edge_prob:
                     arrows.append(Arrow(i, j))
-        self.add(name, arrows)
+        self.add(name, tuple(arrows))
 
     def run(self, verbose : bool = False):
         times = []
