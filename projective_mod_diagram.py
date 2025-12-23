@@ -20,10 +20,9 @@ class ProjectiveModuleDiagram(ModuleDiagram):
         self.algebra = algebra
         self.top_vertex = top_vertex
         self._construct_mod_diagram()
-        super().__init__(arrows=self.arrows, 
-                         vertex_simples=self.vertex_simples, 
-                         isolated_vertices=self.isolated_vertices,
-                         vertex_labels=self.vertex_labels)
+        super().__init__(self.composition_factors,
+                         self.vertex_labels,
+                         self.arrows)
 
     def _construct_mod_diagram(self):
         """
@@ -37,30 +36,32 @@ class ProjectiveModuleDiagram(ModuleDiagram):
             - Each vertex corresponds to a path in the DFS search of the quiver algebra.
             - Each arrow corresponds to a quiver arrow such that source_path + arrow = target_path.
         """
-        self.vertex_simples = {} # node index to the simple factor
-        self.vertex_labels = {} # node index to the path from dfs
-        self.arrows = [] # possible arrows between nodes - really just arrows from the quiver
-        self.isolated_vertices = []
-
-        path_to_vertex_id = {}
+        vertex_to_idx = {}
+        composition_factors = []
+        vertex_labels = []
+        arrows = []
 
         dfs_connections = self.algebra.paths(with_connections=True)[self.top_vertex]
+
         for path, arrow, new_path in dfs_connections:
             print(f"path {path}, new path {new_path}")
 
-            if new_path not in path_to_vertex_id:
-                idx = len(path_to_vertex_id) # take next index available
-                path_to_vertex_id[new_path] = idx # assign new path this index
-                self.vertex_simples[idx] = new_path.target() # assign simple factor to this index
-                self.vertex_labels[idx] = new_path # 
+            if new_path not in vertex_to_idx:
+                idx = len(vertex_to_idx) # take next index available
+                vertex_to_idx[new_path] = idx # assign new path this index
+                composition_factors.append(new_path.target()) # assign simple factor to this index
+                vertex_labels.append(new_path) # 
 
             if arrow is not None:
-                source = path_to_vertex_id[path]
-                target = path_to_vertex_id[new_path]
-                self.arrows.append(Arrow(source,target,arrow))
+                source = vertex_to_idx[path]
+                target = vertex_to_idx[new_path]
+                arrows.append(Arrow(source,target,arrow.label if hasattr(arrow, 'label') else arrow))
 
-        if not self.arrows and self.vertex_simples:
-            self.isolated_vertices = list(range(len(self.vertex_simples))) 
+        self.composition_factors = tuple(composition_factors)
+        self.vertex_labels = tuple(vertex_labels)
+        self.arrows = tuple(arrows)
+
+
 
 
 
@@ -87,7 +88,7 @@ class Examples:
             for vertex in quiver.vertices:
                 projective = ProjectiveModuleDiagram(quiver, vertex)
                 print(f"\n- Projective {projective} -")
-                #projective.draw_radical_layers
+                projective.draw_radical_layers
             for submod in projective.generate_all_submodules:
                 print(f"submod {submod}")
 
