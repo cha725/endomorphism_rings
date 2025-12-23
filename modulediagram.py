@@ -34,6 +34,8 @@ class ModuleDiagram:
         vertices in sources get layer 0, and each target node gets a layer
         one higher than the maximum of its predecessors.
         """
+        if not self.pred_list:
+            return [0] * self.num_vertices 
         r_labels = [-1] * self.num_vertices
         vertices = list(range(self.num_vertices))
         sources = self.sources.copy()
@@ -112,6 +114,7 @@ class ModuleDiagram:
                 font_weight='bold')
         nx.draw_networkx_labels(G, 
                                 pos, 
+                                labels={n: G.nodes[n]['comp_factor'] for n in G.nodes},
                                 font_size=10, 
                                 font_weight='bold')  
         edge_labels = {
