@@ -127,7 +127,7 @@ class BitmaskSubgraph:
         Returns:
             list: index i = predecessors of vertex i.
         """
-        return [self.mask_to_vertices[p] for p in self.pred_mask]
+        return [self.mask_to_vertices[p] if p != 0 else [] for p in self.pred_mask]
 
     @cached_property
     def sources(self) -> list[bool]:
