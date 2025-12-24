@@ -1,5 +1,5 @@
 from quiver_algebra import MonomialQuiverAlgebra, Arrow, Path
-from modulediagram import ModuleDiagram
+from modulediagram import ModuleDiagram, ModuleSubDiagram
 
 class ProjectiveModuleDiagram(ModuleDiagram):
     """
@@ -36,33 +36,60 @@ class ProjectiveModuleDiagram(ModuleDiagram):
             - Each vertex corresponds to a path in the DFS search of the quiver algebra.
             - Each arrow corresponds to a quiver arrow such that source_path + arrow = target_path.
         """
-        vertex_to_idx = {}
+        path_to_vertex = {}
         composition_factors = []
         vertex_labels = []
         arrows = []
+        paths = []
 
         dfs_connections = self.algebra.paths(with_connections=True)[self.top_vertex]
 
         for path, arrow, new_path in dfs_connections:
-            print(f"path {path}, new path {new_path}")
 
-            if new_path not in vertex_to_idx:
-                idx = len(vertex_to_idx) # take next index available
-                vertex_to_idx[new_path] = idx # assign new path this index
+            if new_path not in path_to_vertex:
+                idx = len(path_to_vertex) # take next index available
+                path_to_vertex[new_path] = idx # assign new path this index
                 composition_factors.append(new_path.target()) # assign simple factor to this index
                 vertex_labels.append(new_path) # 
+                paths.append(path)
 
             if arrow is not None:
-                source = vertex_to_idx[path]
-                target = vertex_to_idx[new_path]
+                source = path_to_vertex[path]
+                target = path_to_vertex[new_path]
                 arrows.append(Arrow(source,target,arrow.label if hasattr(arrow, 'label') else arrow))
 
-        self.composition_factors = tuple(composition_factors)
-        self.vertex_labels = tuple(vertex_labels)
-        self.arrows = tuple(arrows)
+        self.path_to_vertex: dict[Path,int] = path_to_vertex
+        self.composition_factors: tuple[int] = tuple(composition_factors)
+        self.vertex_labels: tuple[str] = tuple(vertex_labels)
+        self.arrows: tuple[Arrow] = tuple(arrows)
+        self.paths: list[Path] = list(set(paths))
 
+    def vertex_to_path(self) -> list[Path]:
+        """
+        Return list whose ith entry is the quiver path that vertex i is defined by.
+        """
+        vtp = [Path() for _ in range(len(self.path_to_vertex))]
+        for v, path in enumerate(self.path_to_vertex):
+            vtp[v] = path
+        return vtp
+    
+    def find_all_submodules(self):
+        submods = self.generate_all_submodules
+        if submods is None:
+            return None
+        new_submods = []
+        for submod in submods:
+            new_submod = []
+            for v in submod:
+                new_submod.append(self.vertex_to_path()[v])
+            new_submods.append(new_submod)
+        return new_submods
+    
+    def find_all_submods_up_to_iso(self):
+        pass
 
-
+    def __repr__(self):
+        return f"Projective(algebra={self.algebra}, top vertex={self.top_vertex})"
 
 
 # TODO: Is this standard practice?
@@ -78,19 +105,22 @@ class Examples:
     def add(self, example : tuple[str, MonomialQuiverAlgebra]):
         self.examples[example[0]] = example[1]
 
-    def run(self):
+    def run(self, draw: bool = False):
         for name, quiver in self.examples.items():
             print(f"\n=== Example: {name} ===")
             print(f"\n Vertices = {quiver.vertices}")
             print(f" Arrows = {quiver.arrows}")
             print(f" Relations = {quiver.relations}")
             print(f"\n-- Projectives of quiver --")
-            for vertex in quiver.vertices:
-                projective = ProjectiveModuleDiagram(quiver, vertex)
-                print(f"\n- Projective {projective} -")
-                projective.draw_radical_layers
-            for submod in projective.generate_all_submodules:
-                print(f"submod {submod}")
+            for v in quiver.vertices:
+                proj = ProjectiveModuleDiagram(quiver, v)
+                print(proj)
+                if draw:
+                    proj.draw_radical_layers
+                print(f"Paths = {proj.paths}")
+                print(f"Submodules:")
+                for submod in proj.find_all_submodules():
+                    print(f"{submod}")
 
 if __name__ == "__main__":
 
