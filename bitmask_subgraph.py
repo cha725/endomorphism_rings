@@ -103,45 +103,44 @@ class BitmaskSubgraph:
 
 
     @cached_property
-    def succ_list(self) -> list[list[int]]:
+    def _radical_layers(self) -> list[int]:
         """
-        Convert succ mask into lists of vertices.
+        Compute radical layers.
+        A vertex has radical layer n if the longest path from any source to it has length n.
 
         Returns:
-            list: index i = successors of vertex i.
+            list: index i = vertices in radical layer i.
         """
-        return [self.mask_to_vertices[s] for s in self.succ_mask]
-    
-
-    
-    @cached_property
-    def radical_layer_mask(self) -> list[int]:
-        """
-        Create list of radical layers as bitmasks.
-            i.e. minimum number of steps from a source.
-
-        Returns:
-            list: index i = vertex bitmask of radical layer i.
-        """
-        radical_layers = []
         succ_mask = self.succ_mask
-        next_layer = 0
+        radical_layers = []
+        visited = 0
+        current_layer = 0
 
         for idx, is_source in enumerate(self.sources):
             if is_source:
-                next_layer |= 1 << idx
+                current_layer |= 1 << idx
 
-        while next_layer:
-            radical_layers.append(next_layer)
-            
-            remaining = next_layer
+        while current_layer:
+            radical_layers.append(current_layer)
+            visited |= current_layer
+
+            remaining = current_layer
             new_layer = 0
+
             while remaining:
                 v = remaining & -remaining
-                v_idx = v.bit_length() - 1
-                new_layer |= succ_mask[v_idx]
                 remaining &= ~v
-            next_layer = new_layer
+                v_idx = v.bit_length() - 1
+                succ = succ_mask[v_idx]
+                while succ:
+                    succ_v = succ & -succ
+                    succ &= ~succ_v
+                    succ_idx = succ_v.bit_length() - 1
+                    if self.pred_mask[succ_idx] & ~visited == 0:
+                        new_layer |= succ_v
+                
+            current_layer = new_layer & ~visited # remove already visited vertices
+
         return radical_layers
     
     @cached_property
@@ -156,22 +155,22 @@ class BitmaskSubgraph:
         return [self.mask_to_vertices[layer] for layer in self.radical_layer_mask]
 
     @cached_property
-    def socle_layers_mask(self) -> list[int]:
+    def _socle_layers(self) -> list[int]:
         """
         Create list of socle layers as bitmasks.
-            i.e. minimum number of steps from a sink.
+            i.e. maximum number of steps from a sink.
 
         Returns:
-            list: index i = vertex bitmask of socle layer i.
+            list: index i = vertices in socle layer i.
         """
         socle_layers = []
         pred_mask = self.pred_mask
         next_layer = 0
-
         for idx, is_sink in enumerate(self.sinks):
             if is_sink:
                 next_layer |= 1 << idx
-
+            
+        visited = next_layer
         while next_layer:
             socle_layers.append(next_layer)
 
@@ -179,10 +178,18 @@ class BitmaskSubgraph:
             new_layer = 0
             while remaining:
                 v = remaining & -remaining
-                v_idx = v.bit_length() - 1
-                new_layer |= pred_mask[v_idx]
                 remaining &= ~v
-            next_layer = new_layer
+                v_idx = v.bit_length() - 1
+                pred = pred_mask[v_idx]
+                while pred:
+                    pred_v = pred & -pred
+                    pred &= ~pred_v
+                    pred_idx = pred_v.bit_length() - 1
+                    if self.succ_mask[pred_idx] & ~visited == 0:
+                        new_layer |= pred_v
+ 
+            next_layer = new_layer &~ visited
+            visited |= next_layer
 
         return socle_layers
     
