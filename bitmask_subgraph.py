@@ -34,20 +34,31 @@ class BitmaskSubgraph:
             raise ValueError(f"Graph must contain at least one arrow.")
         self.arrows = arrows
         self.num_arrows = len(arrows)
-        self.vertices = tuple(set(a.source for a in self.arrows) | set(a.target for a in self.arrows))
-        self.index = {external_v: idx for idx, external_v in enumerate(self.vertices)}
-        self.index_to_vertex = {v : k for k, v in self.index.items()}
+        self.vertices = tuple(sorted(set(a.source for a in self.arrows) | set(a.target for a in self.arrows)))
         self.num_vertices = len(self.vertices)
+        self.index = {v: idx for idx, v in enumerate(self.vertices)}
+        self.index_to_vertex = {v : k for k, v in self.index.items()}
+        
+        self.vertex_mask = (1 << self.num_vertices) - 1
+        self.all_pred_mask = [0] * self.num_vertices
+        self.all_succ_mask = [0] * self.num_vertices
+        for arrow in self.arrows:
+            source_idx = self.index[arrow.source]
+            target_idx = self.index[arrow.target]
+            self.all_succ_mask[source_idx] |= (1 << target_idx)
+            self.all_pred_mask[target_idx] |= (1 << source_idx)
+
 
     ### VERTICES ###
 
     @cached_property
-    def vertex_mask(self) -> dict[int,int]:
+    def _mask_to_vertices(self) -> dict[int,int]:
         """
-        Create bitmasks for each vertex and cache.
-        For V vertices: vertex mask in bits 0..V-1.
+        For V vertices, returns dictionary:
+            - keys are integers in bits 0..V-1 representing bitmasks of vertices.
+            - values are the vertex with that bitmask.
         """
-        return {external_v : 1 << idx for idx, external_v in enumerate(self.vertices)}
+        return {v : 1 << idx for idx, v in enumerate(self.vertices)}
 
     @cached_property
     def full_vertex_mask(self) -> int:
