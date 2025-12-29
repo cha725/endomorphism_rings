@@ -40,17 +40,17 @@ class BitmaskSubgraph:
         self.index_to_vertex = {v : k for k, v in self.index.items()}
         
         self.vertex_mask = (1 << self.num_vertices) - 1
-        self.all_pred_mask = [0] * self.num_vertices
-        self.all_succ_mask = [0] * self.num_vertices
-        self.all_adj_mask = [0] * self.num_vertices
+        self.pred_mask = [0] * self.num_vertices
+        self.succ_mask = [0] * self.num_vertices
+        self.adj_mask = [0] * self.num_vertices
         for arrow in self.arrows:
             source_idx = self.index[arrow.source]
             target_idx = self.index[arrow.target]
-            self.all_succ_mask[source_idx] |= (1 << target_idx)
-            self.all_pred_mask[target_idx] |= (1 << source_idx)
-            self.all_adj_mask[source_idx] |= (1 << target_idx)
-            self.all_adj_mask[target_idx] |= (1 << source_idx)
-
+            self.succ_mask[source_idx] |= (1 << target_idx)
+            self.pred_mask[target_idx] |= (1 << source_idx)
+            self.adj_mask[source_idx] |= (1 << target_idx)
+            self.adj_mask[target_idx] |= (1 << source_idx)
+        # TODO: does pred_mask etc. suggest an integer rather than a list?
 
     ### VERTICES ###
     
