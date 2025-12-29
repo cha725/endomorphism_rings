@@ -112,16 +112,7 @@ class BitmaskSubgraph:
         """
         return [self.mask_to_vertices[s] for s in self.succ_mask]
     
-    @cached_property
-    def sinks(self) -> list[bool]:
-        """
-        Create list of vertices that are sinks.
-            i.e. No successors.
 
-        Returns:
-            list: index i = True if vertex i is a sink.
-        """
-        return [succ == 0 for succ in self.succ_mask]
     
     @cached_property
     def radical_layer_mask(self) -> list[int]:
