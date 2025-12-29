@@ -42,11 +42,14 @@ class BitmaskSubgraph:
         self.vertex_mask = (1 << self.num_vertices) - 1
         self.all_pred_mask = [0] * self.num_vertices
         self.all_succ_mask = [0] * self.num_vertices
+        self.all_adj_mask = [0] * self.num_vertices
         for arrow in self.arrows:
             source_idx = self.index[arrow.source]
             target_idx = self.index[arrow.target]
             self.all_succ_mask[source_idx] |= (1 << target_idx)
             self.all_pred_mask[target_idx] |= (1 << source_idx)
+            self.all_adj_mask[source_idx] |= (1 << target_idx)
+            self.all_adj_mask[target_idx] |= (1 << source_idx)
 
 
     ### VERTICES ###
@@ -74,45 +77,45 @@ class BitmaskSubgraph:
         """
         return [self._mask_to_vertices(mask) for mask in range(self.full_vertex_mask + 1)]
     
-    @cached_property
-    def adj_mask(self) -> list[dict[str,int]]:
-        """
-        Create predecessor "p" and successor "s" masks for each vertex.
-        Returns:
-            list: index i = {   "p" : predecessor vertex mask of vertex i, 
-                                "s" : successor vertex mask of vertex i    }.
-        """
-        index = self.index
-        adj = [{"p" : 0, "s" : 0} for _ in range(self.num_vertices)]
-        for a in self.arrows:
-            source_idx = index[a.source]
-            target_idx = index[a.target]
-            # a is an arrow a.source -> a.target
-            # so a.source is a predecessor of a.target
-            # and a.target is a successor of a.source
-            adj[source_idx]["s"] |= (1 << target_idx)
-            adj[target_idx]["p"] |= (1 << source_idx)
-        return adj
+    # @cached_property
+    # def adj_mask(self) -> list[dict[str,int]]:
+    #     """
+    #     Create predecessor "p" and successor "s" masks for each vertex.
+    #     Returns:
+    #         list: index i = {   "p" : predecessor vertex mask of vertex i, 
+    #                             "s" : successor vertex mask of vertex i    }.
+    #     """
+    #     index = self.index
+    #     adj = [{"p" : 0, "s" : 0} for _ in range(self.num_vertices)]
+    #     for a in self.arrows:
+    #         source_idx = index[a.source]
+    #         target_idx = index[a.target]
+    #         # a is an arrow a.source -> a.target
+    #         # so a.source is a predecessor of a.target
+    #         # and a.target is a successor of a.source
+    #         adj[source_idx]["s"] |= (1 << target_idx)
+    #         adj[target_idx]["p"] |= (1 << source_idx)
+    #     return adj
 
-    @cached_property
-    def pred_mask(self) -> list[int]:
-        """
-        Create list of predecessor masks for each vertex.
+    # @cached_property
+    # def pred_mask(self) -> list[int]:
+    #     """
+    #     Create list of predecessor masks for each vertex.
 
-        Returns:
-            list: index i = predecessor vertex mask of vertex i.
-        """
-        return [adj_mask["p"] for adj_mask in self.adj_mask]
+    #     Returns:
+    #         list: index i = predecessor vertex mask of vertex i.
+    #     """
+    #     return [adj_mask["p"] for adj_mask in self.adj_mask]
     
-    @cached_property
-    def pred_list(self) -> list[list[int]]:
-        """
-        Convert pred mask into lists of vertices.
+    # @cached_property
+    # def pred_list(self) -> list[list[int]]:
+    #     """
+    #     Convert pred mask into lists of vertices.
 
-        Returns:
-            list: index i = predecessors of vertex i.
-        """
-        return [self.mask_to_vertices[p] if p != 0 else [] for p in self.pred_mask]
+    #     Returns:
+    #         list: index i = predecessors of vertex i.
+    #     """
+    #     return [self.mask_to_vertices[p] if p != 0 else [] for p in self.pred_mask]
 
     @cached_property
     def sources(self) -> list[bool]:
