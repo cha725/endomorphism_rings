@@ -210,8 +210,8 @@ class BitmaskSubgraph:
         """
         Check if mask is connected (as an undirected graph).
         """
-        undir_adjs = self.undirected_adj_mask
-
+        if mask == 0:
+            return True
         # mask is connected iff starting at a single vertex can visit every other vertex
         start = mask & (~mask + 1) # first non-zero bit in mask
         visited = start
@@ -224,7 +224,7 @@ class BitmaskSubgraph:
             
             vertex_idx = vertex.bit_length()-1 # compute index of vertex
             
-            neighbours = mask & undir_adjs[vertex_idx] # adjacencies of vertex that are in the mask
+            neighbours = mask & self.adj_mask[vertex_idx] # adjacencies of vertex that are in the mask
             new_neighbours = neighbours & ~visited # find vertices that have not been visited
             
             visited |= new_neighbours # have visited the adjacent vertices now
