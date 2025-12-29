@@ -1,7 +1,10 @@
 from quiver_algebra import MonomialQuiverAlgebra, Arrow, Path
 from modulediagram import ModuleDiagram, ModuleSubDiagram
 
-class ProjectiveModuleDiagram(ModuleDiagram):
+
+
+
+class ProjectiveDiagram(ModuleDiagram):
     """
     A module diagram representating an indecomposable projective module
     of a MonomialQuiverAlgebra.
@@ -113,7 +116,7 @@ class Examples:
             print(f" Relations = {quiver.relations}")
             print(f"\n-- Projectives of quiver --")
             for v in quiver.vertices:
-                proj = ProjectiveModuleDiagram(quiver, v)
+                proj = ProjectiveDiagram(quiver, v)
                 print(proj)
                 if draw:
                     proj.draw_radical_layers
