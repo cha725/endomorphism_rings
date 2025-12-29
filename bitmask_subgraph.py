@@ -126,7 +126,7 @@ class BitmaskSubgraph:
         Returns:
             list: index i = True if vertex i is a source.
         """
-        return [True if pred == 0 else False for pred in self.pred_mask]
+        return [pred == 0 for pred in self.pred_mask]
 
     @cached_property
     def succ_mask(self) -> list[int]:
@@ -157,7 +157,7 @@ class BitmaskSubgraph:
         Returns:
             list: index i = True if vertex i is a sink.
         """
-        return [True if succ == 0 else False for succ in self.succ_mask]
+        return [succ == 0 for succ in self.succ_mask]
     
     @cached_property
     def radical_layer_mask(self) -> list[int]:
