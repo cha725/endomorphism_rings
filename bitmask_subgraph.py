@@ -50,46 +50,20 @@ class BitmaskSubgraph:
 
 
     ### VERTICES ###
-
-    @cached_property
-    def _mask_to_vertices(self) -> dict[int,int]:
-        """
-        For V vertices, returns dictionary:
-            - keys are integers in bits 0..V-1 representing bitmasks of vertices.
-            - values are the vertex with that bitmask.
-        """
-        return {v : 1 << idx for idx, v in enumerate(self.vertices)}
-
-    @cached_property
-    def full_vertex_mask(self) -> int:
-        """
-        Compute bitmask of all vertices.
-        """
-        return (1 << self.num_vertices) - 1
     
-    @cached_property
-    def mask_to_indices(self) -> list[list[int]]:
+    def _mask_to_vertices(self, mask: int) -> list:
         """
-        Create list to convert masks to the list of indices included.
-
-        Returns:
-            list: index i = list of vertex indices inside the binary expansion of i.
-                    i.e. the indices of the 1s in the binary expansion.      
+        Returns list of vertices in given mask.
         """
-        mask_to_vertex_indices = [[0]]
-        for mask in range(1, self.full_vertex_mask + 1):
-            remaining = mask
-            subset = []
-            while remaining:
-                vertex = remaining & (~remaining + 1) # get first non-zero bit
-                remaining &= ~vertex # remove first non-zero bit
+        remaining = mask
+        vertices = []
+        while remaining:
+            vertex = remaining & (~remaining + 1) # get first non-zero bit
+            remaining &= ~vertex # remove first non-zero bit
+            vertex_idx = vertex.bit_length() - 1
+            vertices.append(vertex_idx)
+        return vertices
 
-                vertex_idx = vertex.bit_length() - 1
-
-                subset.append(vertex_idx)
-            mask_to_vertex_indices.append(subset)
-        return mask_to_vertex_indices
-    
     @cached_property
     def mask_to_vertices(self) -> list[list]:
         """
@@ -98,7 +72,7 @@ class BitmaskSubgraph:
         Returns:
             list: index i = list of vertices inside i.   
         """
-        return [[self.vertices[idx] for idx in indices] for indices in self.mask_to_indices]
+        return [self._mask_to_vertices(mask) for mask in range(self.full_vertex_mask + 1)]
     
     @cached_property
     def adj_mask(self) -> list[dict[str,int]]:
