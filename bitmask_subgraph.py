@@ -296,81 +296,81 @@ class BitmaskSubgraph:
         """
         Compute connected predecessor-closed and successor-closed subsets efficiently.
 
-        TODO: Why is this slower than the original function?
-        """
-        n = len(self.vertex_mask)
-        full_mask = self.full_vertex_mask
-        pred = self.pred_mask
-        succ = self.succ_mask
-        undir = self.undirected_adj_mask
+    #     TODO: Why is this slower than the original function?
+    #     """
+    #     n = len(self.vertex_mask)
+    #     full_mask = self.full_vertex_mask
+    #     pred = self.pred_mask
+    #     succ = self.succ_mask
+    #     undir = self.undirected_adj_mask
 
-        pred_missing = [0] * (full_mask + 1)
-        succ_missing = [0] * (full_mask + 1)
-        pred_closed = [False] * (full_mask + 1)
-        succ_closed = [False] * (full_mask + 1)
-        connected_comp = [0] * (full_mask + 1)
+    #     pred_missing = [0] * (full_mask + 1)
+    #     succ_missing = [0] * (full_mask + 1)
+    #     pred_closed = [False] * (full_mask + 1)
+    #     succ_closed = [False] * (full_mask + 1)
+    #     connected_comp = [0] * (full_mask + 1)
 
-        pred_results = [False] * (full_mask + 1)
-        succ_results = [False] * (full_mask + 1)
+    #     pred_results = [False] * (full_mask + 1)
+    #     succ_results = [False] * (full_mask + 1)
 
-        # mask 0 is trivially closed and connected
-        pred_closed[0] = succ_closed[0] = True
-        connected_comp[0] = 0
-        pred_results[0] = succ_results[0] = True
+    #     # mask 0 is trivially closed and connected
+    #     pred_closed[0] = succ_closed[0] = True
+    #     connected_comp[0] = 0
+    #     pred_results[0] = succ_results[0] = True
 
-        # Process masks in increasing number of vertices in mask
-        masks_by_size = [[] for _ in range(n + 1)]
-        for mask in range(1, full_mask + 1):
-            size = bin(mask).count("1")
-            masks_by_size[size].append(mask)
+    #     # Process masks in increasing number of vertices in mask
+    #     masks_by_size = [[] for _ in range(n + 1)]
+    #     for mask in range(1, full_mask + 1):
+    #         size = bin(mask).count("1")
+    #         masks_by_size[size].append(mask)
 
-        for size in range(1, n + 1):
-            for mask in masks_by_size[size]:
-                v = mask & -mask
-                prev_mask = mask & (mask - 1)
-                v_idx = v.bit_length() - 1
+    #     for size in range(1, n + 1):
+    #         for mask in masks_by_size[size]:
+    #             v = mask & -mask
+    #             prev_mask = mask & (mask - 1)
+    #             v_idx = v.bit_length() - 1
 
-                # Check predecessor / successor closure
-                p_missing = (pred[v_idx] & ~mask) | (pred_missing[prev_mask] & ~v)
-                s_missing = (succ[v_idx] & ~mask) | (succ_missing[prev_mask] & ~v)
-                pred_missing[mask] = p_missing
-                succ_missing[mask] = s_missing
+    #             # Check predecessor / successor closure
+    #             p_missing = (pred[v_idx] & ~mask) | (pred_missing[prev_mask] & ~v)
+    #             s_missing = (succ[v_idx] & ~mask) | (succ_missing[prev_mask] & ~v)
+    #             pred_missing[mask] = p_missing
+    #             succ_missing[mask] = s_missing
 
-                if p_missing == 0 and (pred_closed[prev_mask] or pred_missing[prev_mask] == v):
-                    pred_closed[mask] = True
-                if s_missing == 0 and (succ_closed[prev_mask] or succ_missing[prev_mask] == v):
-                    succ_closed[mask] = True
-                if not pred_closed[mask] and not succ_closed[mask]:
-                    continue  # move on if neither pred or succ closed
+    #             if p_missing == 0 and (pred_closed[prev_mask] or pred_missing[prev_mask] == v):
+    #                 pred_closed[mask] = True
+    #             if s_missing == 0 and (succ_closed[prev_mask] or succ_missing[prev_mask] == v):
+    #                 succ_closed[mask] = True
+    #             if not pred_closed[mask] and not succ_closed[mask]:
+    #                 continue  # move on if neither pred or succ closed
 
-                # Connectivity
-                prev_comp = connected_comp[prev_mask]
-                if prev_mask == 0:
-                    new_comp = mask
-                else:
-                    # Only check connectivity if mask is potentially closed
-                    if prev_comp & undir[v_idx]:
-                        # BFS to expand component
-                        visited = prev_comp | v
-                        remaining = visited
-                        while remaining:
-                            bit = remaining & -remaining
-                            remaining ^= bit
-                            idx = bit.bit_length() - 1
-                            neighbors = (mask & undir[idx]) & ~visited
-                            visited |= neighbors
-                            remaining |= neighbors
-                        new_comp = visited
-                    else:
-                        new_comp = prev_comp  # disconnected
+    #             # Connectivity
+    #             prev_comp = connected_comp[prev_mask]
+    #             if prev_mask == 0:
+    #                 new_comp = mask
+    #             else:
+    #                 # Only check connectivity if mask is potentially closed
+    #                 if prev_comp & undir[v_idx]:
+    #                     # BFS to expand component
+    #                     visited = prev_comp | v
+    #                     remaining = visited
+    #                     while remaining:
+    #                         bit = remaining & -remaining
+    #                         remaining ^= bit
+    #                         idx = bit.bit_length() - 1
+    #                         neighbors = (mask & undir[idx]) & ~visited
+    #                         visited |= neighbors
+    #                         remaining |= neighbors
+    #                     new_comp = visited
+    #                 else:
+    #                     new_comp = prev_comp  # disconnected
 
-                connected_comp[mask] = new_comp
-                is_conn = new_comp == mask
+    #             connected_comp[mask] = new_comp
+    #             is_conn = new_comp == mask
 
-                pred_results[mask] = pred_closed[mask] and is_conn
-                succ_results[mask] = succ_closed[mask] and is_conn
+    #             pred_results[mask] = pred_closed[mask] and is_conn
+    #             succ_results[mask] = succ_closed[mask] and is_conn
 
-        return pred_results, succ_results
+    #     return pred_results, succ_results
     
 
     @cached_property
