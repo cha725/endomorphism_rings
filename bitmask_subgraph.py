@@ -128,15 +128,15 @@ class BitmaskSubgraph:
         """
         return [pred == 0 for pred in self.pred_mask]
 
-    @cached_property
-    def succ_mask(self) -> list[int]:
-        """
-        Create list of successor masks for each vertex.
+    # @cached_property
+    # def succ_mask(self) -> list[int]:
+    #     """
+    #     Create list of successor masks for each vertex.
 
-        Returns:
-            list: index i = successor vertex mask of vertex i.
-        """
-        return [adj_mask["s"] for adj_mask in self.adj_mask]
+    #     Returns:
+    #         list: index i = successor vertex mask of vertex i.
+    #     """
+    #     return [adj_mask["s"] for adj_mask in self.adj_mask]
     
     @cached_property
     def succ_list(self) -> list[list[int]]:
