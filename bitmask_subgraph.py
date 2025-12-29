@@ -203,17 +203,40 @@ class BitmaskSubgraph:
         """
         return [self.mask_to_vertices[layer] for layer in self.socle_layers_mask]
 
-    @cached_property
-    def undirected_adj_mask(self) -> list[int]:
+    def decompose(self, mask : int) -> list[list[int]]:
         """
-        Create list of undirected neighbours for each vertex.
+        Return a list of connected components of the mask as lists of vertices.
+        """
+        if mask == 0:
+            return [[]]
+        # mask is connected iff starting at a single vertex can visit every other vertex
+        
+        summands = []
+        remaining = mask
+        while remaining:
+            start = remaining & (~remaining + 1) # first non-zero bit in mask
+            summand = start
+            summand_remaining = start
 
-        Returns:
-            list: index i = (undirected) neighbour vertex mask of vertex i.
-        """
-        return [adj_mask["p"] | adj_mask["s"] for adj_mask in self.adj_mask]
-   
-    def is_connected(self, mask : int) -> bool:
+            while summand_remaining:
+            
+                vertex = summand_remaining & (~summand_remaining + 1) # first non-zero bit
+                summand_remaining &= ~vertex # remove vertex from remaining
+                
+                vertex_idx = vertex.bit_length()-1 # compute index of vertex
+                
+                neighbours = mask & self.adj_mask[vertex_idx] # adjacencies of vertex that are in the mask
+                new_neighbours = neighbours & ~summand # find vertices that have not been visited
+                
+                summand |= new_neighbours # have visited the adjacent vertices now
+                summand_remaining |= new_neighbours # add new neighbours to remaining
+
+            summands.append(self._mask_to_vertices(summand))
+            remaining &= ~summand # remove summand from remaining
+
+        return summands
+    
+    def _is_connected(self, mask: int) -> bool:
         """
         Check if mask is connected (as an undirected graph).
         """
