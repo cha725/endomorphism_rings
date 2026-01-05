@@ -94,17 +94,20 @@ class BitmaskSubgraph:
         return sources
     
     @cached_property
-    def sinks(self) -> list[bool]:
+    def _sources(self) -> int:
         """
-        Create list of vertices that are sinks.
-            i.e. No successors.
-
-        Returns:
-            list: index i = True if vertex i is a sink.
+        Return bitmask of vertices that are sources of the graph.
+        A source vertex is one with no predecessors in the mask.
         """
-        return [succ == 0 for succ in self.succ_mask]    
-
-
+        return self.sources_of_mask(self.vertex_mask)
+    
+    def sources(self) -> list[int]:
+        """
+        Return list of vertices that are sources.
+        A source vertex is one with no predecessors in the mask.
+        """
+        return self._mask_to_vertices(self._sources)
+    
     @cached_property
     def _radical_layers(self) -> list[int]:
         """
