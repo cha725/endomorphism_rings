@@ -75,18 +75,24 @@ class BitmaskSubgraph:
             list: index i = list of vertices inside i.   
         """
         return [self._mask_to_vertices(mask) for mask in range(self.vertex_mask + 1)]
+    
+    # Radical layers
 
-    @cached_property
-    def sources(self) -> list[bool]:
+    def sources_of_mask(self, mask: int) -> int:
         """
-        Create list of vertices that are sources.
-            i.e. No predecessors.
-
-        Returns:
-            list: index i = True if vertex i is a source.
+        Return bitmask of source vertices in the given mask.
+        A source vertex is one with no predecessors in the mask.
         """
-        return [pred == 0 for pred in self.pred_mask]
-
+        sources = 0
+        rem_mask = mask
+        while rem_mask:
+            v = rem_mask & -rem_mask
+            rem_mask &= ~v
+            idx = v.bit_length() - 1
+            if self.pred_mask[idx] & mask == 0:
+                sources |= v
+        return sources
+    
     @cached_property
     def sinks(self) -> list[bool]:
         """
