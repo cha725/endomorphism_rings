@@ -111,45 +111,17 @@ class BitmaskSubgraph:
     @cached_property
     def _radical_layers(self) -> list[int]:
         """
-        Compute radical layers.
-        A vertex has radical layer n if the longest path from any source to it has length n.
-
-        Returns:
-            list: index i = vertices in radical layer i.
+        Returns list of bitmasks representing radical layers.
+        0th entry = sources, then removing sources gives next layer, etc.
         """
-        succ_mask = self.succ_mask
-        radical_layers = []
-        visited = 0
-        current_layer = 0
-
-        for idx, is_source in enumerate(self.sources):
-            if is_source:
-                current_layer |= 1 << idx
-
-        while current_layer:
-            radical_layers.append(current_layer)
-            visited |= current_layer
-
-            remaining = current_layer
-            new_layer = 0
-
-            while remaining:
-                v = remaining & -remaining
-                remaining &= ~v
-                v_idx = v.bit_length() - 1
-                succ = succ_mask[v_idx]
-                while succ:
-                    succ_v = succ & -succ
-                    succ &= ~succ_v
-                    succ_idx = succ_v.bit_length() - 1
-                    if self.pred_mask[succ_idx] & ~visited == 0:
-                        new_layer |= succ_v
-                
-            current_layer = new_layer & ~visited # remove already visited vertices
-
-        return radical_layers
+        remaining_mask = self.vertex_mask
+        layers = []
+        while remaining_mask:
+            sources = self.sources_of_mask(remaining_mask)
+            layers.append(sources)
+            remaining_mask &= ~sources
+        return layers
     
-    @cached_property
     def radical_layers(self) -> list[list[int]]:
         """
         Return radical layers as lists of vertices.
