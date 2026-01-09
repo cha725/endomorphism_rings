@@ -1,5 +1,5 @@
-from typing import Optional
 from functools import cached_property
+from typing import Iterator
 import random, time
 
 class Vertex:
