@@ -103,47 +103,37 @@ class ModuleDiagram:
                 socle_labels[v] = layer_idx
         return socle_labels
     @cached_property
-    def radical_layer_to_vertices(self) -> list[list[int]]:
-        """
-        Returns:
-            list[list[int]]: A list entry i = all vertices in radical layer i.
-        """
-        r_labels = self.radical_labels
-        r_layers = [[] for _ in range(self.num_radical_layers())]
-        for v, lay in enumerate(r_labels):
-            r_layers[lay].append(v)
-        return r_layers
-
+    ## Drawing the module diagram ##
+    @cached_property
     def _create_radical_layer_graph(self):
-        """
-        Create graph with vertex labels: composition factor, vertex label, radical layer
+        """ 
+        Construct a networkx directed graph of module.
+        Node labels: 
+            - label = vertex label of vertex (if given).
+            - comp_factor = composition factor represented by vertex.
+            - rad_layer = radical layer of vertex.
         """
         G = nx.MultiDiGraph()
-        for idx, v in enumerate(self.composition_factors):
-            if self.vertex_labels:
-                v_label = self.vertex_labels[idx]
-            r_label = self.radical_labels[idx]
-            G.add_node(idx, comp_factor=v, label=v_label, rad_layer=r_label)
-        for arrow in self.arrows:
+        for v in self.vertex_list:
+            G.add_node(v, comp_factor = v.composition_factor, label = v.label, rad_layer = v.radical_layer)
+        for arrow in self.arrow_list:
             G.add_edge(arrow.source, arrow.target, label=arrow.label)
         return G
 
     @cached_property
     def draw_radical_layers(self):
-        """
-        Draw the nxgraph lined up with radical layers.
-        """
+        """ Draw the module diagram with nodes aligned by radical layer. """
         pos = {}
-        for layer, vertices in enumerate(self.radical_layer_to_vertices):
+        for layer_idx, vertices in enumerate(self.radical_layer_list):
             n = len(vertices)
             if n == 1:
                 x_coord = [0.5]
             else:
                 x_coord = [i / (n - 1) for i in range(n)]
-            for x, node in zip(x_coord, vertices):
-                pos[node] = (x, -layer)
+            for x, v in zip(x_coord, vertices):
+                pos[v] = (x,-layer_idx)
 
-        G = self._create_radical_layer_graph()
+        G = self._create_radical_layer_graph
         nx.draw(G,
                 pos=pos,
                 node_size=1000, 
@@ -151,17 +141,17 @@ class ModuleDiagram:
                 font_weight='bold')
         nx.draw_networkx_labels(G, 
                                 pos, 
-                                labels={n: G.nodes[n]['comp_factor'] for n in G.nodes},
+                                labels={n: G.nodes[n]["comp_factor"] for n in G.nodes},
                                 font_size=10, 
                                 font_weight='bold')  
         edge_labels = {
             (u, v, k): d.get("label")
-            for u, v, k, d in self.graph.edges(keys=True, data=True)
+            for u, v, k, d in G.edges(keys=True, data=True)
             if d.get("label") is not None
         }
 
         nx.draw_networkx_edge_labels(
-            self.graph, pos,
+            G, pos,
             edge_labels=edge_labels,
             font_size=9,
             label_pos=0.5,
