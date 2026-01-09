@@ -247,17 +247,29 @@ class BitmaskSubgraph:
         return self._mask_to_vertices(self._sinks)
     
     @cached_property
-    def socle_layers(self) -> list[list[int]]:
+    def _socle_layers(self) -> list[int]:
         """
-        Return socle layers as lists of vertices.
+        Returns list of bitmasks representing socle layers.
+        0th entry = sinks, then removing sinks gives next layer, etc.
         """
-        soc_layers = self._socle_layers
-        return [self._mask_to_vertices(layer) for layer in soc_layers]
-
-    def decompose(self, mask : int) -> list[list[int]]:
+        remaining_mask = self.vertex_mask
+        layers = []
+        while remaining_mask:
+            sinks = self._sinks_of_mask(remaining_mask)
+            layers.append(sinks)
+            remaining_mask &= ~sinks
+        return layers
+    
+    def socle_layers(self) -> list[list[Vertex]]:
         """
-        Return a list of connected components of the mask as lists of vertices.
+        Returns list of vertices representing socle layers.
+        0th entry = sinks, then removing sinks gives next layer, etc.
         """
+        layers = []
+        for layer_mask in self._socle_layers:
+            layers.append(self._mask_to_vertices(layer_mask))
+        return layers
+    
     @cached_property
     def _connected_masks(self) -> list[bool]:
         """ 
