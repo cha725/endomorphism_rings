@@ -290,7 +290,7 @@ class BitmaskSubgraph:
         """ Return list of connected components as lists of vertices. """
         return [self._mask_to_vertices(m) for m in self._connected_components]
     @cached_property
-    def compute_closed_subsets(self) -> tuple[list[list[int]],list[list[int]]]:
+    def compute_closed_subsets(self) -> tuple[list[list[list[Vertex]]],list[list[list[Vertex]]]]:
         """
         Compute which vertex subsets (represented as bitmasks) are closed under
         predecessors and/or successors.
@@ -313,34 +313,43 @@ class BitmaskSubgraph:
 
         pred_results = [False for _ in range(full_mask + 1)]
         succ_results = [False for _ in range(full_mask + 1)]
+        pred_subsets = [[] for _ in range(self.num_vertices + 1)]
+        succ_subsets = [[] for _ in range(self.num_vertices + 1)]
 
+        conn_comps = self._connected_components
 
-        for mask in range(1, full_mask + 1):
-            connected = False
-            pred_closed = True
-            succ_closed = True
+        for comp in conn_comps:
+            for mask in range(1, comp + 1):
+                if not self._is_connected_mask(mask):
+                    continue
+                
+                pred_closed = True
+                succ_closed = True
 
-            for vertex_idx in range(self.num_vertices):
-                if not (mask & (1 << vertex_idx)):
-                    continue # vertex not in mask
-                if pred_mask[vertex_idx] & (~mask): # check if p_mask outside of mask
-                    pred_closed = False
-                if succ_mask[vertex_idx] & (~mask): # check if s_mask outside of mask
-                    succ_closed = False
-                if not(pred_closed or succ_closed):
-                    break # no need to continue if neither closed
+                for vertex_idx in range(self.num_vertices):
+                    if not (mask & (1 << vertex_idx)):
+                        continue # vertex not in mask
+                    if pred_mask[vertex_idx] & (~mask): # check if p_mask outside of mask
+                        pred_closed = False
+                    if succ_mask[vertex_idx] & (~mask): # check if s_mask outside of mask
+                        succ_closed = False
+                    if not(pred_closed or succ_closed):
+                        break # no need to continue if neither closed
+                
+                if pred_closed:
+                    pred_results[mask] = True
+                    dim = self._dim_of_mask(mask)
+                    vertices = self._mask_to_vertices(mask)
+                    if vertices not in pred_subsets[dim]:
+                        pred_subsets[dim].append(vertices)
+                if succ_closed:
+                    succ_results[mask] = True
+                    dim = self._dim_of_mask(mask)
+                    vertices = self._mask_to_vertices(mask)
+                    if vertices not in succ_subsets[dim]:
+                        succ_subsets[dim].append(vertices)
 
-            if pred_closed or succ_closed:
-                if self._is_connected(mask):
-                    connected = True
-
-            pred_results[mask] = pred_closed and connected
-            succ_results[mask] = succ_closed and connected
-
-            pred_subsets = [self._mask_to_vertices(m) for m, val in enumerate(pred_results) if val]
-            succ_subsets = [self._mask_to_vertices(m) for m, val in enumerate(succ_results) if val]
-
-        return (pred_subsets, succ_subsets)    
+        return (pred_subsets, succ_subsets)  
     
     def compute_pred_closed_subsets(self) -> list[list[int]]:
         """
