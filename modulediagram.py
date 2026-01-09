@@ -204,6 +204,9 @@ class ModuleDiagram:
     
     def __repr__(self):
         return f"MD(vertices = {self.vertex_labels}, arrows = {self.arrow_list})"
+    
+    __hash__ = object.__hash__
+
 
 class ModuleSubDiagram(ModuleDiagram):
     def __init__(self,
@@ -266,6 +269,7 @@ class ModuleSubDiagram(ModuleDiagram):
     def __repr__(self):
         return f"MSubD(parent={self.parent}, vertices={self.vertex_labels})"
     
+    __hash__ = object.__hash__
 
 
 
