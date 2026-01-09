@@ -44,6 +44,20 @@ class Homomorphism:
         if quotient != sub:
             raise ValueError(f"The image of the homomorphism is not well-defined.")
 
+    def apply(self, vertex: Vertex) -> Vertex:
+        """
+        Apply the homomorphism to a vertex of the domain module.
+
+        Args:
+            vertex (Vertex): A vertex of the domain module.
+
+        Returns:
+            int: The image of the element in the codomain module.
+        """
+        if vertex not in self.mapping:
+            raise ValueError(f"Invalid element. Vertex {vertex} not in domain mapping.")
+        return self.mapping[vertex]
+    
         self.domain = domain
         self.image = image
         self.codomain = codomain
