@@ -188,11 +188,7 @@ class ModuleDiagram:
         return self.compute_isomorphism(other) is not None
     
     def __repr__(self):
-        if not self.vertices:
-            return f"Module diagram with no vertices and no arrows."
-        if not self.arrows:
-            return f"Module diagram with vert={self.vertex_labels} and no arrows."
-        return f"Module diagram with vert={self.vertex_labels} and arrows = {self.arrows}"
+        return f"MD(vertices = {self.vertex_labels}, arrows = {self.arrow_list})"
 
 class ModuleSubDiagram(ModuleDiagram):
     def __init__(self,
