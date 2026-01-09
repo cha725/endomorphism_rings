@@ -168,7 +168,7 @@ class BitmaskSubgraph:
         """
         return self.sources_of_mask(self.vertex_mask)
     
-    def sources(self) -> list[int]:
+    def sources(self) -> list[Vertex]:
         """
         Return list of vertices that are sources.
         A source vertex is one with no predecessors in the mask.
@@ -176,7 +176,7 @@ class BitmaskSubgraph:
         return self._mask_to_vertices(self._sources)
     
     @cached_property
-    def _radical_layers(self) -> list[int]:
+    def _radical_layers(self) -> list[int] | None:
         """
         Returns list of bitmasks representing radical layers.
         0th entry = sources, then removing sources gives next layer, etc.
@@ -451,7 +451,7 @@ class BitmaskSubgraph:
 
         return (pred_subsets, succ_subsets)  
     
-    def compute_pred_closed_subsets(self) -> list[list[int]]:
+    def compute_pred_closed_subsets(self) -> list[list[list[Vertex]]]:
         """
         Compute which vertex subsets (represented as bitmasks) are closed under
         predecessors.
@@ -466,7 +466,7 @@ class BitmaskSubgraph:
         """        
         return self.compute_closed_subsets[0]
     
-    def compute_succ_closed_subsets(self) -> list[list[int]]:
+    def compute_succ_closed_subsets(self) -> list[list[list[Vertex]]]:
         """
         Compute which vertex subsets (represented as bitmasks) are closed under
         successors.
