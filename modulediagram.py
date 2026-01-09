@@ -300,9 +300,53 @@ class ModuleSubDiagram(ModuleDiagram):
 
 # TODO: make the print out prettier.
 
-if __name__ == "__main__":
+    class MSDExamples:
+        """
+        Class to store and run examples of ModuleSubDiagram instances
+        based on a parent ModuleDiagram and vertex subsets.
+        """
+        def __init__(self, parent: ModuleDiagram):
+            self.parent = parent
+            self.examples: dict[str, list[Vertex]] = {}
 
-    examples = Examples({})
+        def add(self, name: str, vertices: list[Vertex]):
+            """
+            Add a subdiagram example using a subset of parent vertices.
+            """
+            if not set(vertices) <= set(self.parent.vertex_list):
+                raise ValueError(f"Vertices {vertices} must be a subset of parent vertices {self.parent.vertex_list}")
+            self.examples[name] = vertices
+
+        def add_random_subdiagram(self, name: str):
+            """
+            Add a random directed tree with num_vertices vertices and edge probability edge_prob.
+            """
+            parent_verts = self.parent.vertex_list
+            parent_num_verts = self.parent.num_vertices
+            num_verts = random.choice(range(1, parent_num_verts))
+            self.add(name, random.sample(parent_verts, num_verts))
+
+        def run(self, verbose: bool = False):
+            results = {}
+            for name, vertices in self.examples.items():
+                subdiagram = ModuleSubDiagram(self.parent, vertices)
+                print("===========parent", self.parent)
+                results[name] = subdiagram
+                summands = subdiagram.indecomposable_summands()
+
+                if verbose:
+                    print(f"\n=== Subdiagram Example: {name} ===")
+                    print(f"Parent diagram: {subdiagram.parent}")
+                    print(f"Subdiagram vertices: {subdiagram.vertex_labels}")
+                    print(f"Subdiagram arrows: {subdiagram.arrow_list}")
+                    print(f"Idecomposable summands: {[s.vertex_labels for s in summands]}")
+                    print(f"Which summands are submodules/quotients of parent module?")
+                    for summand in summands:
+                        print(f"Is {summand.vertex_list} a submodule of parent? {summand.is_submodule()}")
+                        print(f"Is {summand.vertex_list} a quotient of parent? {summand.is_quotient()}")                   
+                    
+            return results
+
 
     for n in range(1):
         examples.add_random_diagram(f"Example {n}", 10, 0.4)
