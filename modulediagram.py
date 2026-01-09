@@ -80,38 +80,14 @@ class ModuleDiagram:
             for v in layer:
                 radical_labels[v] = layer_idx
         return radical_labels
-        """
-        if not self.pred_list:
-            return [0] * self.num_vertices 
-        r_labels = [-1] * self.num_vertices
-        vertices = list(range(self.num_vertices))
-        sources = self.sources.copy()
-        for s in sources:
-            r_labels[s] = 0
-        seen = set(sources)
-        left_to_check = [v for v in vertices if v not in seen]
-        while left_to_check:
-            updated = False
-            next_left_to_check = []
-            for v in left_to_check:
-                preds = self.pred_list[v]
-                if all(r_labels[p] != -1 for p in preds):
-                    r_labels[v] = max([r_labels[p] for p in preds], default=-1) + 1
-                    seen.add(v)
-                    updated = True
-                else:
-                    next_left_to_check.append(v)
-            if not updated:
-                raise ValueError("Graph has a cycle; cannot assign radical layers.")
-            left_to_check = next_left_to_check
-        return r_labels
-    
-    def num_radical_layers(self) -> int:
-        """
-        Returns number of radical layers.
-        """
-        return max(self.radical_labels) + 1
 
+    
+    def loewy_length(self) -> int:
+        """
+        Return Loewy length of module diagram.
+        Loewy length is the smallest n such that the nth radical layer is trivial.
+        """
+        return len(self.radical_layer_list)
     @cached_property
     def radical_layer_to_vertices(self) -> list[list[int]]:
         """
