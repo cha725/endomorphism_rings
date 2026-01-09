@@ -39,6 +39,11 @@ class ProjectiveDiagram(ModuleDiagram):
         return (vertex_list, arrow_list)
     
 
+    def nice_print(self):
+        s = f"\nVertices = {self.vertex_list}"
+        s += f"\nArrows = {[a.label for a in self.arrow_list]}"
+        return s
+
     def __repr__(self):
         return f"Projective(algebra={self.algebra}, top vertex={self.top_vertex})"
 
