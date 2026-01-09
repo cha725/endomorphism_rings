@@ -5,14 +5,17 @@ from bitmask_subgraph import Arrow
     
 class Path:
     def __init__(self,
-                 arrows: tuple[Arrow,...] = (),
-                 stationary_vertex: Optional[int] = None):
+                 arrows: tuple[Arrow,...] | None = None,
+                 stationary_vertex = None):
         
-        if stationary_vertex is not None and arrows:
+        if arrows is None and stationary_vertex is None:
+            raise ValueError("Path must have either arrows or be a stationary_vertex.")
+
+        if stationary_vertex and arrows:
             raise ValueError("Path cannot have both arrows and stationary_vertex.")
 
         self.stationary_vertex = stationary_vertex
-        self.arrows = arrows
+        self.arrows = arrows or ()
 
         # Check path is valid
         if self.arrows:
