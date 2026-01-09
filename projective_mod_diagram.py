@@ -1,5 +1,6 @@
-from quiver_algebra import MonomialQuiverAlgebra, Arrow, Path
-from modulediagram import ModuleDiagram, ModuleSubDiagram
+from bitmask_subgraph import Vertex, Arrow
+from quiver_algebra import MonomialQuiverAlgebra
+from modulediagram import ModuleDiagram
 
 
 
