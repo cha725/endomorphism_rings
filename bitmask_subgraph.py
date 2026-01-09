@@ -233,43 +233,18 @@ class BitmaskSubgraph:
         return sinks
     
     @cached_property
-    def _socle_layers(self) -> list[int]:
+    def _sinks(self) -> int:
         """
-        Create list of socle layers as bitmasks.
-            i.e. maximum number of steps from a sink.
-
-        Returns:
-            list: index i = vertices in socle layer i.
+        Return bitmask of vertices that are sinks of the graph.
+        A sink vertex is one with no successors in the mask.
         """
-        socle_layers = []
-        pred_mask = self.pred_mask
-        next_layer = 0
-        for idx, is_sink in enumerate(self.sinks):
-            if is_sink:
-                next_layer |= 1 << idx
-            
-        visited = next_layer
-        while next_layer:
-            socle_layers.append(next_layer)
-
-            remaining = next_layer
-            new_layer = 0
-            while remaining:
-                v = remaining & -remaining
-                remaining &= ~v
-                v_idx = v.bit_length() - 1
-                pred = pred_mask[v_idx]
-                while pred:
-                    pred_v = pred & -pred
-                    pred &= ~pred_v
-                    pred_idx = pred_v.bit_length() - 1
-                    if self.succ_mask[pred_idx] & ~visited == 0:
-                        new_layer |= pred_v
- 
-            next_layer = new_layer &~ visited
-            visited |= next_layer
-
-        return socle_layers
+        return self._sinks_of_mask(self.vertex_mask)
+    
+    def sinks(self) -> list[Vertex]:
+        """
+        Return list of sink vertices.
+        """
+        return self._mask_to_vertices(self._sinks)
     
     @cached_property
     def socle_layers(self) -> list[list[int]]:
