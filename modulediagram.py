@@ -9,6 +9,20 @@ from types import MappingProxyType
 from bitmask_subgraph import Vertex, Arrow, BitmaskSubgraph
 
 class ModuleDiagram:
+    """
+    Represents a directed graph modelling a module.
+
+    - Each vertex corresponds to a composition factor of the module.
+    - Each arrow represents the action of a ring element on the composition factor.
+
+    Provides functionality to compute radical layers, submodules, and quotients.
+
+    Note: the directed graph is acyclic, but the undirected graph may not be acyclic.
+
+    Parameters:
+        vertex_list (list[Vertex]): List of vertices of the module diagram.
+        arrow_list (list(Arrow,...)): List of arrows between the vertices of the module diagram.
+    """
     def __init__(self, 
                  vertex_list: list[Vertex] | None = None,
                  arrow_list: list[Arrow] | None = None):
