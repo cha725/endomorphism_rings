@@ -114,6 +114,12 @@ class Homomorphism:
             except:
                 return None
     
+    def post_compose_with_homs(self, post_homs: list[Homomorphism]):
+        return [self.post_compose(h) for h in post_homs if self.post_compose(h)]
+    
+    def pre_compose_with_homs(self, post_homs: list[Homomorphism]):
+        return [self.pre_compose(h) for h in post_homs if self.pre_compose(h)]
+    
         self.domain = domain
         self.image = image
         self.codomain = codomain
