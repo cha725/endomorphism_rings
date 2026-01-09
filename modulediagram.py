@@ -240,6 +240,9 @@ class ModuleSubDiagram(ModuleDiagram):
         dim = self.num_vertices
         return self.vertex_list in self.parent.all_quotients[dim]
     
+    def __repr__(self):
+        return f"MSubD(parent={self.parent}, vertices={self.vertex_labels})"
+    
 
     def add(self, 
             name: str, 
