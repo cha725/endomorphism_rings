@@ -73,6 +73,47 @@ class Homomorphism:
     def is_projection(self) -> bool:
         return self.image().vertex_labels == self.codomain.vertex_labels
     
+    def post_compose(self, other: "Homomorphism") -> Homomorphism | None:
+        """
+        Post-compose homomorphism with other.
+
+        Args:
+            other (Homomorphism): Another homomorphism.
+
+        Returns:
+            Homomorphism: The composition of the two mappings in order: self then other.
+            None: If the composition is the zero morphism.
+        """
+        comp_map = {k : u   for k, v in self.mapping.items()
+                            for l, u in other.mapping.items()
+                            if v == l}
+        if comp_map:
+            try:
+                return Homomorphism(self.domain, other.codomain, comp_map)
+            except:
+                return None
+    
+    def pre_compose(self, other: "Homomorphism") -> Homomorphism | None:
+        """
+        Pre-compose homomorphism with other.
+
+        Args:
+            other (Homomorphism): Another homomorphism.
+
+        Returns:
+            Homomorphism: The composition of the two mappings in order: other then self.
+            None: If the composition is the zero morphism.
+        """
+        comp_map = {l : v
+                    for l, u in other.mapping.items()  
+                    for k, v in self.mapping.items()
+                    if u == k}
+        if comp_map:
+            try:
+                return Homomorphism(other.domain, self.codomain, comp_map)
+            except:
+                return None
+    
         self.domain = domain
         self.image = image
         self.codomain = codomain
