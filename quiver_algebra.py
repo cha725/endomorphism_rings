@@ -20,39 +20,51 @@ class Path:
                 if prev.target != curr.source:
                     raise ValueError(f"Invalid path: target of {prev} != source of {curr}")
 
-    def is_stationary_path(self):
+    def is_stationary_path(self) -> bool:
         return self.stationary_vertex is not None
 
     def source(self):
-        if self.is_stationary_path():
+        """ Returns source vertex of path. If stationary, then returns stationary vertex. """
+        if self.stationary_vertex is not None:
             return self.stationary_vertex
         return self.arrows[0].source
 
     def target(self):
-        if self.is_stationary_path():
+        """ Returns source vertex of path. If stationary, then returns stationary vertex. """
+        if self.stationary_vertex is not None:
             return self.stationary_vertex
         return self.arrows[-1].target
     
     def vertices(self) -> list:
-        if self.is_stationary_path():
+        """ Returns list of vertices in path. If stationary, then returns stationary vertex. """
+        if self.stationary_vertex:
             return [self.stationary_vertex]
         return [self.source()] + [a.target for a in self.arrows]
     
-    def extend_at_end(self, arrow : Arrow):
+    def extend_at_end(self, arrow : Arrow) -> "Path | None":
+        """ 
+        If given arrow starts where path finishes, then returns concantenation path then arrow.
+        Otherwise, returns None.
+        """
         if self.target() != arrow.source:
             return None
         return Path(self.arrows + (arrow,))
     
-    def extend_at_start(self, arrow : Arrow):
+    def extend_at_start(self, arrow : Arrow) -> "Path | None":
+        """ 
+        If given arrow ends where path starts, then returns new concantenation arrow then path.
+        Otherwise, returns None.
+        """
         if arrow.target != self.source():
             return None
         return Path((arrow,) + self.arrows)
         
-    def truncate(self, start_idx : int, end_idx : int):
+    def truncate(self, start_idx : int, end_idx : int) -> Path:
+        """ Take subpath of path with indices [start_idx, ..., end_idx-1]. """
         arrows = self.arrows[start_idx:end_idx]
         return Path(arrows)
 
-    def is_subpath(self, other: Path):
+    def is_subpath(self, other: Path) -> bool:
         if len(self) == 0:
             return True
         if self.is_stationary_path():
