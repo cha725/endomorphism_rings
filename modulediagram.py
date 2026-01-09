@@ -103,6 +103,13 @@ class ModuleDiagram:
                 socle_labels[v] = layer_idx
         return socle_labels
     @cached_property
+    def indecomposable_summands(self) -> "list[ModuleSubDiagram]":
+        """ Returns list of indecomposable summands. """
+        subsets = self.bitmask.connected_components
+        return [ModuleSubDiagram(self, v) for v in subsets]
+
+
+
     ## Drawing the module diagram ##
     @cached_property
     def _create_radical_layer_graph(self):
