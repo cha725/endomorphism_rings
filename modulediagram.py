@@ -193,27 +193,25 @@ class ModuleDiagram:
 class ModuleSubDiagram(ModuleDiagram):
     def __init__(self,
                  parent : ModuleDiagram,
-                 vertices : list[int]):
-        if not set(vertices) <= set(parent.vertices):
-            raise ValueError(f"Invalid vertices. Must be a subset of {parent.vertices}")
+                 vertex_sublist : list[Vertex]):
+        for v in vertex_sublist:
+            if v not in parent.vertex_list:
+                raise ValueError(f"{v} is not a vertex of parent module, {parent.vertex_list}")
         self.parent = parent
-        comp_fac = parent.composition_factors
-        composition_factors = tuple([comp_fac[v] for v in vertices])
-        v_lab = parent.vertex_labels
-        vertex_labels = tuple([v_lab[v] for v in vertices])
-        arr = parent.arrows
-        arrows = tuple([a for a in arr if a.source in vertices and a.target in vertices])
-        super().__init__(composition_factors,
-                         vertex_labels,
-                         arrows)
 
-class Examples:
-    """
-    Class to store examples of module diagrams.
-    """
-    def __init__(self, 
-                 examples: dict[str, dict]):
-        self.examples = examples
+        if parent.arrow_list:
+            arrow_sublist = [
+                arr for arr in parent.arrow_list
+                    if arr.source in vertex_sublist and arr.target in vertex_sublist
+            ]
+        else:
+            arrow_sublist = []
+
+        super().__init__(
+            vertex_sublist,
+            arrow_sublist
+        )
+
 
     def add(self, 
             name: str, 
