@@ -254,6 +254,31 @@ class BitmaskSubgraph:
     def is_connected(self) -> bool:
         """ Check if the whole graph is connected. """
         return self._connected_masks[self.vertex_mask]
+
+    def _connected_components_of(self, mask: int) -> list[int]:
+        """ Returns a list of masks of connected components of the given mask. """
+        if self._is_connected_mask(mask):
+            return [mask]
+        components = []
+        remaining_mask = mask
+        while remaining_mask:
+            first_bit = remaining_mask & -remaining_mask
+            component = first_bit
+            to_check = first_bit
+            while to_check:
+                second_bit = to_check & -to_check
+                to_check &= ~second_bit
+                idx = second_bit.bit_length() - 1
+                neighbours = mask & self.adj_mask[idx]
+                new_neighbours = neighbours & ~component
+                component |= new_neighbours
+                to_check |= new_neighbours
+            components.append(component)
+            remaining_mask &= ~component
+            if remaining_mask and self._is_connected_mask(remaining_mask):
+                components.append(remaining_mask)
+                break
+        return components
     @cached_property
     def compute_closed_subsets(self) -> tuple[list[list[int]],list[list[int]]]:
         """
