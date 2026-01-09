@@ -66,27 +66,39 @@ class BitmaskSubgraph:
     TODO: combine connectivity and closure functions for efficiency.
     """
     def __init__(self,
-                 arrows : Optional[tuple[Arrow,...]] = None):
-        if arrows is None:
-            raise ValueError(f"Graph must contain at least one arrow.")
-        self.arrows = arrows
-        self.num_arrows = len(arrows)
-        self.vertices = tuple(sorted(set(a.source for a in self.arrows) | set(a.target for a in self.arrows)))
-        self.num_vertices = len(self.vertices)
-        self.vertex_to_index = {v: idx for idx, v in enumerate(self.vertices)}
+                 vertex_list: list[Vertex],
+                 arrow_list : list[Arrow] | None):
         
+        self.vertex_list = vertex_list
+        self.num_vertices = len(self.vertex_list)
+
+        self.vertex_to_index = {v : idx for idx, v in enumerate(self.vertex_list)}
+        self.index_to_vertex = self.vertex_list
+
         self.vertex_mask = (1 << self.num_vertices) - 1
+        self.vertex_to_mask = {v : (1 << idx) for v, idx in self.vertex_to_index.items()}
+        self.mask_to_vertex = {(1 << idx) : v for v, idx in self.vertex_to_index.items()}
+
+        self.arrow_list = arrow_list or []
+        for arrow in self.arrow_list:
+            if arrow.source not in self.vertex_list:
+                raise ValueError(f"Source of {arrow} is {arrow.source} which is not a vertex {self.vertex_list}.")
+            if arrow.target not in self.vertex_list:
+                raise ValueError(f"Target of {arrow} is {arrow.target} which is not a vertex {self.vertex_list}.")
+    
+        self.num_arrows = len(self.arrow_list)
+
         self.pred_mask = [0] * self.num_vertices
         self.succ_mask = [0] * self.num_vertices
         self.adj_mask = [0] * self.num_vertices
-        for arrow in self.arrows:
+
+        for arrow in self.arrow_list:
             source_idx = self.vertex_to_index[arrow.source]
             target_idx = self.vertex_to_index[arrow.target]
             self.succ_mask[source_idx] |= (1 << target_idx)
             self.pred_mask[target_idx] |= (1 << source_idx)
             self.adj_mask[source_idx] |= (1 << target_idx)
             self.adj_mask[target_idx] |= (1 << source_idx)
-        # TODO: does pred_mask etc. suggest an integer rather than a list?
 
     ### VERTICES ###
     def _iterate_over_bits(self, mask: int) -> Iterator[int]:
