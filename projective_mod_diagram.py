@@ -26,69 +26,18 @@ class ProjectiveDiagram(ModuleDiagram):
         vertex_list, arrow_list = self._create_module_diagram()
         super().__init__(vertex_list, arrow_list)
 
-    def _construct_mod_diagram(self):
-        """
-        Build the projective module diagram for the given top vertex.
-        
-        Algebraically:
-            - Each vertex corresponds to a simple composition factor of the module.
-            - Each arrow represents the algebra action extending a path.
-        
-        Computationally:
-            - Each vertex corresponds to a path in the DFS search of the quiver algebra.
-            - Each arrow corresponds to a quiver arrow such that source_path + arrow = target_path.
-        """
-        path_to_vertex = {}
-        composition_factors = []
-        vertex_labels = []
-        arrows = []
-        paths = []
-
-        dfs_connections = self.algebra.paths(with_connections=True)[self.top_vertex]
-
-        for path, arrow, new_path in dfs_connections:
-
-            if new_path not in path_to_vertex:
-                idx = len(path_to_vertex) # take next index available
-                path_to_vertex[new_path] = idx # assign new path this index
-                composition_factors.append(new_path.target()) # assign simple factor to this index
-                vertex_labels.append(new_path) # 
-                paths.append(path)
-
-            if arrow is not None:
-                source = path_to_vertex[path]
-                target = path_to_vertex[new_path]
-                arrows.append(Arrow(source,target,arrow.label if hasattr(arrow, 'label') else arrow))
-
-        self.path_to_vertex: dict[Path,int] = path_to_vertex
-        self.composition_factors: tuple[int] = tuple(composition_factors)
-        self.vertex_labels: tuple[str] = tuple(vertex_labels)
-        self.arrows: tuple[Arrow] = tuple(arrows)
-        self.paths: list[Path] = list(set(paths))
-
-    def vertex_to_path(self) -> list[Path]:
-        """
-        Return list whose ith entry is the quiver path that vertex i is defined by.
-        """
-        vtp = [Path() for _ in range(len(self.path_to_vertex))]
-        for v, path in enumerate(self.path_to_vertex):
-            vtp[v] = path
-        return vtp
+    def _create_module_diagram(self) -> tuple[list[Vertex], list[Arrow]]:
+        paths, connections = self.algebra.dfs_paths_from_vertex(self.top_vertex)
+        paths_to_vertex = {path : Vertex(label = path.fancy_label(), composition_factor=path.target()) for path in paths}
+        vertex_list = list(paths_to_vertex.values())
+        arrow_list = []
+        for connection in connections:
+            source = paths_to_vertex[connection.source]
+            target = paths_to_vertex[connection.target]
+            label = connection.label
+            arrow_list.append(Arrow(source, target, label))
+        return (vertex_list, arrow_list)
     
-    def find_all_submodules(self):
-        submods = self.generate_all_submodules
-        if submods is None:
-            return None
-        new_submods = []
-        for submod in submods:
-            new_submod = []
-            for v in submod:
-                new_submod.append(self.vertex_to_path()[v])
-            new_submods.append(new_submod)
-        return new_submods
-    
-    def find_all_submods_up_to_iso(self):
-        pass
 
     def __repr__(self):
         return f"Projective(algebra={self.algebra}, top vertex={self.top_vertex})"
