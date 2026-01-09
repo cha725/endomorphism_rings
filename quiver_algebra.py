@@ -76,9 +76,12 @@ class Path:
         return len(self.arrows)
     
     def __eq__(self, other : Path):
-        if self.is_stationary_path():
-            return self.stationary_vertex == other.stationary_vertex
-        return self.arrows == other.arrows
+        if self.is_stationary_path() == other.is_stationary_path():
+            if self.is_stationary_path():
+                return self.stationary_vertex == other.stationary_vertex
+            else:
+                return self.arrows == other.arrows
+        return False
 
     def __repr__(self):
         if self.is_stationary_path():
