@@ -178,7 +178,9 @@ class BitmaskSubgraph:
         remaining_mask = self.vertex_mask
         layers = []
         while remaining_mask:
-            sources = self.sources_of_mask(remaining_mask)
+            sources = self._sources_of_mask(remaining_mask)
+            if sources == 0:
+                return None
             layers.append(sources)
             remaining_mask &= ~sources
         return layers
