@@ -244,32 +244,16 @@ class BitmaskSubgraph:
                 # otherwise first_bit is not connected to the rest of the mask.
                 connected_masks[mask] = False
         return connected_masks
+    
+    def _is_connected_mask(self, mask: int) -> bool:
         """
         Check if mask is connected (as an undirected graph).
         """
-        if mask == 0:
-            return True
-        # mask is connected iff starting at a single vertex can visit every other vertex
+        return self._connected_masks[mask]
     
-        start = mask & (~mask + 1) # first non-zero bit in mask
-        visited = start
-        remaining = start
-
-        while remaining:
-        
-            vertex = remaining & (~remaining + 1) # first non-zero bit
-            remaining &= ~vertex # remove vertex from remaining
-            
-            vertex_idx = vertex.bit_length()-1 # compute index of vertex
-            
-            neighbours = mask & self.adj_mask[vertex_idx] # adjacencies of vertex that are in the mask
-            new_neighbours = neighbours & ~visited # find vertices that have not been visited
-            
-            visited |= new_neighbours # have visited the adjacent vertices now
-            remaining |= new_neighbours # add new neighbours to remaining
-
-        return visited == mask
-    
+    def is_connected(self) -> bool:
+        """ Check if the whole graph is connected. """
+        return self._connected_masks[self.vertex_mask]
     @cached_property
     def compute_closed_subsets(self) -> tuple[list[list[int]],list[list[int]]]:
         """
