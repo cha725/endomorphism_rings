@@ -133,6 +133,9 @@ class Homomorphism:
     
     __hash__ = object.__hash__
 
+    def __repr__(self) -> str:
+        return f"Hom({self.domain.vertex_labels} -> {self.codomain.vertex_labels} with mapping={dict({k.label : v.label for k,v in self.mapping.items()})})"    
+
         self.domain = domain
         self.image = image
         self.codomain = codomain
