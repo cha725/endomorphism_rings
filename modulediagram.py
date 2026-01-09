@@ -88,6 +88,20 @@ class ModuleDiagram:
         Loewy length is the smallest n such that the nth radical layer is trivial.
         """
         return len(self.radical_layer_list)
+    
+    @cached_property
+    def socle_layers(self) -> list[list[Vertex]]:
+        """ Return list of vertices grouped into socle layers. """
+        return self.bitmask.socle_layers()
+
+    @cached_property
+    def socle_layer_of(self) -> dict[Vertex, int]:
+        """ Return dictionary assigning to each vertex its socle layer. """
+        socle_labels = {}
+        for layer_idx, layer in enumerate(self.socle_layers):
+            for v in layer:
+                socle_labels[v] = layer_idx
+        return socle_labels
     @cached_property
     def radical_layer_to_vertices(self) -> list[list[int]]:
         """
