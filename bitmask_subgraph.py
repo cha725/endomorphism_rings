@@ -67,7 +67,7 @@ class BitmaskSubgraph:
     Computes the predecessor and successor closed subsets of a directed graph.
 
     Uses bitmasks to compute these properties.
-    For V vertices, the vertex bitmasks are on 0...V-1 bits.
+    For V vertices, the vertex bitmasks are on V-1 bits.
 
     TODO: combine connectivity and closure functions for efficiency.
     """
@@ -107,6 +107,7 @@ class BitmaskSubgraph:
             self.adj_mask[target_idx] |= (1 << source_idx)
 
     ### VERTICES ###
+
     def _iterate_over_bits(self, mask: int) -> Iterator[int]:
         """ Returns interator that generates the individual bits in the given mask. """
         while mask:
@@ -163,8 +164,8 @@ class BitmaskSubgraph:
     @cached_property
     def _sources(self) -> int:
         """
-        Return bitmask of vertices that are sources of the graph.
-        A source vertex is one with no predecessors in the mask.
+        Return bitmask of vertices that are sources of the entire graph.
+        A source vertex is one with no predecessors.
         """
         return self.sources_of_mask(self.vertex_mask)
     
@@ -275,6 +276,8 @@ class BitmaskSubgraph:
         for layer_mask in self._socle_layers:
             layers.append(self._mask_to_vertices(layer_mask))
         return layers
+    
+    ### Connected components ###
     
     @cached_property
     def _connected_masks(self) -> list[bool]:
@@ -388,6 +391,7 @@ class BitmaskSubgraph:
                     return False
         return True
       
+
 
     @cached_property
     def compute_closed_subsets(self) -> tuple[list[list[list[Vertex]]],list[list[list[Vertex]]]]:
