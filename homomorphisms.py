@@ -125,6 +125,11 @@ class Homomorphism:
             if len(self.mapping.values()) == len(self.codomain.vertex_list):
                 return all(self.mapping[v] == v for v in self.domain.vertex_list)
         return False
+    def __eq__(self, other: "Homomorphism"):
+        dom = self.domain == other.domain
+        codom = self.codomain == other.codomain
+        map = self.mapping == other.mapping
+        return all([dom,codom,map])
         self.domain = domain
         self.image = image
         self.codomain = codomain
