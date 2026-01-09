@@ -67,6 +67,10 @@ class ModuleDiagram:
         """ Return list of vertices with no outgoing arrows. """
         return self.bitmask.sinks()
 
+    @cached_property
+    def radical_layer_list(self) -> list[list[Vertex]]:
+        """ Return list of vertices grouped into radical layers. """
+        return self.bitmask.radical_layers()
 
     @cached_property
     def radical_labels(self):
