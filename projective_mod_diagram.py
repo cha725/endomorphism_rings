@@ -47,58 +47,81 @@ class ProjectiveDiagram(ModuleDiagram):
     def __repr__(self):
         return f"Projective(algebra={self.algebra}, top vertex={self.top_vertex})"
 
+###################################################################################################
+###################################################################################################
+###################################################################################################
+###################################################################################################
+###################################################################################################
+###################################################################################################
+###################################################################################################
+###################################################################################################
+###################################################################################################
+###################################################################################################
 
-# TODO: Is this standard practice?
-
-class Examples:
-    """
-    Class to store examples.
-    """
-    def __init__(self,
-                    examples : dict[str,MonomialQuiverAlgebra]):
-        self.examples = examples
-
-    def add(self, example : tuple[str, MonomialQuiverAlgebra]):
-        self.examples[example[0]] = example[1]
-
-    def run(self, draw: bool = False):
-        for name, quiver in self.examples.items():
-            print(f"\n=== Example: {name} ===")
-            print(f"\n Vertices = {quiver.vertices}")
-            print(f" Arrows = {quiver.arrows}")
-            print(f" Relations = {quiver.relations}")
-            print(f"\n-- Projectives of quiver --")
-            for v in quiver.vertices:
-                proj = ProjectiveDiagram(quiver, v)
-                print(proj)
-                if draw:
-                    proj.draw_radical_layers
-                print(f"Paths = {proj.paths}")
-                print(f"Submodules:")
-                for submod in proj.find_all_submodules():
-                    print(f"{submod}")
 
 if __name__ == "__main__":
+
+    class Examples:
+        """
+        Class to store examples.
+        """
+        def __init__(self,
+                        examples : dict[str,MonomialQuiverAlgebra]):
+            self.examples = examples
+
+        def add(self, example : tuple[str, MonomialQuiverAlgebra]):
+            self.examples[example[0]] = example[1]
+
+        def run(self, draw: bool = False):
+            for name, quiver in self.examples.items():
+                print(f"\n=== Example: {name} ===")
+                print(f"\n Vertices of quiver = {quiver.vertices}")
+                print(f" Arrows of quiver = {quiver.arrows}")
+                print(f" Relations = {quiver.relations}")
+                print(f"\n-- Projectives of quiver --")
+                for v in quiver.vertices:
+                    print(f"\n=== Projective at {v} ===")
+                    proj = ProjectiveDiagram(quiver, v)
+                    print(f"\n {proj.nice_print()}")
+                    print(f"\n Radical layers of proj: {[[v.label for v in layer] for layer in proj.radical_layer_list]}")
+                    print(f"\n Radical subgraphs:")
+                    for r in proj.radical_submodules:
+                        print([v.label for v in r.vertex_list])                
+                    if draw:
+                        proj.draw_radical_layers
 
     examples = Examples({})
 
     examples.add(("Type A no relations",
-                  MonomialQuiverAlgebra(arrows=[Arrow(0,1,"a"),Arrow(1,2,"b"),Arrow(2,3,"c")],
+                  MonomialQuiverAlgebra(arrows=[Arrow(0,1,"a"),
+                                                Arrow(1,2,"b"),
+                                                Arrow(2,3,"c")],
                                         relations = [])))
     
-    examples.add(("Type A rad2 relations",
-                  MonomialQuiverAlgebra(arrows=[Arrow(0,1,"a"),Arrow(1,2,"b"),Arrow(2,3,"c")],
-                                        relations = [Path((Arrow(0,1,"a"),Arrow(1,2,"b"))),
-                                                     Path((Arrow(1,2,"b"),Arrow(2,3,"c")))])))
+    # examples.add(("Type A rad2 relations",
+    #               MonomialQuiverAlgebra(arrows=[Arrow(Vertex(0),Vertex(1),"a"),
+    #                                             Arrow(Vertex(1),Vertex(2),"b"),
+    #                                             Arrow(Vertex(2),Vertex(3),"c")],
+    #                                     relations = [Path((Arrow(Vertex(0),Vertex(1),"a"),
+    #                                                        Arrow(Vertex(1),Vertex(2),"b"))),
+    #                                                  Path((Arrow(Vertex(1),Vertex(2),"b"),
+    #                                                        Arrow(Vertex(2),Vertex(3),"c")))])))
 
-    examples.add(("Three cyclic",
-                 MonomialQuiverAlgebra(arrows=[Arrow(0,1,"a"),Arrow(1,2,"b"),Arrow(2,0,"c")],
-                                       relations=[Path((Arrow(0,1,"a"),Arrow(1,2,"b")))])))
+    # examples.add(("Three cyclic",
+    #              MonomialQuiverAlgebra(arrows=[Arrow(Vertex(0),Vertex(1),"a"),
+    #                                            Arrow(Vertex(1),Vertex(2),"b"),
+    #                                            Arrow(Vertex(2),Vertex(0),"c")],
+    #                                    relations=[Path((Arrow(Vertex(0),Vertex(1),"a"),
+    #                                                     Arrow(Vertex(1),Vertex(2),"b")))])))
 
-    examples.add(("Bigger",
-                 MonomialQuiverAlgebra( arrows=[Arrow(1,2,"a"), Arrow(2,3,"b"), Arrow(1,3,"c"),
-                                                Arrow(3,1,"d"), Arrow(2,2,"e")],
-                                        relations=[Path((Arrow(1,2,"a"), Arrow(2,2,"e")))],
-                                        max_radical_length=3)))
+    # examples.add(("Bigger",
+    #              MonomialQuiverAlgebra( arrows=[Arrow(Vertex(1),Vertex(2),"a"),
+    #                                             Arrow(Vertex(2),Vertex(3),"b"),
+    #                                             Arrow(Vertex(1),Vertex(3),"c"),
+    #                                             Arrow(Vertex(3),Vertex(1),"d"),
+    #                                             Arrow(Vertex(2),Vertex(2),"e")],
+    #                                     relations=[Path((Arrow(Vertex(1),Vertex(2),"a"),
+    #                                                      Arrow(Vertex(2),Vertex(2),"e")))],
+    #                                     max_radical_length=3)))
 
     examples.run()
