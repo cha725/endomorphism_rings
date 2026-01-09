@@ -73,11 +73,13 @@ class ModuleDiagram:
         return self.bitmask.radical_layers()
 
     @cached_property
-    def radical_labels(self):
-        """
-        Create a 'radical_layer' label to each node in the graph.
-        vertices in sources get layer 0, and each target node gets a layer
-        one higher than the maximum of its predecessors.
+    def radical_layer_of(self) -> dict[Vertex, int]:
+        """ Return dictionary assigning to each vertex its radical layer. """
+        radical_labels = {}
+        for layer_idx, layer in enumerate(self.radical_layer_list):
+            for v in layer:
+                radical_labels[v] = layer_idx
+        return radical_labels
         """
         if not self.pred_list:
             return [0] * self.num_vertices 
