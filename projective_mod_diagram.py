@@ -23,10 +23,8 @@ class ProjectiveDiagram(ModuleDiagram):
             raise ValueError(f"Invalid vertex. Vertex {top_vertex} must be a quiver vertex {algebra.vertices}")
         self.algebra = algebra
         self.top_vertex = top_vertex
-        self._construct_mod_diagram()
-        super().__init__(self.composition_factors,
-                         self.vertex_labels,
-                         self.arrows)
+        vertex_list, arrow_list = self._create_module_diagram()
+        super().__init__(vertex_list, arrow_list)
 
     def _construct_mod_diagram(self):
         """
