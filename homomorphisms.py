@@ -136,8 +136,34 @@ class Homomorphism:
     def __repr__(self) -> str:
         return f"Hom({self.domain.vertex_labels} -> {self.codomain.vertex_labels} with mapping={dict({k.label : v.label for k,v in self.mapping.items()})})"    
 
+class HomomorphismGroup:
+    def __init__(self,
+                 domain: ModuleDiagram,
+                 codomain: ModuleDiagram):
         self.domain = domain
-        self.image = image
         self.codomain = codomain
+        self.homs = self.compute_homs()
+
+    def compute_homs(self) -> list[Homomorphism]:
+        """
+        Returns list of homomorphisms from domain to codomain.
+        """ 
+        homs = []
+        quotient_im = self.domain.all_quotients
+        sub_im = self.codomain.all_submodules
+        max_dim = min(self.domain.num_vertices, self.codomain.num_vertices)
+        for dim in range(max_dim + 1):
+            poss_quotients = quotient_im[dim]
+            poss_subs = sub_im[dim]
+            for quotient in poss_quotients:
+                for sub in poss_subs:
+                    mapping = {}
+                    q_mod = ModuleSubDiagram(self.domain, quotient)
+                    s_mod = ModuleSubDiagram(self.codomain, sub)
+                    if q_mod == s_mod:
+                        mapping = q_mod.compute_isomorphism(s_mod)
+                        if mapping:
+                            homs.append(Homomorphism(self.domain, self.codomain, mapping))
+        return homs
 
     
