@@ -130,6 +130,9 @@ class Homomorphism:
         codom = self.codomain == other.codomain
         map = self.mapping == other.mapping
         return all([dom,codom,map])
+    
+    __hash__ = object.__hash__
+
         self.domain = domain
         self.image = image
         self.codomain = codomain
