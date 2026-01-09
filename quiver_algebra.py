@@ -227,21 +227,34 @@ if __name__ == "__main__":
     examples = Examples({})
 
     examples.add(("Type A no relations",
-                  MonomialQuiverAlgebra(arrows=[Arrow(0,1,"a"),Arrow(1,2,"b"),Arrow(2,3,"c")],
+                  MonomialQuiverAlgebra(arrows=[Arrow(0,1,"a"),
+                                                Arrow(1,2,"b"),
+                                                Arrow(2,3,"c")],
                                         relations = [])))
     
     examples.add(("Type A rad2 relations",
-                  MonomialQuiverAlgebra(arrows=[Arrow(0,1,"a"),Arrow(1,2,"b"),Arrow(2,3,"c")],
-                                        relations = [Path((Arrow(0,1,"a"),Arrow(1,2,"b"))),
-                                                     Path((Arrow(1,2,"b"),Arrow(2,3,"c")))])))
+                  MonomialQuiverAlgebra(arrows=[Arrow(0,1,"a"),
+                                                Arrow(1,2,"b"),
+                                                Arrow(2,3,"c")],
+                                        relations = [Path((Arrow(0,1,"a"),
+                                                           Arrow(1,2,"b"))),
+                                                     Path((Arrow(1,2,"b"),
+                                                           Arrow(2,3,"c")))])))
 
     examples.add(("Three cyclic",
-                 MonomialQuiverAlgebra(arrows=[Arrow(0,1,"a"),Arrow(1,2,"b"),Arrow(2,0,"c")],
-                                       relations=[Path((Arrow(0,1,"a"),Arrow(1,2,"b")))])))
+                 MonomialQuiverAlgebra(arrows=[Arrow(0,1,"a"),
+                                               Arrow(1,2,"b"),
+                                               Arrow(2,0,"c")],
+                                       relations=[Path((Arrow(0,1,"a"),
+                                                        Arrow(1,2,"b")))])))
 
     examples.run()
 
-    qa = MonomialQuiverAlgebra(arrows=[Arrow(0,1,"a"),Arrow(1,2,"b"),Arrow(2,3,"c")],
-                               relations = [Path((Arrow(0,1,"a"),Arrow(1,2,"b"))),
-                                            Path((Arrow(1,2,"b"),Arrow(2,3,"c")))])
+    qa = MonomialQuiverAlgebra(arrows=[Arrow(0,1,"a"),
+                                       Arrow(1,2,"b"),
+                                       Arrow(2,3,"c")],
+                               relations = [Path((Arrow(0,1,"a"),
+                                                  Arrow(1,2,"b"))),
+                                            Path((Arrow(1,2,"b"),
+                                                  Arrow(2,3,"c")))])
     
