@@ -209,6 +209,16 @@ class BitmaskSubgraph:
                     subgraphs[layer_idx] |= sub_layers
         return subgraphs
     
+    def compute_radical_subgraphs(self) -> list[list[Vertex]]:
+        """ Returns list of bitmasks where ith entry is all the vertices in radical layer j>=i. """
+        subgraphs = self._compute_radical_subgraphs()
+        ind_subgraphs = []
+        for subgraph in subgraphs:
+            summands = [self._mask_to_vertices(m) for m in self._connected_components_of(subgraph)]
+            ind_subgraphs += summands
+        return ind_subgraphs
+
+    # Socle layers
     @cached_property
     def _socle_layers(self) -> list[int]:
         """
