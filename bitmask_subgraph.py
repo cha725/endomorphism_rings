@@ -108,25 +108,35 @@ class BitmaskSubgraph:
             mask ^= bit
             yield bit
     
+    def _mask_to_indices(self, mask: int) -> list[int]:
+        """ Converts mask to corresponding list of vertex indices. """
         remaining = mask
-        vertices = []
+        indices = []
         while remaining:
-            vertex = remaining & (~remaining + 1) # get first non-zero bit
+            vertex = remaining & -remaining # get first non-zero bit
             remaining &= ~vertex # remove first non-zero bit
             vertex_idx = vertex.bit_length() - 1
-            vertices.append(vertex_idx)
-        return vertices
-
-    @cached_property
-    def mask_to_vertices(self) -> list[list]:
-        """
-        Create list to convert masks to subsets of vertices.
-
-        Returns:
-            list: index i = list of vertices inside i.   
-        """
-        return [self._mask_to_vertices(mask) for mask in range(self.vertex_mask + 1)]
+            indices.append(vertex_idx)
+        return indices
     
+    def _indices_to_vertices(self, indices: list[int]) -> list[Vertex]:
+        """ Converts list of vertex indices to corresponding list of vertices. """
+        return [self.index_to_vertex[idx] for idx in indices]
+
+    def _mask_to_vertices(self, mask: int) -> list[Vertex]:
+        """ Converts mask to corresponding list of vertices. """
+        return self._indices_to_vertices(self._mask_to_indices(mask))
+    
+    def _dim_of_mask(self, mask: int) -> int:
+        """ Returns the number of vertices represented by the mask. """
+        remaining = mask
+        dim = 0
+        while remaining:
+            vertex = remaining & -remaining
+            remaining &= ~vertex
+            dim += 1
+        return dim
+
     # Radical layers
 
     def sources_of_mask(self, mask: int) -> int:
