@@ -44,6 +44,15 @@ class ModuleDiagram:
         self.num_arrows = len(self.arrow_list)
 
         self.bitmask = BitmaskSubgraph(self.vertex_list, self.arrow_list)
+    
+    def sources(self) -> list[Vertex]:
+        """ Return list of vertices with no incoming arrows. """
+        return self.bitmask.sources()
+
+    def sinks(self) -> list[Vertex]:
+        """ Return list of vertices with no outgoing arrows. """
+        return self.bitmask.sinks()
+
 
     @cached_property
     def radical_labels(self):
