@@ -195,9 +195,20 @@ class BitmaskSubgraph:
             for layer_mask in self._radical_layers:
                 layers.append(self._mask_to_vertices(layer_mask))
         return layers
+    
+    def _compute_radical_subgraphs(self) -> list[int]:
+        """ Returns list of bitmasks where ith entry is all the vertices in radical layer j>=i. """
         rad_layers = self._radical_layers
-        return [self._mask_to_vertices(layer) for layer in rad_layers]
-
+        subgraphs = []
+        if rad_layers:
+            sub_rad_layers = rad_layers.copy()
+            for layer_idx, layer in enumerate(rad_layers):
+                subgraphs.append(layer)
+                sub_rad_layers.remove(layer)
+                for sub_layers in sub_rad_layers:
+                    subgraphs[layer_idx] |= sub_layers
+        return subgraphs
+    
     @cached_property
     def _socle_layers(self) -> list[int]:
         """
