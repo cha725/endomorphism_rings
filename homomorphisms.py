@@ -67,6 +67,12 @@ class Homomorphism:
         """
         return ModuleSubDiagram(self.codomain, list(self.mapping.values()))
     
+    def is_inclusion(self) -> bool:
+        return self.image().vertex_labels == self.domain.vertex_labels
+    
+    def is_projection(self) -> bool:
+        return self.image().vertex_labels == self.codomain.vertex_labels
+    
         self.domain = domain
         self.image = image
         self.codomain = codomain
