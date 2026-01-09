@@ -165,5 +165,18 @@ class HomomorphismGroup:
                         if mapping:
                             homs.append(Homomorphism(self.domain, self.codomain, mapping))
         return homs
+    
+    def compose_with(self, other: "HomomorphismGroup") -> list[Homomorphism]:
+        """
+        Return composition of all homs in starting homs up to n compositions.
+        """
+        if self.codomain != other.domain:
+            return []
+        new_homs = []
+        pre_homs = self.homs
+        post_homs = other.homs
+        for h in pre_homs:
+            new_homs += h.post_compose_with_homs(post_homs)
+        return new_homs
 
     
