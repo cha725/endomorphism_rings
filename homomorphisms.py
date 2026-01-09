@@ -120,6 +120,11 @@ class Homomorphism:
     def pre_compose_with_homs(self, post_homs: list[Homomorphism]):
         return [self.pre_compose(h) for h in post_homs if self.pre_compose(h)]
     
+    def is_identity(self):
+        if len(self.mapping.keys()) == len(self.domain.vertex_list):
+            if len(self.mapping.values()) == len(self.codomain.vertex_list):
+                return all(self.mapping[v] == v for v in self.domain.vertex_list)
+        return False
         self.domain = domain
         self.image = image
         self.codomain = codomain
