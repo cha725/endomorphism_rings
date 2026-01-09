@@ -146,7 +146,7 @@ class BitmaskSubgraph:
 
     # Radical layers
 
-    def sources_of_mask(self, mask: int) -> int:
+    def _sources_of_mask(self, mask: int) -> int:
         """
         Return bitmask of source vertices in the given mask.
         A source vertex is one with no predecessors in the mask.
@@ -154,11 +154,11 @@ class BitmaskSubgraph:
         sources = 0
         rem_mask = mask
         while rem_mask:
-            v = rem_mask & -rem_mask
-            rem_mask &= ~v
-            idx = v.bit_length() - 1
+            bit = rem_mask & -rem_mask
+            rem_mask &= ~bit
+            idx = bit.bit_length() - 1
             if self.pred_mask[idx] & mask == 0:
-                sources |= v
+                sources |= bit
         return sources
     
     @cached_property
@@ -167,7 +167,7 @@ class BitmaskSubgraph:
         Return bitmask of vertices that are sources of the entire graph.
         A source vertex is one with no predecessors.
         """
-        return self.sources_of_mask(self.vertex_mask)
+        return self._sources_of_mask(self.vertex_mask)
     
     def sources(self) -> list[Vertex]:
         """
