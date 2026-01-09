@@ -232,6 +232,15 @@ class ModuleSubDiagram(ModuleDiagram):
 
         return matcher.mapping
 
+    def is_submodule(self) -> bool:
+        dim = self.num_vertices
+        return self.vertex_list in self.parent.all_submodules[dim]
+    
+    def is_quotient(self) -> bool:
+        dim = self.num_vertices
+        return self.vertex_list in self.parent.all_quotients[dim]
+    
+
     def add(self, 
             name: str, 
             composition_factors: tuple[int,...],
