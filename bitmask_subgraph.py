@@ -40,18 +40,24 @@ class Vertex:
         return hash((self.label, self.composition_factor))
 
 class Arrow:
-    def __init__(self, source : int, target : int, label : Optional[str]=None):
+    """
+    Represents an arrow as a pair (source, target) with an optional label.
+    """
+    def __init__(self, 
+                 source, 
+                 target, 
+                 label = None):
         self.source = source
         self.target = target
         self.label = label
 
-    def __eq__(self, other : Arrow):
+    def __eq__(self, other: "Arrow") -> bool:
         return (self.source == other.source) and (self.target == other.target) and (self.label == other.label)
 
     def __repr__(self):
         if self.label:
-            return f"{self.label}: {self.source}->{self.target}"
-        return f"{self.source}->{self.target}"
+            return f"Arrow({self.label}: {self.source} -> {self.target})"
+        return f"Arrow({self.source} -> {self.target})"
     
     def __hash__(self):
         return hash((self.source, self.target, self.label))
