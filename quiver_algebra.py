@@ -213,34 +213,45 @@ class MonomialQuiverAlgebra(PathAlgebra):
         return f"MQA(vertices={self.vertices}, arrows={[a for a in self.arrows]}, relations={self.relations})"
 
 
-# TODO: Is this standard practice?
-
-class Examples:
-    """
-    Class to store examples of quivers.
-    """
-    def __init__(self,
-                    examples : dict[str,MonomialQuiverAlgebra]):
-        self.examples = examples
-
-    def add(self, example : tuple[str, MonomialQuiverAlgebra]):
-        self.examples[example[0]] = example[1]
-
-    def run(self):
-        for name, quiver in self.examples.items():
-            print(f"\n=== Example: {name} ===")
-            print(f"\n Vertices = {quiver.vertices}")
-            print(f" Arrows = {quiver.arrows}")
-            print(f" Relations = {quiver.relations}")
-            print(f"\n-- Paths in quiver --")
-            for vertex, paths in quiver.paths().items():
-                print(f"\n- Starting at vertex {vertex} -")
-                for path in paths:
-                    print(f"• {path}")
-                      
-
+###################################################################################################
+###################################################################################################
+###################################################################################################
+###################################################################################################
+###################################################################################################
+###################################################################################################
+###################################################################################################
+###################################################################################################
+###################################################################################################
+###################################################################################################
 
 if __name__ == "__main__":
+
+    
+
+    # TODO: Is this standard practice?
+
+    class Examples:
+        """
+        Class to store examples of quivers.
+        """
+        def __init__(self,
+                        examples : dict[str,MonomialQuiverAlgebra]):
+            self.examples = examples
+
+        def add(self, example : tuple[str, MonomialQuiverAlgebra]):
+            self.examples[example[0]] = example[1]
+
+        def run(self):
+            for name, quiver in self.examples.items():
+                print(f"\n=== Example: {name} ===")
+                print(f"\n Vertices = {quiver.vertices}")
+                print(f" Arrows = {quiver.arrows}")
+                print(f" Relations = {quiver.relations}")
+                print(f"\n-- Paths in quiver --")
+                for vertex, paths in quiver.paths().items():
+                    print(f"\n- Starting at vertex {vertex} -")
+                    for path in paths:
+                        print(f"* {path}")
 
     examples = Examples({})
 
