@@ -1,12 +1,12 @@
-import networkx as nx
 import matplotlib.pyplot as plt
-from typing import Optional
-from collections import defaultdict
-from functools import cached_property
-from quiver_algebra import Arrow
-from bitmask_subgraph import BitmaskSubgraph
-import time, random
+import networkx as nx
+import random
+import time
 
+from functools import cached_property
+from types import MappingProxyType
+
+from bitmask_subgraph import Vertex, Arrow, BitmaskSubgraph
 
 class ModuleDiagram:
     def __init__(self, 
