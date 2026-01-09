@@ -212,6 +212,25 @@ class ModuleSubDiagram(ModuleDiagram):
             arrow_sublist
         )
 
+    def compute_isomorphism(self, other: "ModuleSubDiagram") -> dict[Vertex, Vertex] | None:
+        """
+        Returns a mapping using parent vertex indices if isomorphism is found.
+        Or None if an isomorphism is not found.
+        """
+        G = self._create_radical_layer_graph
+        H = other._create_radical_layer_graph
+
+        matcher = nx.algorithms.isomorphism.DiGraphMatcher(
+            G,
+            H,
+            node_match = lambda a, b: a.get("comp_factor") == b.get("comp_factor"),
+            edge_match = lambda a, b: a.get("label") == b.get("label")
+        )
+
+        if not matcher.is_isomorphic():
+            return None
+
+        return matcher.mapping
 
     def add(self, 
             name: str, 
