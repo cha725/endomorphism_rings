@@ -279,6 +279,16 @@ class BitmaskSubgraph:
                 components.append(remaining_mask)
                 break
         return components
+    
+    @cached_property
+    def _connected_components(self) -> list[int]:
+        """ Return list of connected components. """
+        return self._connected_components_of(self.vertex_mask)
+    
+    @cached_property
+    def connected_components(self) -> list[list[Vertex]]:
+        """ Return list of connected components as lists of vertices. """
+        return [self._mask_to_vertices(m) for m in self._connected_components]
     @cached_property
     def compute_closed_subsets(self) -> tuple[list[list[int]],list[list[int]]]:
         """
