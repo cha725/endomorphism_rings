@@ -231,6 +231,14 @@ class ModuleSubDiagram(ModuleDiagram):
             return None
 
         return matcher.mapping
+    
+    def indecomposable_summands(self) -> list[ModuleSubDiagram]:
+        """ Returns list of indecomposable summands as subdiagrams of the parent module. """
+        ind_summands = super().indecomposable_summands()
+        change_parent = []
+        for summand in ind_summands:
+            change_parent.append(ModuleSubDiagram(self.parent, summand.vertex_list))
+        return change_parent
 
     def is_submodule(self) -> bool:
         dim = self.num_vertices
