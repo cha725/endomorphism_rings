@@ -340,6 +340,49 @@ class BitmaskSubgraph:
     def connected_components(self) -> list[list[Vertex]]:
         """ Return list of connected components as lists of vertices. """
         return [self._mask_to_vertices(m) for m in self._connected_components]
+    
+    def _is_pred_closed(self, mask: int) -> bool:
+        """
+        Check if a bitmask is closed under predecessors.
+        Returns True if closed under predecessors, or False otherwise.
+        TODO: would it be faster to compute the sources first?
+        """
+        rem_mask = mask
+        while rem_mask:
+            v = rem_mask & -rem_mask
+            rem_mask &= ~v
+            v_idx = v.bit_length() - 1
+            pred_v = self.pred_mask[v_idx]
+            rem_pred_v = pred_v
+            while rem_pred_v:
+                u = rem_pred_v & -rem_pred_v
+                rem_pred_v &= ~u
+                if u & mask == 0:
+                    return False
+        return True
+
+    
+    def _is_succ_closed(self, mask: int) -> bool:
+        """
+        Check if a bitmask is closed under successors.
+        Returns True if closed under successors, or False otherwise.
+        TODO: would it be faster to compute the sinks first?
+        """
+        rem_mask = mask
+        while rem_mask:
+            v = rem_mask & -rem_mask
+            rem_mask &= ~v
+            v_idx = v.bit_length() - 1
+            succ_v = self.succ_mask[v_idx]
+            rem_succ_v = succ_v
+            while rem_succ_v:
+                u = rem_succ_v & -rem_succ_v
+                rem_succ_v &= ~u
+                if u & mask == 0:
+                    return False
+        return True
+      
+
     @cached_property
     def compute_closed_subsets(self) -> tuple[list[list[list[Vertex]]],list[list[list[Vertex]]]]:
         """
