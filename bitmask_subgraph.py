@@ -185,10 +185,16 @@ class BitmaskSubgraph:
             remaining_mask &= ~sources
         return layers
     
-    def radical_layers(self) -> list[list[int]]:
+    def radical_layers(self) -> list[list[Vertex]]:
         """
-        Return radical layers as lists of vertices.
+        Returns list of vertices representing radical layers.
+        0th entry = sources, then removing sources gives next layer, etc.
         """
+        layers = []
+        if self._radical_layers:
+            for layer_mask in self._radical_layers:
+                layers.append(self._mask_to_vertices(layer_mask))
+        return layers
         rad_layers = self._radical_layers
         return [self._mask_to_vertices(layer) for layer in rad_layers]
 
