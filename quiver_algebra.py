@@ -190,8 +190,9 @@ class MonomialQuiverAlgebra(PathAlgebra):
             else:
                 paths[vertex] = results
         return paths
-
     
+    def __repr__(self):
+        return f"MQA(vertices={self.vertices}, arrows={[a for a in self.arrows]}, relations={self.relations})"
 
 
 # TODO: Is this standard practice?
