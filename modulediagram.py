@@ -169,26 +169,23 @@ class ModuleDiagram:
         )      
         plt.show()
 
-    def __eq__(self, other : ModuleDiagram):
-        def node_match(node1_att,node2_att):
-            return node1_att.get("simples") == node2_att.get("simples")
-        def edge_match(edge1_att,edge2_att):
-            return edge1_att.get("label") == edge2_att.get("label")
-        return nx.is_isomorphic(self.graph,other.graph,node_match=node_match,edge_match=edge_match)
-    
-    @cached_property
-    def generate_all_submodules(self):
-        return self.arrow_bitmask.succ_closed_vertex_subsets
-    
-    @cached_property
-    def generate_all_quotients(self):
-        return self.arrow_bitmask.pred_closed_vertex_subsets
-    
-    def is_submodule(self, other : ModuleDiagram):
-        return other in self.generate_all_submodules
-    
-    def is_quotient(self, other : ModuleDiagram):
-        return other in self.generate_all_quotients
+
+
+    def compute_isomorphism(self, other: "ModuleDiagram") -> dict | None:
+        G = self._create_radical_layer_graph
+        H = other._create_radical_layer_graph
+        matcher = nx.algorithms.isomorphism.DiGraphMatcher(
+            G,
+            H,
+            node_match = lambda a, b: a.get("comp_factor") == b.get("comp_factor"),
+            edge_match = lambda a, b: a.get("label") == b.get("label")
+        )
+        if not matcher.is_isomorphic():
+            return None
+        return dict(matcher.mapping)
+
+    def __eq__(self, other : "ModuleDiagram") -> bool:
+        return self.compute_isomorphism(other) is not None
     
     def __repr__(self):
         if not self.vertices:
