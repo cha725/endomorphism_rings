@@ -76,7 +76,7 @@ class Path:
     
     def fancy_label(self):
         if self.is_stationary_path():
-            return f"e({self.source})"
+            return f"e_{self.source()}"
         return "".join(str(a.label) for a in self.arrows)
     
     def fancy_vertices(self):
@@ -84,7 +84,6 @@ class Path:
             return f"Stationary path at {self.source()}"
         return "->".join(str(v) for v in self.vertices())
         
-
     def __len__(self):
         if self.is_stationary_path():
             return 0
@@ -112,7 +111,7 @@ class Path:
 class PathAlgebra:
     def __init__(self,
                  arrows : Optional[list[Arrow]] = None,
-                 vertices : Optional[list[int]] = None):
+                 vertices : Optional[list] = None):
         
         if arrows is None and vertices is None:
             raise ValueError("Path algebra cannot be empty.")
@@ -139,7 +138,7 @@ class MonomialQuiverAlgebra(PathAlgebra):
     def __init__(self,
                  arrows : Optional[list[Arrow]] = None,
                  relations : Optional[list[Path]] = None,
-                 vertices : Optional[list[int]] = None,
+                 vertices : Optional[list] = None,
                  max_radical_length : int = 20):
         super().__init__(arrows, vertices)
         self.relations = relations or []
