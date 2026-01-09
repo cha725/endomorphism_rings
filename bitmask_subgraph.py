@@ -2,6 +2,43 @@ from typing import Optional
 from functools import cached_property
 import random, time
 
+class Vertex:
+    """
+    Represents a vertex in a module diagram.
+
+    Parameters:
+        label: Label of the vertex.
+        composition_factor: The label for the simple corresponding to this vertex.
+        radical_layer (int): The value n such that the vertex is in the nth radical power
+            of the module but not the (n+1)th radical power.
+            Note such a value exists since the module diagram is finite.
+            i.e. the maximum number of steps from a source to the vertex.
+    """
+    def __init__(self,
+                 label,
+                 composition_factor = None,
+                 radical_layer: int | None = None):
+        self.label = label
+        self.composition_factor = composition_factor
+        self.radical_layer = radical_layer
+
+        if self.label is None:
+            raise ValueError("Vertex label cannot be None.")
+
+    def update_radical_layer(self, rad_layer: int):
+        self.radical_layer = rad_layer
+
+    def __eq__(self, other: "Vertex"):
+        return self.label == other.label and self.composition_factor == other.composition_factor
+
+    def __repr__(self):
+        if self.composition_factor:
+            return f"Vertex {self.label} with composition factor {self.composition_factor}"
+        return f"Vertex {self.label}"
+    
+    def __hash__(self):
+        return hash((self.label, self.composition_factor))
+
 class Arrow:
     def __init__(self, source : int, target : int, label : Optional[str]=None):
         self.source = source
