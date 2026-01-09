@@ -89,11 +89,13 @@ class BitmaskSubgraph:
         # TODO: does pred_mask etc. suggest an integer rather than a list?
 
     ### VERTICES ###
+    def _iterate_over_bits(self, mask: int) -> Iterator[int]:
+        """ Returns interator that generates the individual bits in the given mask. """
+        while mask:
+            bit = mask & -mask
+            mask ^= bit
+            yield bit
     
-    def _mask_to_vertices(self, mask: int) -> list:
-        """
-        Returns list of vertices in given mask.
-        """
         remaining = mask
         vertices = []
         while remaining:
