@@ -10,22 +10,40 @@ import time, random
 
 class ModuleDiagram:
     def __init__(self, 
-                 composition_factors: tuple[int,...],
-                 vertex_labels: Optional[tuple[str,...]] = None,
-                 arrows: Optional[tuple[Arrow,...]] = None):
+                 vertex_list: list[Vertex] | None = None,
+                 arrow_list: list[Arrow] | None = None):
         
-        self.composition_factors = composition_factors
-        self.num_vertices = len(self.composition_factors)
-        self.vertices = list(range(self.num_vertices))
-        self.vertex_labels = vertex_labels or tuple(['']*self.num_vertices)
-        self.arrows = arrows or tuple([])
-        self.num_arrows = len(self.arrows)
-        self.arrow_bitmask = BitmaskSubgraph(self.arrows)
-        self.sources = [i for i, flag in enumerate(self.arrow_bitmask.sources) if flag]        
-        self.sinks = self.arrow_bitmask.sinks
-        self.pred_list = self.arrow_bitmask.pred_list
-        self.succ_list = self.arrow_bitmask.succ_list
-        self.graph = self._create_radical_layer_graph()
+        # Compute vertices
+        if vertex_list:
+            self.vertex_list = vertex_list
+        elif arrow_list:
+            unordered = set(a.source for a in arrow_list) | set(a.target for a in arrow_list)
+            try:
+                self.vertex_list = sorted(unordered, key=lambda v : v.label)
+            except(TypeError, AttributeError):
+                self.vertex_list = list(unordered)
+        else:
+            raise ValueError("Either vertex_list or arrow_list must be provided.")
+        
+        self.vertex_labels = [v.label for v in self.vertex_list]
+        self.num_vertices = len(self.vertex_list)
+
+        self.vertex_to_index: MappingProxyType[Vertex, int] = MappingProxyType({v: idx for idx, v in enumerate(self.vertex_list)})
+        self.index_to_vertex: MappingProxyType[int, Vertex] = MappingProxyType({idx: v for idx, v in enumerate(self.vertex_list)})
+
+        # Compute arrows
+        
+        if arrow_list:
+            for a in arrow_list:
+                if a.source not in self.vertex_list:
+                    raise ValueError(f"Arrow sources must be in vertex list. Got arrow {a} for vertex list {self.vertex_list}.")
+                if a.target not in self.vertex_list:
+                    raise ValueError(f"Arrow targets must be in vertex list. Got arrow {a} for vertex list {self.vertex_list}.")
+        self.arrow_list = arrow_list or []
+        self.arrow_labels = [a.label for a in self.arrow_list]
+        self.num_arrows = len(self.arrow_list)
+
+        self.bitmask = BitmaskSubgraph(self.vertex_list, self.arrow_list)
 
     @cached_property
     def radical_labels(self):
