@@ -58,6 +58,15 @@ class Homomorphism:
             raise ValueError(f"Invalid element. Vertex {vertex} not in domain mapping.")
         return self.mapping[vertex]
     
+    def image(self) -> ModuleSubDiagram:
+        """
+        Compute the image of the homomorphism.
+
+        Returns:
+            ModuleSubDiagram: subdiagram of the codomain.
+        """
+        return ModuleSubDiagram(self.codomain, list(self.mapping.values()))
+    
         self.domain = domain
         self.image = image
         self.codomain = codomain
