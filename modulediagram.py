@@ -244,61 +244,107 @@ class ModuleSubDiagram(ModuleDiagram):
         return f"MSubD(parent={self.parent}, vertices={self.vertex_labels})"
     
 
-    def add(self, 
-            name: str, 
-            composition_factors: tuple[int,...],
-            vertex_labels: Optional[tuple[str,...]] = None,
-            arrows: Optional[tuple[Arrow,...]] = None):
-        self.examples[name] = { "composition_factors" : composition_factors,
-                                "vertex_labels" : vertex_labels,
-                                "arrows" : arrows}
 
-    def add_random_diagram(self, name: str, num_vertices : int, edge_prob: float):
+
+###################################################################################################
+###################################################################################################
+###################################################################################################
+###################################################################################################
+###################################################################################################
+###################################################################################################
+###################################################################################################
+###################################################################################################
+###################################################################################################
+###################################################################################################
+
+
+
+
+if __name__ == "__main__":
+
+
+    class MDExamples:
         """
-        Add a random directed tree with num_vertices vertices and edge probability edge_prob.
+        Class to store examples of module diagrams.
         """
-        composition_factors = tuple([0]*num_vertices)
-        vertex_labels = tuple(['']*num_vertices)
-        arrows = []
-        for i in range(num_vertices):
-            for j in range(i+1,num_vertices):
-                if random.random() < edge_prob:
-                    arrows.append(Arrow(i, j))
-        arrows = tuple(arrows)
-        self.add(name, composition_factors, vertex_labels, arrows)
+        def __init__(self, 
+                    examples: dict[str, dict]):
+            self.examples = examples
 
-    def run(self, verbose : bool = False, draw: bool = False):
-        times = []
-        for name, data in self.examples.items():
-            print(f"\n=== Example: {name} ===")
+        def add(self, 
+                name: str,
+                vertex_list: list[Vertex] | None = None,
+                arrow_list: list[Arrow] | None = None):
+            self.examples[name] = { 
+                "vertex_list" : vertex_list,
+                "arrow_list" : arrow_list
+            }
 
-            start_time = time.time()
-            diagram = ModuleDiagram(composition_factors=data["composition_factors"],
-                                    vertex_labels=data["vertex_labels"],
-                                    arrows=data["arrows"])
-            init_time = time.time() - start_time
+        def add_random_diagram(self, name: str, num_vertices : int, edge_prob: float):
+            """
+            Add a random directed tree with num_vertices vertices and edge probability edge_prob.
+            """
+            vertex_list = [Vertex(chr(i+97)) for i in range(num_vertices)]
+            arrow_list = []
+            for i in range(num_vertices):
+                for j in range(i+1,num_vertices):
+                    if random.random() < edge_prob:
+                        arrow_list.append(Arrow(Vertex(chr(i+97)), Vertex(chr(j+97))))
+            self.add(name, vertex_list, arrow_list)
 
-            start_time = time.time()
-            submods = diagram.generate_all_submodules
-            quotients = diagram.generate_all_quotients
-            subgraph_time = time.time() - start_time
+        def run(self, verbose : bool = False, draw: bool = False):
+            times = []
+            for name, data in self.examples.items():
+                print(f"\n=== Example: {name} ===")
 
-            if draw:
-                diagram.draw_radical_layers
+                start_time = time.time()
+                diagram = ModuleDiagram(
+                    vertex_list=data["vertex_list"],
+                    arrow_list=data["arrow_list"]
+                )
+                init_time = time.time() - start_time
+                print(f"Time to initialise object: {init_time:.4f} seconds")
 
-            if verbose:
-                print("\nVertices:", diagram.vertices)
-                print("\nArrows:", diagram.arrows)
-                print("\nSources:", diagram.sources)
-                print("\nRadical layers:", diagram.radical_layer_to_vertices)
-                print("\nAll submodules:", submods)
-                print("\nAll quotient modules:", quotients)
-        
-            times.append((init_time, subgraph_time))
+                start_time = time.time()
+                decomposition = diagram.indecomposable_summands()
+                decomp_time = time.time() - start_time
+                print(f"Time to decompose object {decomp_time:.4f} seconds")
 
-        return times
+                start_time = time.time()
+                rad_layers = diagram.radical_layer_list
+                rad_submods = diagram.radical_submodules
+                rad_time = time.time() - start_time
+                print(f"Time to create radical subgraphs: {rad_time:.4f} seconds")
 
-# TODO: make the print out prettier.
+                start_time = time.time()
+                subs = diagram.all_submodules
+                quotients = diagram.all_quotients
+                subgraph_time = time.time() - start_time
+                print(f"Time to generate sub and quotient modules: {subgraph_time:.4f} seconds")
+
+                if verbose:
+                    print("\nVertices:", diagram.vertex_labels)
+                    print("\nArrows:", diagram.arrow_list)
+                    print("\nDecomposition:", [d.vertex_labels for d in decomposition])
+                    print("\nRadical layers:", [[v.label for v in layer] for layer in rad_layers])
+                    print("\nRadical submodules:", rad_submods)
+                    print("\nSocle layers:", [[v.label for v in layer] for layer in diagram.socle_layers]) 
+                    print("\nAll submodules:")
+                    for s_list in subs:
+                        for v_list in s_list:
+                            print([v.label for v in v_list])
+                    print("\nAll quotient modules:")
+                    for q_list in quotients:
+                        for v_list in q_list:
+                            print([v.label for v in v_list])
+            
+                if draw:
+                    diagram.draw_radical_layers
+                times.append((init_time, subgraph_time))
+
+            return times
+
+    # TODO: make the print out prettier.
 
     class MSDExamples:
         """
@@ -348,39 +394,55 @@ class ModuleSubDiagram(ModuleDiagram):
             return results
 
 
+    # ### RUN EXAMPLES ###
+
+    # ### ModuleDiagram Examples ###
+
+    MD_examples = MDExamples({})
+
     for n in range(1):
-        examples.add_random_diagram(f"Example {n}", 10, 0.4)
-
-    times = examples.run(draw=True, verbose=True)
-
-    for idx, t in enumerate(times):
-        print(f"\n=== Example {idx} ===")
-        print(f"Initialisation time: {t[0]:.4f}")
-        print(f"Subgraph time: {t[1]:.4f}")
-
-
-
-
-    # examples.add("Example 1: A4",
-    #                     arrows=[Arrow(0,1,"a"), Arrow(1,2,"b"), Arrow(2,3,"c")],
-    #                     vertex_simples={0:0, 1:1, 2:0, 3:1})
-
-    # examples.add("Example 2: Diamond",
-    #                     arrows=[Arrow(0,1,"a"), Arrow(0,2,"b"), Arrow(1,3,"c"), Arrow(2,3,"d")])
-
-    # examples.add("Example 3: Y structure",
-    #                     arrows=[Arrow(0,2,"a"), Arrow(1,2,"b"), Arrow(2,3,"c"), Arrow(3,4,"d")])
-
-    # examples.add("Example 4: weird radical",
-    #                     arrows=[Arrow(0,1,"a"), Arrow(1,2,"b"), Arrow(2,3,"c"), Arrow(3,4,"d"),
-    #                             Arrow(0,5,"e"), Arrow(5,4,"f")])
-
-    # examples.add("Example 5: product of modules",
-    #                     arrows=[Arrow(0,1,"a1"), Arrow(1,2,"b1"), Arrow(2,3,"c1"),
-    #                             Arrow(4,5,"a2"), Arrow(5,6,"b2"), Arrow(6,7,"c2")])
-
-    # examples.add("Example 6: Algebra and dual",
-    #                     arrows=[Arrow(0,1,"a1"), Arrow(0,2,"b1"), Arrow(4,5,"a2"), Arrow(6,7,"b2")],
-    #                     isolated_vertices=[3])
+       MD_examples.add_random_diagram(f"Example {n}", 7, 0.4)
     
+    MD_examples.run(verbose=True, draw=True)
 
+    # ### ModuleSubDiagram Examples ###
+
+    # MSD_parent = ModuleDiagram(arrow_list=[Arrow(Vertex(0),Vertex(1)), Arrow(Vertex(1),Vertex(2))])
+
+    MSD_parent_data = MD_examples.examples["Example 0"]
+    MSD_parent_vertices = MSD_parent_data["vertex_list"]
+    MSD_parent_arrows = MSD_parent_data["arrow_list"]
+    MSD_parent = ModuleDiagram(MSD_parent_vertices, MSD_parent_arrows)
+
+    MSD_examples = MSDExamples(MSD_parent)
+    for n in range(10):
+        MSD_examples.add_random_subdiagram(f"Example {n}")
+
+    # MSD_examples.add("first two vertices", [Vertex(0),Vertex(1)])
+    # MSD_examples.add("last two vertices", [Vertex(1),Vertex(2)])
+
+    #MSD_examples.run(verbose=True)
+
+
+
+    # # examples.add("Example 1: A4",
+    # #                     arrows=(Arrow(0,1,"a"), Arrow(1,2,"b"), Arrow(2,3,"c")))
+
+    # # examples.add("Example 2: Diamond",
+    # #                     arrows=(Arrow(0,1,"a"), Arrow(0,2,"b"), Arrow(1,3,"c"), Arrow(2,3,"d")))
+
+    # # examples.add("Example 3: Y structure",
+    # #                     arrows=(Arrow(0,2,"a"), Arrow(1,2,"b"), Arrow(2,3,"c"), Arrow(3,4,"d")))
+
+    # # examples.add("Example 4: weird radical",
+    # #                     arrows=(Arrow(0,1,"a"), Arrow(1,2,"b"), Arrow(2,3,"c"), Arrow(3,4,"d"),
+    # #                             Arrow(0,5,"e"), Arrow(5,4,"f")))
+
+    # # examples.add("Example 5: product of modules",
+    # #                     arrows=(Arrow(0,1,"a1"), Arrow(1,2,"b1"), Arrow(2,3,"c1"),
+    # #                             Arrow(4,5,"a2"), Arrow(5,6,"b2"), Arrow(6,7,"c2")))
+
+    # # examples.add("Example 6: Algebra and dual",
+    # #                     arrows=(Arrow(0,1,"a1"), Arrow(0,2,"b1"), Arrow(4,5,"a2"), Arrow(6,7,"b2")),
+    # #                     composition_factors=(0,1,2,3,4,5,6,7))
+    
