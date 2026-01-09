@@ -178,5 +178,10 @@ class HomomorphismGroup:
         for h in pre_homs:
             new_homs += h.post_compose_with_homs(post_homs)
         return new_homs
+    
+    def __repr__(self):
+        return f"Hom({self.domain.vertex_labels, self.codomain.vertex_labels})"
+
+class EndoRing:
 
     
