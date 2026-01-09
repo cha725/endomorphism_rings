@@ -102,6 +102,19 @@ class ModuleDiagram:
             for v in layer:
                 socle_labels[v] = layer_idx
         return socle_labels
+    
+    ## Submodules and quotient modules ##
+
+    @cached_property
+    def all_submodules(self) -> list[list[list[Vertex]]]:
+        """ Return all submodules (successor-closed subsets) indexed by size. """
+        return self.bitmask.compute_succ_closed_subsets()
+    
+    @cached_property
+    def all_quotients(self) -> list[list[list[Vertex]]]:
+        """ Return all quotient modules (predeccesor-closed subsets) indexed by size. """
+        return self.bitmask.compute_pred_closed_subsets()
+
     @cached_property
     def radical_submodules(self) -> list["ModuleSubDiagram"]:
         """ Returns list of radical power submodules. """
