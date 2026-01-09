@@ -146,25 +146,27 @@ class MonomialQuiverAlgebra(PathAlgebra):
         return True
 
 
-    def dfs_paths_from_vertex(self, vertex: int, max_length: Optional[int] = None):
-        if max_length is None:
-            max_length = self.max_radical_length
+    def dfs_paths_from_vertex(self, vertex, max_length: Optional[int] = None) -> tuple[list[Path], list[Arrow]] | None:
+        """
+        Return list of paths of length at most max_length starting at given vertex.
+        If max_length not given, then max_length set to be the max radical length of the quiver.
+        """
+        if vertex not in self.vertices:
+            return None
+        max_length = max_length or self.max_radical_length
+        initial_path = Path(stationary_vertex=vertex)
+        paths_to_check = [initial_path]
+        connections: list[Arrow] = []
+        seen = set()
+        paths = []
 
-        paths = [Path(stationary_vertex=vertex)]
-        connecting_edges : dict[Path, tuple[Path, Optional[Arrow],Path]] = {Path(stationary_vertex=vertex):
-                            (Path(stationary_vertex=vertex), None, Path(stationary_vertex=vertex))}
-        seen = set(self.relations)
-        results = []
-        connections = []
-
-        while paths:
-            path = paths.pop()
+        while paths_to_check:
+            path = paths_to_check.pop()
             if path in seen:
                 # if path seen move onto next path in paths
                 continue
             # otherwise add to results and seen
-            results.append(path)
-            connections.append(connecting_edges[path])
+            paths.append(path)
             seen.add(path)
             if len(path) >= max_length:
                 # if path is maximum length move onto next path in paths
@@ -173,9 +175,11 @@ class MonomialQuiverAlgebra(PathAlgebra):
             for arrow in [a for a in self.arrows if a.source == path.target()]:
                 new_path = path.extend_at_end(arrow)
                 if new_path and self.is_path(new_path):
-                    paths.append(new_path)
-                    connecting_edges[new_path] = (path, arrow, new_path)
-        return results, connections
+                    paths_to_check.append(new_path)
+                    connections.append(Arrow(path, 
+                                             new_path, 
+                                             arrow.label))
+        return paths, connections
     
     def paths(self, length : Optional[int] = None, with_connections : bool = False) -> dict[int,list[Path]]:
         paths = {}
