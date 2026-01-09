@@ -219,6 +219,19 @@ class BitmaskSubgraph:
         return ind_subgraphs
 
     # Socle layers
+
+    def _sinks_of_mask(self, mask: int) -> int:
+        """
+        Return bitmask of sink vertices in the given mask.
+        A sink vertex is one with no successors in the mask.
+        """
+        sinks = 0
+        for bit in self._iterate_over_bits(mask):
+            idx = bit.bit_length() - 1
+            if self.succ_mask[idx] & mask == 0:
+                sinks |= bit
+        return sinks
+    
     @cached_property
     def _socle_layers(self) -> list[int]:
         """
