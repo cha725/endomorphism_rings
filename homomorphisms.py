@@ -313,6 +313,28 @@ class EndoRing:
                 for hom in M[row][col]:
                     G.add_edge(hom.domain,hom.codomain)
         return G
+    
+    def draw_quiver(self, node_size=800, node_color='lightblue', edge_color='black'):
+        """
+        Draw the quiver of the endomorphism ring.
+        The nodes correspond to indecomposable summands of the module M in End(M).
+        The arrows are the indecomposable morphisms between summands of M.
+        """
+        G = self.quiver()
+        pos = nx.spring_layout(G, seed=42)
+
+        # Label each node by its vertex list
+        labels = {n: str(n.vertex_list) for n in G.nodes()}
+
+        nx.draw(
+            G, pos,
+            node_size=node_size,
+            node_color=node_color,
+            edge_color=edge_color,
+            with_labels=True,
+            labels=labels
+        )
+        
 
 
     
