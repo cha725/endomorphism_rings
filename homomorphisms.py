@@ -197,8 +197,41 @@ class EndoRing:
             self.ind_summands += modules.indecomposable_summands()
         self.ind_summands = tuple(set(self.ind_summands))
         self.num_summands = len(self.ind_summands)
-        self.all_homs: NDArray = np.array([[HomomorphismGroup(m, n).homs for n in self.ind_summands] for m in self.ind_summands],
-            dtype=object)
+
+    def _find_indecomposable_morphisms(self) -> list[list[list[Homomorphism]]]:
+        """
+        Return list of endomorphisms that do not factor non-trivially through
+        another endomorphism. 
+        i.e. the endomorphisms f such that if f = gh then either g or h is idempotent.
+        """
+        candidate_homs = self.all_homs
+        indecomposables = [[list(h) for h in row] for row in candidate_homs]
+
+        for i in range(self.num_summands):
+            for j in range(self.num_summands):
+                new_list = []
+                for f in indecomposables[i][j]:
+                    reducible = False
+                    for k in range(self.num_summands):
+                        for g in candidate_homs[i][k]:
+                            if g.is_identity():
+                                continue
+                            for h in candidate_homs[k][j]:
+                                if h.is_identity():
+                                    continue
+                                comp = g.post_compose(h)
+                                if comp is not None and comp.hom_signature() == f.hom_signature():
+                                    reducible = True
+                                    break
+                            if reducible:
+                                break
+                        if reducible:
+                            break
+                    if not reducible:
+                        new_list.append(f)
+                indecomposables[i][j] = new_list
+        return indecomposables
+
 
 
     
