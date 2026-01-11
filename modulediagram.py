@@ -72,6 +72,12 @@ class ModuleDiagram:
         """ Return list of vertices grouped into radical layers. """
         return self.bitmask.radical_layers()
 
+    # @cached_property
+    # def radical_layers(self) -> list[list[Vertex]]:
+    #     """ Return list of vertices grouped into radical layers. """
+    #     rad_layers_idx = self._radical_layers_idx
+    #     return [[self.index_to_vertex[idx] for idx in layer] for layer in rad_layers_idx]
+
     @cached_property
     def radical_layer_of(self) -> dict[Vertex, int]:
         """ Return dictionary assigning to each vertex its radical layer. """
@@ -115,6 +121,25 @@ class ModuleDiagram:
         """ Return all quotient modules (predeccesor-closed subsets) indexed by size. """
         return self.bitmask.compute_pred_closed_subsets()
 
+    
+    # def is_submodule(self, vertex_sublist: list[Vertex]) -> bool:
+    #     """
+    #     Check if given vertex sublist forms a submodule of self.
+    #     A submodule corresponds to a subset of vertices that is successor-closed:
+    #         i.e. the successors of every vertex in the subset are also in the subset.
+    #     """
+    #     dim = len(vertex_sublist)
+    #     return vertex_sublist in self.all_submodules[dim]
+    
+    # def is_quotient(self, vertex_sublist: list[Vertex]) -> bool:
+    #     """
+    #     Check if given vertex sublist forms a quotient module of self.
+    #     A quotient module corresponds to a subset of vertices that is predecessor-closed:
+    #         i.e. the predecessors of every vertex in the subset are also in the subset.
+    #     """
+    #     dim = len(vertex_sublist)
+    #     return vertex_sublist in self.all_quotients[dim]
+    
     @cached_property
     def radical_submodules(self) -> list["ModuleSubDiagram"]:
         """ Returns list of radical power submodules. """
