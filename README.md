@@ -1,6 +1,6 @@
 # Endomorphism Rings
 
-Compute the projective modules of the endomorphism ring of a quiver algebra and its dual.
+Compute the projective modules of the endomorphism ring of a quiver algebra and all its radical powers.
 
 ---
 
@@ -8,9 +8,10 @@ Compute the projective modules of the endomorphism ring of a quiver algebra and 
 
 This Python project takes a quiver algebra A and computes the projective modules of its endomorphism ring:
 
-End_A(A + D(A))
+End_A(A + rad^i(A) : i > 0)
 
-where D(A) = Hom_k(A, k) is the dual of A as a vector space over a field k.
+where rad(A) is the radical of A, rad^2(A) = rad(rad(A)) is the second radical power of A and so on.
+Note: so long as the quiver algebra A is admissible there exists an n such that rad^n(A) = 0.
 
 ---
 
@@ -35,15 +36,12 @@ A quiver algebra is a finite-dimensional algebra over a field, constructed from 
 
 ---
 
-## Duality and Endomorphism Rings
+## Radicals
 
-Since A is a finite-dimensional vector space over k, we can take its dual:
+We consider the Jacobsen radical of a module.
+For a right module M, rad(M) is the intersection of all the maximal right ideals of M.
 
-D(A) = Hom_k(_A A, k)
-
-We then compute the endomorphism ring:
-
-End_A(A + D(A))
+So, rad(A) is the intersection of all the maximal right ideals of A when treated as a right A-module.
 
 ---
 
@@ -80,7 +78,7 @@ Injective modules are projective modules over the opposite quiver (where all arr
 
 ## Computing the Endomorphism Ring
 
-To compute End_A(A + D(A)), we find all module homomorphisms between these graph representations.
+To compute End_A(A + rad^i(A) : i > 0), we find all module homomorphisms between these graph representations.
 
 A module homomorphism M -> N is uniquely determined by a pair (Q, S), where:
 
@@ -106,4 +104,4 @@ The endomorphism ring itself can also be represented as a graph:
 This project:
 - Constructs quiver algebras.  
 - Models projective and injective modules as directed graphs.  
-- Computes the endomorphism ring End_A(A + D(A)) through graph-based homomorphism analysis.
+- Computes the endomorphism ring End_A(A + rad^i(A) : i > 0) through graph-based homomorphism analysis.
