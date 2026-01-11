@@ -184,4 +184,21 @@ class HomomorphismGroup:
 
 class EndoRing:
 
+    def __init__(self,
+                 modules: list[ModuleDiagram] | ModuleDiagram,
+                 cut_off: int = 50):
+        self.modules = modules
+        self.cut_off = cut_off
+        self.ind_summands = []
+        if isinstance(modules, list):
+            for m in modules:
+                self.ind_summands += m.indecomposable_summands()
+        else:
+            self.ind_summands += modules.indecomposable_summands()
+        self.ind_summands = tuple(set(self.ind_summands))
+        self.num_summands = len(self.ind_summands)
+        self.all_homs: NDArray = np.array([[HomomorphismGroup(m, n).homs for n in self.ind_summands] for m in self.ind_summands],
+            dtype=object)
+
+
     
