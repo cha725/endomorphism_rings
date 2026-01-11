@@ -303,6 +303,16 @@ class EndoRing:
             composed_homs.append(current_homs)
         return composed_homs
     
+    def quiver(self):
+        G = nx.DiGraph()
+        for m in self.ind_summands:
+            G.add_node(m)
+        M = self._find_indecomposable_morphisms()
+        for row in range(self.num_summands):
+            for col in range(self.num_summands):
+                for hom in M[row][col]:
+                    G.add_edge(hom.domain,hom.codomain)
+        return G
 
 
     
