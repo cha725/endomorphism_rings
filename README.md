@@ -8,7 +8,7 @@ Compute the projective modules of the endomorphism ring of a quiver algebra and 
 
 This Python project takes a quiver algebra A and computes the projective modules of its endomorphism ring:
 
-$$\mathrm{End}_A(A + \mathrm{rad}^i(A) \; \mid \; i > 0)$$
+$$\mathrm{End}_A(A + \mathrm{rad}^i(A)  \mid  i > 0)$$
 
 where $\mathrm{rad}(A)$ is the radical of $A$, $\mathrm{rad}^2(A) = \mathrm{rad}(\mathrm{rad}(A))$ is the second radical power of $A$ and so on.
 Note: so long as the quiver algebra $A$ is admissible there exists an $n$ such that $\mathrm{rad}^n(A) = 0$.
@@ -56,7 +56,7 @@ Some $A$-modules $M$ can be represented as directed graphs:
 - All elements of $M$ are given by linear combinations of the vertices in the graph, though not necessarily in a unique way.
 
 Example:  
-The polynomial ring $k[x]$ has an additive generator set $\{ x^i \; \mid \; i > 0\}$ which can be represented by an infinite graph:
+The polynomial ring $k[x]$ has an additive generator set $\{ x^i  \mid  i > 0\}$ which can be represented by an infinite graph:
 $$ \mathrm{id}_{k[x]} \xrightarrow{x} x \xrightarrow{x} x^2 \xrightarrow{x} \cdots $$
 A polynomial is a linear combination of the vertices in this graph.
 
@@ -75,7 +75,7 @@ Injective modules are projective modules over the opposite quiver (where all arr
 
 ## Computing the Endomorphism Ring
 
-To compute $$\mathrm{End}_A(A + \mathrm{rad}^i(A) \; \mid \; i > 0)$$, we find all module homomorphisms between these graph representations.
+To compute $$\mathrm{End}_A(A + \mathrm{rad}^i(A)  \mid  i > 0)$$, we find all module homomorphisms between these graph representations.
 
 A module homomorphism $M \to N$ is uniquely determined by a pair $(Q, S)$, where:
 
@@ -101,4 +101,4 @@ The endomorphism ring itself can also be represented as a graph:
 This project:
 - Constructs quiver algebras.  
 - Models projective and injective modules as directed graphs.  
-- Computes the endomorphism ring $$\mathrm{End}_A(A + \mathrm{rad}^i(A) \; \mid \; i > 0)$$ through graph-based homomorphisms.
+- Computes the endomorphism ring $$\mathrm{End}_A(A + \mathrm{rad}^i(A)  \mid  i > 0)$$ through graph-based homomorphisms.
