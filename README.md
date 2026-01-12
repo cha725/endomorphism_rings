@@ -8,7 +8,7 @@ Compute the projective modules of the endomorphism ring of a quiver algebra and 
 
 This Python project takes a quiver algebra A and computes the projective modules of its endomorphism ring:
 
-End_A(A + rad^i(A) : i > 0)
+$$End_A(A + rad^i(A) : i > 0)$$
 
 where rad(A) is the radical of A, rad^2(A) = rad(rad(A)) is the second radical power of A and so on.
 Note: so long as the quiver algebra A is admissible there exists an n such that rad^n(A) = 0.
