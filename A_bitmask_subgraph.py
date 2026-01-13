@@ -529,7 +529,14 @@ class BitmaskGraph:
 if __name__ == "__main__":
     class BitmaskGraphExamples:
         """
-        Class to store examples of bitmask graphs.
+        Stores a collection of example bitmask graphs for testing.
+
+        Each example is identified by a string key and maps to a tuple containing:
+            -   A list of vertices (list[Vertex]) or None.
+                If None, the vertex set is the set of all sources and targets of arrows
+                in the arrow list.
+            -   A list of arrows (list[Arrow]) or None.
+                If None, the graph consists only of the given vertices with no edges.
         """
         def __init__(self, 
                     examples: dict[str, tuple[list[Vertex] | None, list[Arrow] | None]]):
