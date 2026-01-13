@@ -363,9 +363,6 @@ class BitmaskGraph:
                 to_check |= new_neighbours
             components.append(component)
             remaining_mask &= ~component
-            if remaining_mask and self._is_connected_mask(remaining_mask):
-                components.append(remaining_mask)
-                break
         return components
     
     @cached_property
