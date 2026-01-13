@@ -532,7 +532,7 @@ if __name__ == "__main__":
         Class to store examples of bitmask graphs.
         """
         def __init__(self, 
-                    examples: dict[str, list[Arrow]]):
+                    examples: dict[str, tuple[list[Vertex] | None, list[Arrow] | None]]):
             self.examples = examples
 
         def add(self, name: str, arrows: list[Arrow]):
