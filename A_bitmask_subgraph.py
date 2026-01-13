@@ -527,6 +527,9 @@ class BitmaskGraph:
 ###################################################################################################
 
 if __name__ == "__main__":
+    
+    import csv
+
     class BitmaskGraphExamples:
         """
         Stores a collection of example bitmask graphs for testing.
