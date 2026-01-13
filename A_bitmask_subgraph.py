@@ -564,76 +564,128 @@ if __name__ == "__main__":
                         arrow_list.append(Arrow(label_to_vertex[str(i)], label_to_vertex[str(j)]))
             self.add(name, arrows)
 
-        def run(self, verbose : bool = False):
-            times = []
-            for name, arrows in self.examples.items():
-                print(f"\n=== BitmaskGraph Example: {name} ===")
-                
-                vertices = list(set(a.source for a in arrows) | set(a.target for a in arrows))
+        def run(self, 
+                print_example_names: bool = True,
+                print_times: bool = True,
+                print_results: bool = False):
+            """
+            Execute all stored example graphs and measure computation times.
+
+            For each example, this method:
+                1. Constructs the corresponding BitmaskGraph.
+                2. Computes connected subgraphs.
+                3. Compute radical layers and radical subgraphs.
+                4. Compute socle layers.
+                5. Computes connected predecessor and successor closed subgraphs.
+            """
+
+            times = {}
+            for name, (vertex_list, arrow_list) in self.examples.items():
+                if print_example_names:
+                    print(f"\n=== BitmaskGraph Example: {name} ===")
+                if not vertex_list:
+                    if not arrow_list:
+                        print("This example has neither a list of vertices, nor a list of arrows.")
+                        continue
+                    else:
+                        sources = set(a.source for a in arrow_list)
+                        targets = set(a.target for a in arrow_list)
+                        vertex_list = list( sources | targets )
 
                 start_time = time.time()
                 bitmask_graph = BitmaskGraph(vertex_list, arrow_list)
                 init_time = time.time() - start_time
+                times["initialisation"] = init_time
 
-
-                print(f"\nTime to initialise graph: {init_time:.4f} seconds")
-
-                start_time = time.time()
-                rad_layers = graph.radical_layers()
-                soc_layers = graph.socle_layers()
-                layer_time = time.time() - start_time
-
-                print(f"Time to compute radical and socle layers {layer_time:.4f} seconds")
+                if print_times:
+                    print(f"\nTime to initialise graph: {init_time:.5f} seconds")
 
                 start_time = time.time()
-                rad_subgraphs = graph.compute_radical_subgraphs()
+                bitmask_graph._connected_masks
+                conn_time = time.time() - start_time
+                times["connected_masks"] = conn_time
+
+                if print_times:
+                    print(f"Time to compute list of connected masks: {conn_time:.5f} seconds")
+
+                start_time = time.time()
+                connected_comps = bitmask_graph.connected_components
+                comp_time = time.time() - start_time
+                times["connected_components"] = comp_time
+
+                if print_times:
+                    print(f"Time to compute list of connected components: {comp_time:.5f} seconds")
+
+                start_time = time.time()
+                rad_layers = bitmask_graph.radical_layers()
+                rad_time = time.time() - start_time
+                times["radical_layers"] = rad_time
+
+                if print_times:
+                    print(f"Time to compute radical layers {rad_time:.5f} seconds")
+
+                start_time = time.time()
+                rad_subgraphs = bitmask_graph.compute_radical_subgraphs()
                 rad_sub_time = time.time() - start_time
+                times["radical_subgraphs"] = rad_sub_time
 
-                print(f"Time to compute radical subgraphs: {rad_sub_time:.4f} seconds")
+                if print_times:
+                    print(f"Time to compute radical subgraphs: {rad_sub_time:.5f} seconds")
 
                 start_time = time.time()
-                pred_closed = graph.compute_closed_subsets[0]
-                succ_closed = graph.compute_closed_subsets[1]
-                compute_time = time.time() - start_time
+                soc_layers = bitmask_graph.socle_layers()
+                soc_time = time.time() - start_time
+                times["socle_layers"] = soc_time
 
-                print(f"Time to compute closed subsets: {compute_time:.4f} seconds")
-                
+                if print_times:
+                    print(f"Time to compute socle layers {soc_time:.5f} seconds")
 
-                if verbose:
+                start_time = time.time()
+                closed = bitmask_graph.compute_closed_subsets
+                closed_time = time.time() - start_time
+                times["connected_closed_masks"] = closed_time
+
+                if print_times:
+                    print(f"Time to compute closed subsets: {closed_time:.5f} seconds")
+
+                if print_results:
 
                     print("\nVertices (with masks):")
-                    for vert, mask in graph.vertex_to_index.items():
+                    for vert, mask in bitmask_graph.vertex_to_index.items():
                         print(f" {vert} -> Mask: {mask}")
                     
                     print("\nArrows:")
-                    for arrow in graph.arrow_list:
-                        print(f" {arrow}")
-                    
+                    for arrow in bitmask_graph.arrow_list:
+                        if arrow.label:
+                            print(f" {arrow.label}: {arrow.source.label} -> {arrow.target.label}")
+                        else:
+                            print(f" {arrow.source.label} -> {arrow.target.label}")
+
                     print("\nRadical layers")
                     for idx, layer in enumerate(rad_layers):
                         print(f" Radical layer: {idx} = Vertices: {[v.label for v in layer]}")
 
                     print("\nRadical graphs")
                     for rad_graph in rad_subgraphs:
-                        print(f"Vertices: {[v.label for v in rad_graph]}")
+                        print(f" Vertices: {[v.label for v in rad_graph]}")
 
                     print("\nSocle layers")
                     for idx, layer in enumerate(soc_layers):
                         print(f" Socle layer: {idx} = Vertices: {[v.label for v in layer]}")
 
                     print("\nConnected components:")
-                    for c in graph.connected_components:
-                        print(f"Vertices: {[v.label for v in c]}")
-
+                    for comp in connected_comps:
+                        print(f" Vertices: {[v.label for v in comp]}")
+        
                     print("\nSubmodules:")
-                    for list_s in succ_closed:
+                    for list_s in closed[0]:
                         for s in list_s:
-                            print(f"Vertices: {[v.label for v in s]}")
+                            print(f" Vertices: {[v.label for v in s]}")
 
                     print("\nQuotients:")
-                    for list_p in pred_closed:
+                    for list_p in closed[1]:
                         for p in list_p:
-                            print(f"Vertices: {[v.label for v in p]}")
+                            print(f" Vertices: {[v.label for v in p]}")
 
                 times.append((init_time, layer_time, compute_time))
 
