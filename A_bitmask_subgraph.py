@@ -550,7 +550,10 @@ if __name__ == "__main__":
 
         def add_random_graph(self, name: str, num_vertices: int, edge_probability: float):
             """
-            Add a random directed tree with num_vertices vertices and edge probability edge_prob.
+            Add a random graph with the given number of vertices and edge probability.
+
+            For each pair of vertices (u,v) with u < v, an arrow u -> v is included
+            with probability edge_probability independently of all other arrows.
             """
             vertex_list = [Vertex(str(i)) for i in range(num_vertices)]
             label_to_vertex = {v.label : v for v in vertex_list}
