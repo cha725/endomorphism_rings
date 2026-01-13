@@ -117,9 +117,9 @@ class BitmaskGraph:
     
         self.num_arrows = len(self.arrow_list)
 
-        self.pred_mask = [0] * self.num_vertices
-        self.succ_mask = [0] * self.num_vertices
-        self.adj_mask = [0] * self.num_vertices
+        self.pred_masks = [0] * self.num_vertices
+        self.succ_masks = [0] * self.num_vertices
+        self.adj_masks = [0] * self.num_vertices
 
         for arrow in self.arrow_list:
             source_idx = self.vertex_to_index[arrow.source]
