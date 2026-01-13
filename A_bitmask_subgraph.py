@@ -562,7 +562,7 @@ if __name__ == "__main__":
                 for j in range(i+1,num_vertices):
                     if random.random() < edge_probability:
                         arrow_list.append(Arrow(label_to_vertex[str(i)], label_to_vertex[str(j)]))
-            self.add(name, arrows)
+            self.add(name, vertex_list, arrow_list)
 
         def run(self, 
                 print_example_names: bool = True,
