@@ -42,6 +42,11 @@ class Vertex:
 class Arrow:
     """
     Represents an arrow as a pair (source, target) with an optional label.
+
+    Attributes:
+        - source: The start of the arrow.
+        - target: The end of the arrow.
+        - label: The label of the arrow.
     """
     def __init__(self, 
                  source, 
