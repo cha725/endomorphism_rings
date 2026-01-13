@@ -210,7 +210,8 @@ class BitmaskGraph:
         while remaining_mask:
             sources = self._sources_of_mask(remaining_mask)
             if sources == 0:
-                return None
+                vertices = self._mask_to_vertices(remaining_mask)
+                raise ValueError(f"The graph contains a directed cycle in vertices: {[v.label for v in vertices]}")
             layers.append(sources)
             remaining_mask &= ~sources
         return layers
@@ -286,6 +287,9 @@ class BitmaskGraph:
         layers = []
         while remaining_mask:
             sinks = self._sinks_of_mask(remaining_mask)
+            if sinks == 0:
+                vertices = self._mask_to_vertices(remaining_mask)
+                raise ValueError(f"The graph contains a directed cycle in vertices: {[v.label for v in vertices]}")
             layers.append(sinks)
             remaining_mask &= ~sinks
         return layers
