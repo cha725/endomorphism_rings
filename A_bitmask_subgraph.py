@@ -67,7 +67,7 @@ class Arrow:
     def __hash__(self):
         return hash((self.source, self.target, self.label))
 
-class BitmaskSubgraph:
+class BitmaskGraph:
     """
     Computes the predecessor and successor closed subsets of a directed graph.
 
@@ -536,7 +536,7 @@ if __name__ == "__main__":
                 vertices = list(set(a.source for a in arrows) | set(a.target for a in arrows))
 
                 start_time = time.time()
-                graph = BitmaskSubgraph(vertices,arrows)
+                bitmask_graph = BitmaskGraph(vertex_list, arrow_list)
                 init_time = time.time() - start_time
 
 
