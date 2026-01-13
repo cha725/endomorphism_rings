@@ -728,5 +728,19 @@ if __name__ == "__main__":
                             data = [num_vertices, edge_probability, run_idx] + time_data
                             writer.writerow(data)
                             print(f"    Finished run {run_idx}.    ")
+            
+    examples = BitmaskGraphExamples({})
 
-    times = examples.run(verbose=True)
+    # for i in range(1):
+    #     examples.add_random_graph(f"Random graph {i}", 10, 0.4)
+
+    # times = examples.run(verbose=False)
+
+    examples.collect_time_stats("bitmask_graph_time_stats.csv",
+                                5,
+                                25,
+                                5,
+                                0.5,
+                                0.1)
+
+    
