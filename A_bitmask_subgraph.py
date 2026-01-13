@@ -535,20 +535,23 @@ if __name__ == "__main__":
                     examples: dict[str, tuple[list[Vertex] | None, list[Arrow] | None]]):
             self.examples = examples
 
-        def add(self, name: str, arrows: list[Arrow]):
-            self.examples[name] = arrows
+        def add(self, 
+                name: str, 
+                vertex_list: list[Vertex] | None = None, 
+                arrow_list: list[Arrow] | None = None):
+            self.examples[name] = (vertex_list, arrow_list)
 
-        def add_random_graph(self, name: str, num_vertices: int, edge_prob: float):
+        def add_random_graph(self, name: str, num_vertices: int, edge_probability: float):
             """
             Add a random directed tree with num_vertices vertices and edge probability edge_prob.
             """
-            vertices = [Vertex(str(i)) for i in range(num_vertices)]
-            label_to_vertex = {v.label : v for v in vertices}
-            arrows = []
+            vertex_list = [Vertex(str(i)) for i in range(num_vertices)]
+            label_to_vertex = {v.label : v for v in vertex_list}
+            arrow_list = []
             for i in range(num_vertices):
                 for j in range(i+1,num_vertices):
-                    if random.random() < edge_prob:
-                        arrows.append(Arrow(label_to_vertex[str(i)], label_to_vertex[str(j)]))
+                    if random.random() < edge_probability:
+                        arrow_list.append(Arrow(label_to_vertex[str(i)], label_to_vertex[str(j)]))
             self.add(name, arrows)
 
         def run(self, verbose : bool = False):
