@@ -1,3 +1,5 @@
 *.csv
 *.pyc
 test.py
+__pycache__/modulediagram.cpython-314.pyc
+__pycache__/quiver_algebra.cpython-314.pyc
