@@ -172,7 +172,7 @@ class BitmaskGraph:
     def _sources_of_mask(self, mask: int) -> int:
         """
         Return bitmask of source vertices in the given mask.
-        A source vertex is one with no predecessors in the mask.
+        A source vertex is a vertex with no predecessors in the mask.
         """
         sources = 0
         rem_mask = mask
@@ -188,14 +188,14 @@ class BitmaskGraph:
     def _sources(self) -> int:
         """
         Return bitmask of vertices that are sources of the entire graph.
-        A source vertex is one with no predecessors.
+        A source vertex is a vertex with no predecessors.
         """
         return self._sources_of_mask(self.vertex_mask)
     
     def sources(self) -> list[Vertex]:
         """
-        Return list of vertices that are sources.
-        A source vertex is one with no predecessors in the mask.
+        Return list of vertices that are sources of the graph.
+        A source vertex is a vertex with no predecessors in the mask.
         """
         return self._mask_to_vertices(self._sources)
     
@@ -203,7 +203,8 @@ class BitmaskGraph:
     def _radical_layers(self) -> list[int] | None:
         """
         Returns list of bitmasks representing radical layers.
-        0th entry = sources, then removing sources gives next layer, etc.
+        Layer 0 consists of all vertices with no predecessors; 
+        removing them yields the next layer, and so on.
         """
         remaining_mask = self.vertex_mask
         layers = []
@@ -219,7 +220,8 @@ class BitmaskGraph:
     def radical_layers(self) -> list[list[Vertex]]:
         """
         Returns list of vertices representing radical layers.
-        0th entry = sources, then removing sources gives next layer, etc.
+        Layer 0 consists of all vertices with no predecessors; 
+        removing them yields the next layer, and so on.
         """
         layers = []
         if self._radical_layers:
@@ -227,8 +229,11 @@ class BitmaskGraph:
                 layers.append(self._mask_to_vertices(layer_mask))
         return layers
     
-    def _compute_radical_subgraphs(self) -> list[int]:
-        """ Returns list of bitmasks where ith entry is all the vertices in radical layer j>=i. """
+    def compute_radical_subgraphs(self) -> list[list[Vertex]]:
+        """ 
+        Returns list of connected components of the radical subgraphs as lists of vertices.
+        A radical subgraph at i is the full subgraph of all the vertices in radical layers j>=i. 
+        """
         rad_layers = self._radical_layers
         subgraphs = []
         if rad_layers:
@@ -281,7 +286,8 @@ class BitmaskGraph:
     def _socle_layers(self) -> list[int]:
         """
         Returns list of bitmasks representing socle layers.
-        0th entry = sinks, then removing sinks gives next layer, etc.
+        Layer 0 consists of all vertices with no successors; 
+        removing them yields the next layer, and so on.
         """
         remaining_mask = self.vertex_mask
         layers = []
@@ -297,7 +303,8 @@ class BitmaskGraph:
     def socle_layers(self) -> list[list[Vertex]]:
         """
         Returns list of vertices representing socle layers.
-        0th entry = sinks, then removing sinks gives next layer, etc.
+        Layer 0 consists of all vertices with no successors; 
+        removing them yields the next layer, and so on.
         """
         layers = []
         for layer_mask in self._socle_layers:
@@ -369,12 +376,12 @@ class BitmaskGraph:
     
     @cached_property
     def _connected_components(self) -> list[int]:
-        """ Return list of connected components. """
+        """ Return list of connected components of graph. """
         return self._connected_components_of(self.vertex_mask)
     
     @cached_property
     def connected_components(self) -> list[list[Vertex]]:
-        """ Return list of connected components as lists of vertices. """
+        """ Return list of connected components of graph as lists of vertices. """
         return [self._mask_to_vertices(m) for m in self._connected_components]
     
     def _is_pred_closed(self, mask: int) -> bool:
@@ -427,8 +434,10 @@ class BitmaskGraph:
         predecessors and/or successors.
 
         A subset S is:
-            - predecessor-closed  iff  for every vertex v in S, all predecessors of v are in S.
-            - successor-closed    iff  for every vertex v in S, all successors of v are in S.
+            - predecessor-closed iff  
+                for every vertex v in S, and for all arrows u -> v in the graph, u is in S.
+            - successor-closed iff  
+                for every vertex v in S, and for all arrows v -> u in the graph, u is in S.
 
         Only connected subsets are considered;
             disconnected masks are ignored and left out of the returned lists.
@@ -487,7 +496,8 @@ class BitmaskGraph:
         Compute which vertex subsets (represented as bitmasks) are closed under
         predecessors.
 
-        A subset S is predecessor-closed  iff  for every vertex v in S, all predecessors of v are in S.
+        A subset S is predecessor-closed iff  
+            for every vertex v in S, and for all arrows u -> v in the graph, u is in S.
 
         Only connected subsets are considered;
             disconnected masks are ignored and left out of the returned lists.
@@ -502,7 +512,8 @@ class BitmaskGraph:
         Compute which vertex subsets (represented as bitmasks) are closed under
         successors.
 
-        A subset S is successor-closed    iff  for every vertex v in S, all successors of v are in S.
+        A subset S is successor-closed iff  
+            for every vertex v in S, and for all arrows v -> u, u is in S.
 
         Only connected subsets are considered;
             disconnected masks are ignored and left out of the returned lists.
