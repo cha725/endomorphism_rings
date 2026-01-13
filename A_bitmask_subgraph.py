@@ -235,24 +235,18 @@ class BitmaskGraph:
         A radical subgraph at i is the full subgraph of all the vertices in radical layers j>=i. 
         """
         rad_layers = self._radical_layers
+        if not rad_layers:
+            return []
+        subgraph_mask = 0
         subgraphs = []
-        if rad_layers:
-            sub_rad_layers = rad_layers.copy()
-            for layer_idx, layer in enumerate(rad_layers):
-                subgraphs.append(layer)
-                sub_rad_layers.remove(layer)
-                for sub_layers in sub_rad_layers:
-                    subgraphs[layer_idx] |= sub_layers
+        for layer_mask in reversed(rad_layers):
+            new_subgraph_mask = subgraph_mask + layer_mask
+            new_conn_comp_masks = self._connected_components_of(new_subgraph_mask)
+            new_conn_comp = [self._mask_to_vertices(mask) for mask in new_conn_comp_masks]
+            subgraphs += new_conn_comp
+            subgraph_mask = new_subgraph_mask
+        subgraphs.reverse()
         return subgraphs
-    
-    def compute_radical_subgraphs(self) -> list[list[Vertex]]:
-        """ Returns list of bitmasks where ith entry is all the vertices in radical layer j>=i. """
-        subgraphs = self._compute_radical_subgraphs()
-        ind_subgraphs = []
-        for subgraph in subgraphs:
-            summands = [self._mask_to_vertices(m) for m in self._connected_components_of(subgraph)]
-            ind_subgraphs += summands
-        return ind_subgraphs
 
     # Socle layers
 
