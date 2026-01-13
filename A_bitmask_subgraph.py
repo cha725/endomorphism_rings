@@ -124,10 +124,10 @@ class BitmaskGraph:
         for arrow in self.arrow_list:
             source_idx = self.vertex_to_index[arrow.source]
             target_idx = self.vertex_to_index[arrow.target]
-            self.succ_mask[source_idx] |= (1 << target_idx)
-            self.pred_mask[target_idx] |= (1 << source_idx)
-            self.adj_mask[source_idx] |= (1 << target_idx)
-            self.adj_mask[target_idx] |= (1 << source_idx)
+            self.succ_masks[source_idx] |= (1 << target_idx)
+            self.pred_masks[target_idx] |= (1 << source_idx)
+            self.adj_masks[source_idx] |= (1 << target_idx)
+            self.adj_masks[target_idx] |= (1 << source_idx)
 
     ### VERTICES ###
 
@@ -180,7 +180,7 @@ class BitmaskGraph:
             bit = rem_mask & -rem_mask
             rem_mask &= ~bit
             idx = bit.bit_length() - 1
-            if self.pred_mask[idx] & mask == 0:
+            if self.pred_masks[idx] & mask == 0:
                 sources |= bit
         return sources
     
@@ -258,7 +258,7 @@ class BitmaskGraph:
         sinks = 0
         for bit in self._iterate_over_bits(mask):
             idx = bit.bit_length() - 1
-            if self.succ_mask[idx] & mask == 0:
+            if self.succ_masks[idx] & mask == 0:
                 sinks |= bit
         return sinks
     
@@ -319,7 +319,7 @@ class BitmaskGraph:
                 # if smaller mask is 0 then mask is one vertex and hence connected.
                 connected_masks[mask] = True
                 continue
-            if self.adj_mask[idx] & smaller_mask:
+            if self.adj_masks[idx] & smaller_mask:
                 # if first_bit is connected to a vertex in smaller_mask,
                 # then mask is connected if and only if smaller_mask is.
                 connected_masks[mask] = connected_masks[smaller_mask]
@@ -352,7 +352,7 @@ class BitmaskGraph:
                 second_bit = to_check & -to_check
                 to_check &= ~second_bit
                 idx = second_bit.bit_length() - 1
-                neighbours = mask & self.adj_mask[idx]
+                neighbours = mask & self.adj_masks[idx]
                 new_neighbours = neighbours & ~component
                 component |= new_neighbours
                 to_check |= new_neighbours
@@ -384,7 +384,7 @@ class BitmaskGraph:
             v = rem_mask & -rem_mask
             rem_mask &= ~v
             v_idx = v.bit_length() - 1
-            pred_v = self.pred_mask[v_idx]
+            pred_v = self.pred_masks[v_idx]
             rem_pred_v = pred_v
             while rem_pred_v:
                 u = rem_pred_v & -rem_pred_v
@@ -405,7 +405,7 @@ class BitmaskGraph:
             v = rem_mask & -rem_mask
             rem_mask &= ~v
             v_idx = v.bit_length() - 1
-            succ_v = self.succ_mask[v_idx]
+            succ_v = self.succ_masks[v_idx]
             rem_succ_v = succ_v
             while rem_succ_v:
                 u = rem_succ_v & -rem_succ_v
@@ -435,8 +435,8 @@ class BitmaskGraph:
                 - 1 entry = list of successor closed connected vertex subsets.
         """        
         full_mask = self.vertex_mask
-        pred_mask = self.pred_mask
-        succ_mask = self.succ_mask
+        pred_masks = self.pred_masks
+        succ_masks = self.succ_masks
 
         pred_results = [False for _ in range(full_mask + 1)]
         succ_results = [False for _ in range(full_mask + 1)]
@@ -456,9 +456,9 @@ class BitmaskGraph:
                 for vertex_idx in range(self.num_vertices):
                     if not (mask & (1 << vertex_idx)):
                         continue # vertex not in mask
-                    if pred_mask[vertex_idx] & (~mask): # check if p_mask outside of mask
+                    if pred_masks[vertex_idx] & (~mask): # check if p_mask outside of mask
                         pred_closed = False
-                    if succ_mask[vertex_idx] & (~mask): # check if s_mask outside of mask
+                    if succ_masks[vertex_idx] & (~mask): # check if s_mask outside of mask
                         succ_closed = False
                     if not(pred_closed or succ_closed):
                         break # no need to continue if neither closed
