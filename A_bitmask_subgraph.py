@@ -690,8 +690,6 @@ if __name__ == "__main__":
                         for p in list_p:
                             print(f" Vertices: {[v.label for v in p]}")
 
-                times.append((init_time, layer_time, compute_time))
-
             return times
         
         def collect_time_stats(self, 
