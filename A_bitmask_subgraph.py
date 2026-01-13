@@ -69,10 +69,28 @@ class Arrow:
 
 class BitmaskGraph:
     """
-    Computes the predecessor and successor closed subsets of a directed graph.
+    Represents a directed acyclic graph with vertices encoded as bitmasks.
 
-    Uses bitmasks to compute these properties.
-    For V vertices, the vertex bitmasks are on V-1 bits.
+    Each vertex is assigned a bitmask corresponding to its index in `vertex_list`.
+    These bitmasks allow efficient computation of predecessor masks, successor
+    masks, adjacency, radical layers, and connectivity/closure properties.
+
+    The graph is assumed to be a directed acyclic graph (DAG) and thus has no
+    directed cycles, but may have undirected cycles.
+
+    Attributes:
+        vertex_list (list[Vertex]):
+            The list of vertices in the graph.
+        arrow_list (list[Arrow]):
+            The directed edges (arrows) of the graph. 
+            The source and target of each arrow must be a member of vertex_list.
+        pred_masks (list[int]):
+            For each vertex index i, a bitmask of all predecessors of i.
+        succ_masks (list[int]):
+            For each vertex index i, a bitmask of all successors of i.
+        adj_masks (list[int]):
+            For each vertex index i, a bitmask of all adjacent vertices
+            (treating edges as undirected).
 
     TODO: combine connectivity and closure functions for efficiency.
     """
