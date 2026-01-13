@@ -527,8 +527,7 @@ class BitmaskGraph:
 ###################################################################################################
 
 if __name__ == "__main__":
-
-    class Examples:
+    class BitmaskGraphExamples:
         """
         Class to store examples of bitmask graphs.
         """
