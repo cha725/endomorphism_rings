@@ -137,19 +137,16 @@ class PathAlgebra:
     """
 
     def __init__(self,
-                 arrows: Optional[list[Arrow]] = None,
-                 vertices: Optional[list] = None):
-        
-        if arrows is None and vertices is None:
-            raise ValueError("Path algebra cannot be empty.")
-        self.arrows = arrows or []
-        self.arrow_vertices = {a.source for a in self.arrows} | {a.target for a in self.arrows}
-        if vertices is None:
-            self.vertices = list(self.arrow_vertices)
-        else:
-            self.vertices = list(self.arrow_vertices | set(vertices))
+                 arrows: list[Arrow] | None = None,
+                 vertices: list | None = None):
 
-    def graph(self):
+        self.arrows = arrows or []
+        arrow_vertices: set[Vertex] = {a.source for a in self.arrows} | {a.target for a in self.arrows}        
+        if vertices:
+            arrow_vertices |= set(vertices)
+        if not arrow_vertices:
+            raise ValueError("Path algebra cannot be empty.")
+        self.vertices: list[Vertex] = list(arrow_vertices)
         return nx.MultiDiGraph([(a.source, a.target) for a in self.arrows])
     
     def is_path_of(self, path: Path):
