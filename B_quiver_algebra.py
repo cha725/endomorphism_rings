@@ -164,13 +164,13 @@ class PathAlgebra:
     
 # TODO: could make this take in gap code, then can use the quiver applet.
 
-class MonomialQuiverAlgebra(PathAlgebra):
+class MonomialQuiverAlgebra():
     def __init__(self,
                  arrows: Optional[list[Arrow]] = None,
                  relations: Optional[list[Path]] = None,
                  vertices: Optional[list] = None,
                  max_radical_length: int = 20):
-        super().__init__(arrows, vertices)
+        self.path_algebra = PathAlgebra(arrows, vertices)
         self.relations = relations or []
         if not all(self.is_path_of(r) for r in self.relations):
             raise ValueError(f"Invalid relations. {relations} must be a subset of {arrows}")
