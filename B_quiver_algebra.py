@@ -113,6 +113,29 @@ class Path:
 
     
 class PathAlgebra:
+    """
+    Path algebra of a directed graph.
+
+    Attributes:
+        - arrows (list[Arrow] or None):
+            The list of directed edges of the graph. If None, the graph is
+            treated as having no arrows.
+
+        - vertices (list or None):
+            If provided, these vertices are vertices of the graph. 
+            The total set of vertices of the graph is this list plus any vertices
+            appearing as sources or targets of the arrows.
+            If None, the vertex set is the set of sources and targets of the arrows.
+
+    Notes:
+        - At least one of arrows or vertices must be non-empty; otherwise
+            the path algebra would have no underlying graph.
+        - The final vertex set is the union of the explicitly provided vertices
+            (if any) and the vertices appearing in the arrows.
+        - If the directed graph is not directed acyclic, then the path algebra
+            will have infinitely many paths.
+    """
+
     def __init__(self,
                  arrows: Optional[list[Arrow]] = None,
                  vertices: Optional[list] = None):
