@@ -147,9 +147,17 @@ class PathAlgebra:
         if not arrow_vertices:
             raise ValueError("Path algebra cannot be empty.")
         self.vertices: list[Vertex] = list(arrow_vertices)
+
+    def graph(self) -> nx.MultiDiGraph:
+        """ Return NetworkX graph representation of the path algebra """
         return nx.MultiDiGraph([(a.source, a.target) for a in self.arrows])
     
     def is_path_of(self, path: Path):
+        """
+        Check if the given path is a path in this path algebra.
+        - Stationary paths are valid if their vertex is in the algebra.
+        - Non-stationary paths are valid if all arrows are in the algebra.
+        """
         if not path.arrows:
             return path.vertex in self.vertices
         return all(a in self.arrows for a in path.arrows)
