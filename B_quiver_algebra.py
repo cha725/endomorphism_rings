@@ -1,7 +1,5 @@
 import networkx as nx
 
-from typing import Optional
-
 from A_bitmask_subgraph import Vertex, Arrow
     
 class Path:
