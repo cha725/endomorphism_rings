@@ -192,7 +192,7 @@ class MonomialQuiverAlgebra(PathAlgebra):
                                              arrow.label))
         return paths, connections
     
-    def paths(self, max_length : Optional[int] = None, with_connections : bool = False) -> dict[int,list[Path]]:
+    def paths(self, max_length: Optional[int] = None, with_connections: bool = False) -> dict[int,list[Path]]:
         paths = {}
         for vertex in self.vertices:
             results, connections = self.dfs_paths_from_vertex(vertex, max_length)
