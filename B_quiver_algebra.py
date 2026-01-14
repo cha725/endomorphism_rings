@@ -34,7 +34,7 @@ class Path:
                         raise ValueError(f"Invalid path: target of {prev} != source of {curr}")
 
     def is_stationary_path(self) -> bool:
-        return self.vertex is not None
+        return self.vertex is not None and not self.arrows
 
     def source(self):
         """ Returns source vertex of path. If stationary, then returns stationary vertex. """
