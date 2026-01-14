@@ -5,23 +5,22 @@ from A_bitmask_subgraph import Arrow
     
 class Path:
     def __init__(self,
-                 arrows: tuple[Arrow,...] | None = None,
-                 stationary_vertex = None):
+                 components: Vertex | tuple[Arrow,...]):
         
-        if arrows is None and stationary_vertex is None:
-            raise ValueError("Path must have either arrows or be a stationary_vertex.")
+        self.vertex: Vertex | None = None
+        self.arrows: tuple[Arrow,...] = tuple()
 
-        if stationary_vertex and arrows:
-            raise ValueError("Path cannot have both arrows and stationary_vertex.")
+        if isinstance(components, Vertex):
+            self.vertex = components
+            self.arrows = tuple()
+        else:
+            self.vertex = None
+            self.arrows = components
 
-        self.stationary_vertex = stationary_vertex
-        self.arrows = arrows or ()
-
-        # Check path is valid
-        if self.arrows:
-            for prev, curr in zip(self.arrows, self.arrows[1:]):
-                if prev.target != curr.source:
-                    raise ValueError(f"Invalid path: target of {prev} != source of {curr}")
+            if isinstance(self.arrows, tuple):
+                for prev, curr in zip(self.arrows, self.arrows[1:]):
+                    if prev.target != curr.source:
+                        raise ValueError(f"Invalid path: target of {prev} != source of {curr}")
 
     def is_stationary_path(self) -> bool:
         return self.stationary_vertex is not None
