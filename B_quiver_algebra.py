@@ -190,21 +190,19 @@ class MonomialQuiverAlgebra():
             return False
         return all(not relation.is_subpath(path) for relation in self.relations)
 
-    def is_path_extension_valid(self, path: Path, arrow: Arrow):
+    def is_path_extension_valid(self, path: Path, arrow: Arrow) -> bool:
         """
-        Given a valid path, check if the extension by an arrow is killed by the relations.
+        Given a path in the quiver algebra, check if the extension by the given arrow
+        is also a path in the quiver algebra.
+        
+        Returns False if:
+            - The concatenation of the path with the arrow is not a path.
+            - The resulting concatenated path contains a relation as a subpath.
         """
         new_path = path.extend_at_end(arrow)
         if new_path is None:
             return False
-        for rel in self.relations:
-            if len(rel) <= len(new_path):
-                if rel == new_path.truncate(len(new_path)-len(rel),len(new_path)):
-                    return False
-        return True
-
-
-    def dfs_paths_from_vertex(self, vertex, max_length: Optional[int] = None) -> tuple[list[Path], list[Arrow]] | None:
+        return self.is_path(new_path)
         """
         Return list of paths of length at most max_length starting at given vertex.
         If max_length not given, then max_length set to be the max radical length of the quiver.
