@@ -53,7 +53,7 @@ class Path:
         """ Returns list of vertices in path. If stationary, then returns stationary vertex. """
         return [self.source()] + [a.target for a in self.arrows]
     
-    def extend_at_end(self, arrow : Arrow) -> "Path | None":
+    def extend_at_end(self, arrow: Arrow) -> "Path | None":
         """ 
         If given arrow starts where path finishes, then returns concatenation path then arrow.
         Otherwise, returns None.
@@ -62,16 +62,16 @@ class Path:
             return None
         return Path(self.arrows + (arrow,))
     
-    def extend_at_start(self, arrow : Arrow) -> "Path | None":
+    def extend_at_start(self, arrow: Arrow) -> "Path | None":
         """ 
         If given arrow ends where path starts, then returns new concatenation arrow then path.
         Otherwise, returns None.
         """
         if arrow.target != self.source():
-            return None
+            return None       
         return Path((arrow,) + self.arrows)
         
-    def truncate(self, start_idx : int, end_idx : int) -> Path:
+    def truncate(self, start_idx: int, end_idx: int) -> Path:
         """ Take subpath of path with indices [start_idx, ..., end_idx-1]. """
         arrows = self.arrows[start_idx:end_idx]
         return Path(arrows)
@@ -107,8 +107,8 @@ class Path:
     
 class PathAlgebra:
     def __init__(self,
-                 arrows : Optional[list[Arrow]] = None,
-                 vertices : Optional[list] = None):
+                 arrows: Optional[list[Arrow]] = None,
+                 vertices: Optional[list] = None):
         
         if arrows is None and vertices is None:
             raise ValueError("Path algebra cannot be empty.")
@@ -122,27 +122,27 @@ class PathAlgebra:
     def graph(self):
         return nx.MultiDiGraph([(a.source, a.target) for a in self.arrows])
     
-    def is_path_of(self, path : Path):
+    def is_path_of(self, path: Path):
         return all(a in self.arrows for a in path.arrows)
     
 # TODO: could make this take in gap code, then can use the quiver applet.
 
 class MonomialQuiverAlgebra(PathAlgebra):
     def __init__(self,
-                 arrows : Optional[list[Arrow]] = None,
-                 relations : Optional[list[Path]] = None,
-                 vertices : Optional[list] = None,
-                 max_radical_length : int = 20):
+                 arrows: Optional[list[Arrow]] = None,
+                 relations: Optional[list[Path]] = None,
+                 vertices: Optional[list] = None,
+                 max_radical_length: int = 20):
         super().__init__(arrows, vertices)
         self.relations = relations or []
         if not all(self.is_path_of(r) for r in self.relations):
             raise ValueError(f"Invalid relations. {relations} must be a subset of {arrows}")
         self.max_radical_length = max_radical_length
 
-    def is_path(self, path : Path):
+    def is_path(self, path: Path):
         return all(not relation.is_subpath(path) for relation in self.relations)
 
-    def is_path_extension_valid(self, path : Path, arrow : Arrow):
+    def is_path_extension_valid(self, path: Path, arrow: Arrow):
         """
         Given a valid path, check if the extension by an arrow is killed by the relations.
         """
@@ -164,7 +164,7 @@ class MonomialQuiverAlgebra(PathAlgebra):
         if vertex not in self.vertices:
             return None
         max_length = max_length or self.max_radical_length
-        initial_path = Path(stationary_vertex=vertex)
+        initial_path = Path(vertex)
         paths_to_check = [initial_path]
         connections: list[Arrow] = []
         seen = set()
@@ -227,10 +227,10 @@ if __name__ == "__main__":
         Class to store examples of quivers.
         """
         def __init__(self,
-                        examples : dict[str,MonomialQuiverAlgebra]):
+                        examples: dict[str,MonomialQuiverAlgebra]):
             self.examples = examples
 
-        def add(self, example : tuple[str, MonomialQuiverAlgebra]):
+        def add(self, example: tuple[str, MonomialQuiverAlgebra]):
             self.examples[example[0]] = example[1]
 
         def run(self):
