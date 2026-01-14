@@ -102,10 +102,9 @@ class Path:
 
     def __repr__(self):
         if self.is_stationary_path():
-            return f"Stationary path at {self.vertex}"
-        labels = "".join(str(a.label) for a in self.arrows)
-        vertices = "->".join(str(v) for v in self.vertices())
-        return f"{labels}: {vertices}"
+            return f"Path({self.label()})"
+        vertices = "->".join(str(v.label) for v in self.vertices())
+        return f"Path({self.label()}: {vertices})"
     
     def __hash__(self):
         if self.is_stationary_path():
