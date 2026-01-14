@@ -52,6 +52,15 @@ class Path:
         """ Returns list of vertices in path. If stationary, then returns stationary vertex. """
         return [self.source()] + [a.target for a in self.arrows]
     
+    def label(self) -> str:
+        """ 
+        Returns label of the path as concatenation of individual arrow labels. 
+        For arrows a and b, the label ab means the path a then b.
+        """
+        if self.is_stationary_path():
+            return f"Stationary path at {self.vertex}"
+        return "".join(str(a.label) for a in self.arrows)
+    
     def extend_at_end(self, arrow: Arrow) -> "Path | None":
         """ 
         If given arrow starts where path finishes, then returns concatenation path then arrow.
