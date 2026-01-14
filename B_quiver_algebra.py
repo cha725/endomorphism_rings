@@ -203,18 +203,25 @@ class MonomialQuiverAlgebra():
         if new_path is None:
             return False
         return self.is_path(new_path)
+
+
+    def dfs_paths_from_vertex(self, 
+                              vertex: Vertex, 
+                              max_path_length: int | None = None
+                              ) -> list[Path] | None:
         """
-        Return list of paths of length at most max_length starting at given vertex.
-        If max_length not given, then max_length set to be the max radical length of the quiver.
+        Return list of paths of length at most max_path_length starting at given vertex.
+        If max_path_length not given, then max_length set to be the max_radical_length of the quiver.
+        Returns None if the vertex is not a vertex of the quiver algebra.
         """
         if vertex not in self.vertices:
             return None
-        max_length = max_length or self.max_radical_length
+        
+        max_path_length = max_path_length or self.max_radical_length
         initial_path = Path(vertex)
-        paths_to_check = [initial_path]
-        connections: list[Arrow] = []
-        seen = set()
-        paths = []
+        paths_to_check: list[Path] = [initial_path]
+        seen: set[Path] = set()
+        paths: list[Path] = []
 
         while paths_to_check:
             path = paths_to_check.pop()
@@ -224,7 +231,7 @@ class MonomialQuiverAlgebra():
             # otherwise add to results and seen
             paths.append(path)
             seen.add(path)
-            if len(path) >= max_length:
+            if len(path) >= max_path_length:
                 # if path is maximum length move onto next path in paths
                 continue
             # otherwise extend by arrows
@@ -232,12 +239,7 @@ class MonomialQuiverAlgebra():
                 new_path = path.extend_at_end(arrow)
                 if new_path and self.is_path(new_path):
                     paths_to_check.append(new_path)
-                    connections.append(Arrow(path, 
-                                             new_path, 
-                                             arrow.label))
-        return paths, connections
-    
-    def paths(self, max_length: Optional[int] = None, with_connections: bool = False) -> dict[int,list[Path]]:
+        return paths
         paths = {}
         for vertex in self.vertices:
             results, connections = self.dfs_paths_from_vertex(vertex, max_length)
