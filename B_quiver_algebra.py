@@ -27,20 +27,18 @@ class Path:
 
     def source(self):
         """ Returns source vertex of path. If stationary, then returns stationary vertex. """
-        if self.stationary_vertex is not None:
-            return self.stationary_vertex
+        if not self.arrows:
+            return self.vertex
         return self.arrows[0].source
 
     def target(self):
         """ Returns source vertex of path. If stationary, then returns stationary vertex. """
-        if self.stationary_vertex is not None:
-            return self.stationary_vertex
+        if not self.arrows:
+            return self.vertex
         return self.arrows[-1].target
     
     def vertices(self) -> list:
         """ Returns list of vertices in path. If stationary, then returns stationary vertex. """
-        if self.stationary_vertex:
-            return [self.stationary_vertex]
         return [self.source()] + [a.target for a in self.arrows]
     
     def extend_at_end(self, arrow : Arrow) -> "Path | None":
@@ -84,17 +82,12 @@ class Path:
         return "->".join(str(v) for v in self.vertices())
         
     def __len__(self):
-        if self.is_stationary_path():
-            return 0
         return len(self.arrows)
     
-    def __eq__(self, other : Path):
-        if self.is_stationary_path() == other.is_stationary_path():
-            if self.is_stationary_path():
-                return self.stationary_vertex == other.stationary_vertex
-            else:
-                return self.arrows == other.arrows
-        return False
+    def __eq__(self, other: Path):
+        if not isinstance(other, Path):
+            return False
+        return (self.vertex == other.vertex) and (self.arrows == other.arrows)
 
     def __repr__(self):
         if self.is_stationary_path():
@@ -103,7 +96,7 @@ class Path:
     
     def __hash__(self):
         if self.is_stationary_path():
-            return hash(('stationary', self.stationary_vertex))
+            return hash(('stationary', self.vertex))
         return hash(tuple(self.arrows))
 
     
