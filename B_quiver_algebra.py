@@ -150,6 +150,8 @@ class PathAlgebra:
         return nx.MultiDiGraph([(a.source, a.target) for a in self.arrows])
     
     def is_path_of(self, path: Path):
+        if not path.arrows:
+            return path.vertex in self.vertices
         return all(a in self.arrows for a in path.arrows)
     
 # TODO: could make this take in gap code, then can use the quiver applet.
