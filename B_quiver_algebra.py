@@ -4,6 +4,18 @@ from A_bitmask_subgraph import Arrow
 
     
 class Path:
+    """
+    Represents a path in a directed graph.
+
+    A path is either a stationary path at a single vertex or a tuple of composable
+    arrows. Composability requires that for each consecutive pair of arrows,
+    the target of the first matches the source of the second.
+
+    Attributes:
+        - arrows (tuple[Arrow] or Vertex):
+            If a Vertex is provided, the path is the stationary path at that vertex.
+            Otherwise, the path is the ordered concatenation of the list of arrows.
+    """
     def __init__(self,
                  components: Vertex | tuple[Arrow,...]):
         
@@ -43,7 +55,7 @@ class Path:
     
     def extend_at_end(self, arrow : Arrow) -> "Path | None":
         """ 
-        If given arrow starts where path finishes, then returns concantenation path then arrow.
+        If given arrow starts where path finishes, then returns concatenation path then arrow.
         Otherwise, returns None.
         """
         if self.target() != arrow.source:
@@ -52,7 +64,7 @@ class Path:
     
     def extend_at_start(self, arrow : Arrow) -> "Path | None":
         """ 
-        If given arrow ends where path starts, then returns new concantenation arrow then path.
+        If given arrow ends where path starts, then returns new concatenation arrow then path.
         Otherwise, returns None.
         """
         if arrow.target != self.source():
@@ -65,6 +77,7 @@ class Path:
         return Path(arrows)
 
     def is_subpath(self, other: Path) -> bool:
+        """ Returns True if self a subpath of other, otherwise False. """
         if len(self) == 0:
             return True
         if self.is_stationary_path():
