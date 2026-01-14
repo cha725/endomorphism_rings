@@ -570,7 +570,7 @@ if __name__ == "__main__":
         def run(self, 
                 print_example_names: bool = True,
                 print_times: bool = True,
-                print_results: bool = False):
+                print_results: bool = False) -> dict[str, float]:
             """
             Execute all stored example graphs and measure computation times.
 
