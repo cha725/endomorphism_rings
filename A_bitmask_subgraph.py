@@ -109,12 +109,6 @@ class BitmaskGraph:
         self.mask_to_vertex = {(1 << idx) : v for v, idx in self.vertex_to_index.items()}
 
         self.arrow_list = arrow_list or []
-        for arrow in self.arrow_list:
-            if arrow.source not in self.vertex_list:
-                raise ValueError(f"Source of {arrow} is {arrow.source} which is not a vertex {self.vertex_list}.")
-            if arrow.target not in self.vertex_list:
-                raise ValueError(f"Target of {arrow} is {arrow.target} which is not a vertex {self.vertex_list}.")
-    
         self.num_arrows = len(self.arrow_list)
 
         self.pred_masks = [0] * self.num_vertices
@@ -122,8 +116,14 @@ class BitmaskGraph:
         self.adj_masks = [0] * self.num_vertices
 
         for arrow in self.arrow_list:
-            source_idx = self.vertex_to_index[arrow.source]
-            target_idx = self.vertex_to_index[arrow.target]
+            try:
+                source_idx = self.vertex_to_index[arrow.source]
+            except:
+                raise ValueError(f"Source of {arrow} is {arrow.source} which is not a vertex {self.vertex_list}.")
+            try:
+                target_idx = self.vertex_to_index[arrow.target]
+            except:
+                raise ValueError(f"Target of {arrow} is {arrow.target} which is not a vertex {self.vertex_list}.")
             self.succ_masks[source_idx] |= (1 << target_idx)
             self.pred_masks[target_idx] |= (1 << source_idx)
             self.adj_masks[source_idx] |= (1 << target_idx)
