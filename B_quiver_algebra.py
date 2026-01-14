@@ -166,13 +166,16 @@ class PathAlgebra:
 
 class MonomialQuiverAlgebra():
     def __init__(self,
-                 arrows: Optional[list[Arrow]] = None,
-                 relations: Optional[list[Path]] = None,
-                 vertices: Optional[list] = None,
+                 arrows: list[Arrow] | None = None,
+                 relations: list[Path] | None = None,
+                 vertices: list | None = None,
                  max_radical_length: int = 20):
+        
         self.path_algebra = PathAlgebra(arrows, vertices)
+        self.arrows = self.path_algebra.arrows
+        self.vertices = self.path_algebra.vertices
         self.relations = relations or []
-        if not all(self.is_path_of(r) for r in self.relations):
+        if not all(self.path_algebra.is_path_of(r) for r in self.relations):
             raise ValueError(f"Invalid relations. {relations} must be a subset of {arrows}")
         self.max_radical_length = max_radical_length
 
