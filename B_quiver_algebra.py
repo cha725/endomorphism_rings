@@ -70,16 +70,6 @@ class Path:
         if self.is_stationary_path():
             return self == Path(stationary_vertex=other.source())
         return any(other.truncate(i,i+len(self)) == self for i in range(len(other)-len(self)+1))
-    
-    def fancy_label(self):
-        if self.is_stationary_path():
-            return f"e_{self.source()}"
-        return "".join(str(a.label) for a in self.arrows)
-    
-    def fancy_vertices(self):
-        if self.is_stationary_path():
-            return f"Stationary path at {self.source()}"
-        return "->".join(str(v) for v in self.vertices())
         
     def __len__(self):
         return len(self.arrows)
@@ -91,8 +81,10 @@ class Path:
 
     def __repr__(self):
         if self.is_stationary_path():
-            return f"Stationary path at {self.stationary_vertex}"
-        return f"{self.fancy_label()} : {self.fancy_vertices()}"
+            return f"Stationary path at {self.vertex}"
+        labels = "".join(str(a.label) for a in self.arrows)
+        vertices = "->".join(str(v) for v in self.vertices())
+        return f"{labels}: {vertices}"
     
     def __hash__(self):
         if self.is_stationary_path():
