@@ -179,7 +179,15 @@ class MonomialQuiverAlgebra():
             raise ValueError(f"Invalid relations. {relations} must be a subset of {arrows}")
         self.max_radical_length = max_radical_length
 
-    def is_path(self, path: Path):
+    def is_path(self, path: Path) -> bool:
+        """
+        Check if the given path is a path in this quiver algebra.
+        A path is valid if:
+            - It is a path in the underlying path algebra.
+            - It does not contain any of the monomial relations as a subpath.
+        """
+        if not self.path_algebra.is_path_of(path):
+            return False
         return all(not relation.is_subpath(path) for relation in self.relations)
 
     def is_path_extension_valid(self, path: Path, arrow: Arrow):
