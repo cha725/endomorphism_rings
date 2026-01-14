@@ -240,13 +240,16 @@ class MonomialQuiverAlgebra():
                 if new_path and self.is_path(new_path):
                     paths_to_check.append(new_path)
         return paths
+    
+    def paths(self, max_path_length: int | None = None) -> dict[int,list[Path]]:
+        """
+        Returns dictionary with vertices as keys and a list of paths from that 
+        vertex as values.
+        """
         paths = {}
+        max_path_length = max_path_length or self.max_radical_length
         for vertex in self.vertices:
-            results, connections = self.dfs_paths_from_vertex(vertex, max_length)
-            if with_connections:
-                paths[vertex] = connections
-            else:
-                paths[vertex] = results
+            paths[vertex] = self.dfs_paths_from_vertex(vertex, max_path_length)
         return paths
     
     def __repr__(self):
