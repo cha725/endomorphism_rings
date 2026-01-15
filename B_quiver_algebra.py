@@ -81,6 +81,8 @@ class Path:
         
     def truncate(self, start_idx: int, end_idx: int) -> Path:
         """ Take subpath of path with indices [start_idx, ..., end_idx-1]. """
+        if len(self) == 1:
+            return Path(self.source())
         arrows = self.arrows[start_idx:end_idx]
         return Path(arrows)
 
