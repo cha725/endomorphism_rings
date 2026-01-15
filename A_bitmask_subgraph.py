@@ -59,6 +59,11 @@ class Arrow:
     def __eq__(self, other: "Arrow") -> bool:
         return (self.source == other.source) and (self.target == other.target) and (self.label == other.label)
 
+    def __str__(self):
+        if self.label:
+            return f"{self.label}: {self.source.label} -> {self.target.label}"
+        return f"{self.source.label} -> {self.target.label}"
+
     def __repr__(self):
         if self.label:
             return f"Arrow({self.label}: {self.source} -> {self.target})"
