@@ -27,15 +27,24 @@ class ProjectiveDiagram(ModuleDiagram):
         super().__init__(vertex_list, arrow_list)
 
     def _create_module_diagram(self) -> tuple[list[Vertex], list[Arrow]]:
-        paths, connections = self.algebra.dfs_paths_from_vertex(self.top_vertex)
-        paths_to_vertex = {path : Vertex(label = path.fancy_label(), composition_factor=path.target()) for path in paths}
-        vertex_list = list(paths_to_vertex.values())
-        arrow_list = []
-        for connection in connections:
-            source = paths_to_vertex[connection.source]
-            target = paths_to_vertex[connection.target]
-            label = connection.label
-            arrow_list.append(Arrow(source, target, label))
+        """
+        Construct the vertex and arrow list for the projective module diagram.
+
+        The list of vertices in the projective module diagram is the list of 
+        paths in the quiver algebra starting at the top vertex. The vertex label
+        is the path label.
+
+        There is an arrow from a vertex p to a vertex q if there exists an arrow
+        a such that pa = q. The label of this arrow is a.
+
+        Returns:
+            - tuple(list[Vertex], list[Arrow]):
+                List of vertices labelled by paths in the algebra.
+                List of arrows labelled by the arrows in the algebra.
+        Note:
+            - No two vertices will have the same label.
+            - More than one arrow can have the same label.
+        """
         return (vertex_list, arrow_list)
     
 
