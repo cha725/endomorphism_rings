@@ -6,7 +6,7 @@ import time
 from functools import cached_property
 from types import MappingProxyType
 
-from A_bitmask_subgraph import Vertex, Arrow, BitmaskSubgraph
+from A_bitmask_subgraph import Vertex, Arrow, BitmaskGraph
 
 class ModuleDiagram:
     """
