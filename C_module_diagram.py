@@ -81,22 +81,12 @@ class ModuleDiagram:
         """ Return list of vertices grouped into radical layers. """
         return self.bitmask.radical_layers()
 
-    # @cached_property
-    # def radical_layers(self) -> list[list[Vertex]]:
-    #     """ Return list of vertices grouped into radical layers. """
-    #     rad_layers_idx = self._radical_layers_idx
-    #     return [[self.index_to_vertex[idx] for idx in layer] for layer in rad_layers_idx]
-
-    @cached_property
-    def radical_layer_of(self) -> dict[Vertex, int]:
-        """ Return dictionary assigning to each vertex its radical layer. """
-        radical_labels = {}
+    def update_radical_layer_labels(self):
+        """ Update vertex radical layer labels. """
         for layer_idx, layer in enumerate(self.radical_layer_list):
             for v in layer:
-                radical_labels[v] = layer_idx
-        return radical_labels
+                v.radical_layer = layer_idx
 
-    
     def loewy_length(self) -> int:
         """
         Return Loewy length of module diagram.
