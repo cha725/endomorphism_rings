@@ -63,9 +63,8 @@ class ProjectiveDiagram(ModuleDiagram):
                 arrow_list.append(Arrow(source, target, label))
         return (vertex_list, arrow_list)
     
-
     def nice_print(self):
-        s = f"\nVertices = {self.vertex_list}"
+        s = f"\nVertices = {[v.label for v in self.vertex_list]}"
         s += f"\nArrows = {[a.label for a in self.arrow_list]}"
         return s
 
