@@ -17,8 +17,6 @@ class ModuleDiagram:
 
     Provides functionality to compute radical layers, submodules, and quotients.
 
-    Note: the directed graph is acyclic, but the undirected graph may not be acyclic.
-
     Parameters:
         vertex_list (list[Vertex]): List of vertices of the module diagram.
         arrow_list (list(Arrow,...)): List of arrows between the vertices of the module diagram.
