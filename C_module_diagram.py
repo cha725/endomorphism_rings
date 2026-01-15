@@ -18,8 +18,19 @@ class ModuleDiagram:
     Provides functionality to compute radical layers, submodules, and quotients.
 
     Parameters:
-        vertex_list (list[Vertex]): List of vertices of the module diagram.
-        arrow_list (list(Arrow,...)): List of arrows between the vertices of the module diagram.
+        vertex_list (list[Vertex]): 
+            If provided, these vertices are vertices of the directed graph. 
+            The total set of vertices of the directed graph is this list plus any vertices
+            appearing as sources or targets of the arrows.
+            If None, the vertex set is the set of sources and targets of the arrows.
+        arrow_list (list(Arrow)): List of directed edges (arrows) in the directed graph.            
+
+    Notes:
+        - At least one of arrows or vertices must be non-empty; otherwise
+            the module diagram would have no underlying graph.
+        - The final vertex set is the union of the explicitly provided vertices
+            (if any) and the vertices appearing in the arrows.
+        - The directed graph should be acyclic, but the undirected graph may not be.
     """
     def __init__(self, 
                  vertex_list: list[Vertex] | None = None,
