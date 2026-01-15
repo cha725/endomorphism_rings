@@ -219,9 +219,10 @@ class ModuleDiagram:
         return self.compute_isomorphism(other) is not None
     
     def __repr__(self):
-        return f"MD(vertices = {self.vertex_labels}, arrows = {self.arrow_list})"
+        return f"MD(vertices = {self.vertex_labels}, arrows = {[str(a) for a in self.arrow_list]})"
     
     __hash__ = object.__hash__
+
 
 
 class ModuleSubDiagram(ModuleDiagram):
