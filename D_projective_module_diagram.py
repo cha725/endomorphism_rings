@@ -1,5 +1,5 @@
 from A_bitmask_subgraph import Vertex, Arrow
-from B_quiver_algebra import MonomialQuiverAlgebra
+from B_quiver_algebra import Path, MonomialQuiverAlgebra
 from C_module_diagram import ModuleDiagram
 
 
