@@ -763,13 +763,15 @@ if __name__ == "__main__":
     # for i in range(1):
     #     examples.add_random_graph(f"Random graph {i}", 10, 0.4)
 
-    # times = examples.run(verbose=False)
+    # times = examples.run()
 
-    examples.collect_time_stats("bitmask_graph_time_stats.csv",
-                                5,
-                                25,
-                                5,
-                                0.5,
-                                0.1)
+    examples.collect_time_stats(filename="bitmask_graph_time_stats.csv",
+                                num_runs=20,
+                                min_num_vertices=1,
+                                max_num_vertices=50,
+                                num_vertices_increment=1,
+                                min_edge_probability=0.1,
+                                max_edge_probability=0.5,
+                                edge_probability_increment=0.1)
 
     
