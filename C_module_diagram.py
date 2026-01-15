@@ -36,37 +36,28 @@ class ModuleDiagram:
                  vertex_list: list[Vertex] | None = None,
                  arrow_list: list[Arrow] | None = None):
         
-        # Compute vertices
+        self.arrow_list = arrow_list or []
+        self.arrow_labels = [a.label for a in self.arrow_list]
+        self.num_arrows = len(self.arrow_list)
+        arrow_vertices = set(a.source for a in self.arrow_list) | set(a.target for a in self.arrow_list)
+        
         if vertex_list:
-            self.vertex_list = vertex_list
-        elif arrow_list:
-            unordered = set(a.source for a in arrow_list) | set(a.target for a in arrow_list)
-            try:
-                self.vertex_list = sorted(unordered, key=lambda v : v.label)
-            except(TypeError, AttributeError):
-                self.vertex_list = list(unordered)
+            self.vertex_list = list(set(vertex_list) | arrow_vertices)
         else:
-            raise ValueError("Either vertex_list or arrow_list must be provided.")
+            self.vertex_list =  list(arrow_vertices)
+
+        try:
+            self.vertex_list.sort(key=lambda v : v.label)
+        except:
+            pass
         
         self.vertex_labels = [v.label for v in self.vertex_list]
         self.num_vertices = len(self.vertex_list)
 
         self.vertex_to_index: MappingProxyType[Vertex, int] = MappingProxyType({v: idx for idx, v in enumerate(self.vertex_list)})
         self.index_to_vertex: MappingProxyType[int, Vertex] = MappingProxyType({idx: v for idx, v in enumerate(self.vertex_list)})
-
-        # Compute arrows
         
-        if arrow_list:
-            for a in arrow_list:
-                if a.source not in self.vertex_list:
-                    raise ValueError(f"Arrow sources must be in vertex list. Got arrow {a} for vertex list {self.vertex_list}.")
-                if a.target not in self.vertex_list:
-                    raise ValueError(f"Arrow targets must be in vertex list. Got arrow {a} for vertex list {self.vertex_list}.")
-        self.arrow_list = arrow_list or []
-        self.arrow_labels = [a.label for a in self.arrow_list]
-        self.num_arrows = len(self.arrow_list)
-
-        self.bitmask = BitmaskSubgraph(self.vertex_list, self.arrow_list)
+        self.bitmask = BitmaskGraph(self.vertex_list, self.arrow_list)
     
     def sources(self) -> list[Vertex]:
         """ Return list of vertices with no incoming arrows. """
