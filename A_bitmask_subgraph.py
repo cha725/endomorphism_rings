@@ -717,10 +717,13 @@ if __name__ == "__main__":
         def collect_time_stats(self, 
                                filename: str,
                                num_runs: int,
+                               min_num_vertices: int,
                                max_num_vertices: int,
                                num_vertices_increment: int,
+                               min_edge_probability: float,
                                max_edge_probability: float,
                                edge_probability_increment: float):
+            """ TODO: add documentation. """
             example_counter = 0
             with open(filename, "w", newline="") as f:
                 writer = csv.writer(f)
@@ -731,26 +734,29 @@ if __name__ == "__main__":
                 time_headers = list(self.run(print_times=False).keys())
                 headers = ["num_vertices", "edge_probability", "run_index"] + time_headers
                 writer.writerow(headers)
+                edge_probabilities = []
+                ep = min_edge_probability
+                while ep < max_edge_probability + edge_probability_increment:
+                    edge_probabilities.append(ep)
+                    ep += edge_probability_increment
                 
-                for num_vertices in range(num_vertices_increment, max_num_vertices+num_vertices_increment, num_vertices_increment):
+                for num_vertices in range(min_num_vertices, max_num_vertices+num_vertices_increment, num_vertices_increment):
                     print(f"\n=== Collecting data for graphs with {num_vertices} vertices. ===")
-                    edge_probabilities = []
-                    ep = edge_probability_increment
-                    while ep < max_edge_probability + edge_probability_increment:
-                        edge_probabilities.append(ep)
-                        ep += edge_probability_increment
 
                     for edge_probability in edge_probabilities:
                         print(f" --- Collecting data for edge probability {edge_probability:.4f} --- ")
                         for run_idx in range(num_runs):
+                            self.reset_examples()
                             self.add_random_graph(f"Example {example_counter}",
                                                   num_vertices,
                                                   edge_probability)
                             example_counter += 1
+                            start_run_time = time.time()
                             time_data = list(self.run(print_example_names=False,print_times=False).values())
+                            end_run = time.time() - start_run_time
                             data = [num_vertices, edge_probability, run_idx] + time_data
                             writer.writerow(data)
-                            print(f"    Finished run {run_idx}.    ")
+                            print(f"    Finished run {run_idx} in {end_run:.4f} seconds.    ")
             
     examples = BitmaskGraphExamples({})
 
