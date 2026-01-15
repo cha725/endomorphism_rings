@@ -117,35 +117,35 @@ if __name__ == "__main__":
     examples = Examples({})
 
     examples.add(("Type A no relations",
-                  MonomialQuiverAlgebra(arrows=[Arrow(0,1,"a"),
-                                                Arrow(1,2,"b"),
-                                                Arrow(2,3,"c")],
+                  MonomialQuiverAlgebra(arrows=[Arrow(Vertex(0),Vertex(1),"a"),
+                                                Arrow(Vertex(1),Vertex(2),"b"),
+                                                Arrow(Vertex(2),Vertex(3),"c")],
                                         relations = [])))
     
-    # examples.add(("Type A rad2 relations",
-    #               MonomialQuiverAlgebra(arrows=[Arrow(Vertex(0),Vertex(1),"a"),
-    #                                             Arrow(Vertex(1),Vertex(2),"b"),
-    #                                             Arrow(Vertex(2),Vertex(3),"c")],
-    #                                     relations = [Path((Arrow(Vertex(0),Vertex(1),"a"),
-    #                                                        Arrow(Vertex(1),Vertex(2),"b"))),
-    #                                                  Path((Arrow(Vertex(1),Vertex(2),"b"),
-    #                                                        Arrow(Vertex(2),Vertex(3),"c")))])))
+    examples.add(("Type A rad2 relations",
+                  MonomialQuiverAlgebra(arrows=[Arrow(Vertex(0),Vertex(1),"a"),
+                                                Arrow(Vertex(1),Vertex(2),"b"),
+                                                Arrow(Vertex(2),Vertex(3),"c")],
+                                        relations = [Path((Arrow(Vertex(0),Vertex(1),"a"),
+                                                           Arrow(Vertex(1),Vertex(2),"b"))),
+                                                     Path((Arrow(Vertex(1),Vertex(2),"b"),
+                                                           Arrow(Vertex(2),Vertex(3),"c")))])))
 
-    # examples.add(("Three cyclic",
-    #              MonomialQuiverAlgebra(arrows=[Arrow(Vertex(0),Vertex(1),"a"),
-    #                                            Arrow(Vertex(1),Vertex(2),"b"),
-    #                                            Arrow(Vertex(2),Vertex(0),"c")],
-    #                                    relations=[Path((Arrow(Vertex(0),Vertex(1),"a"),
-    #                                                     Arrow(Vertex(1),Vertex(2),"b")))])))
+    examples.add(("Three cyclic",
+                 MonomialQuiverAlgebra(arrows=[Arrow(Vertex(0),Vertex(1),"a"),
+                                               Arrow(Vertex(1),Vertex(2),"b"),
+                                               Arrow(Vertex(2),Vertex(0),"c")],
+                                       relations=[Path((Arrow(Vertex(0),Vertex(1),"a"),
+                                                        Arrow(Vertex(1),Vertex(2),"b")))])))
 
-    # examples.add(("Bigger",
-    #              MonomialQuiverAlgebra( arrows=[Arrow(Vertex(1),Vertex(2),"a"),
-    #                                             Arrow(Vertex(2),Vertex(3),"b"),
-    #                                             Arrow(Vertex(1),Vertex(3),"c"),
-    #                                             Arrow(Vertex(3),Vertex(1),"d"),
-    #                                             Arrow(Vertex(2),Vertex(2),"e")],
-    #                                     relations=[Path((Arrow(Vertex(1),Vertex(2),"a"),
-    #                                                      Arrow(Vertex(2),Vertex(2),"e")))],
-    #                                     max_radical_length=3)))
+    examples.add(("Bigger",
+                 MonomialQuiverAlgebra( arrows=[Arrow(Vertex(1),Vertex(2),"a"),
+                                                Arrow(Vertex(2),Vertex(3),"b"),
+                                                Arrow(Vertex(1),Vertex(3),"c"),
+                                                Arrow(Vertex(3),Vertex(1),"d"),
+                                                Arrow(Vertex(2),Vertex(2),"e")],
+                                        relations=[Path((Arrow(Vertex(1),Vertex(2),"a"),
+                                                         Arrow(Vertex(2),Vertex(2),"e")))],
+                                        max_radical_length=3)))
 
     examples.run()
