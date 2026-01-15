@@ -90,16 +90,16 @@ if __name__ == "__main__":
         Class to store examples.
         """
         def __init__(self,
-                        examples : dict[str,MonomialQuiverAlgebra]):
+                        examples: dict[str,MonomialQuiverAlgebra]):
             self.examples = examples
 
-        def add(self, example : tuple[str, MonomialQuiverAlgebra]):
+        def add(self, example: tuple[str, MonomialQuiverAlgebra]):
             self.examples[example[0]] = example[1]
 
         def run(self, draw: bool = False):
             for name, quiver in self.examples.items():
                 print(f"\n=== Example: {name} ===")
-                print(f"\n Vertices of quiver = {quiver.vertices}")
+                print(f"\n Vertices of quiver = {[v.label for v in quiver.vertices]}")
                 print(f" Arrows of quiver = {quiver.arrows}")
                 print(f" Relations = {quiver.relations}")
                 print(f"\n-- Projectives of quiver --")
