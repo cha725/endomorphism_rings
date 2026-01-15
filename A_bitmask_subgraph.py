@@ -585,6 +585,10 @@ if __name__ == "__main__":
                         arrow_list.append(Arrow(label_to_vertex[str(i)], label_to_vertex[str(j)]))
             self.add(name, vertex_list, arrow_list)
 
+        def reset_examples(self):
+            """ Remove all examples and start again. """
+            self.examples = {}
+        
         def run(self, 
                 print_example_names: bool = True,
                 print_times: bool = True,
