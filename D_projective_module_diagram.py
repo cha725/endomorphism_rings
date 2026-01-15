@@ -7,18 +7,18 @@ from C_module_diagram import ModuleDiagram
 
 class ProjectiveDiagram(ModuleDiagram):
     """
-    A module diagram representating an indecomposable projective module
+    A module diagram representing an indecomposable projective module
     of a MonomialQuiverAlgebra.
 
     Attributes:
-        algebra (MonomialQuiverAlgebra):
+        - algebra (MonomialQuiverAlgebra):
             The algebra over which to compute the projective module.
-        top_vertex (int):
+        - top_vertex (Vertex):
             The vertex of the quiver corresponding to the top of the projective.
     """
     def __init__(self,
-                 algebra : MonomialQuiverAlgebra,
-                 top_vertex : int):
+                 algebra: MonomialQuiverAlgebra,
+                 top_vertex: Vertex):
         if top_vertex not in algebra.vertices:
             raise ValueError(f"Invalid vertex. Vertex {top_vertex} must be a quiver vertex {algebra.vertices}")
         self.algebra = algebra
