@@ -49,8 +49,8 @@ class Arrow:
         - label: The label of the arrow.
     """
     def __init__(self, 
-                 source, 
-                 target, 
+                 source: Vertex, 
+                 target: Vertex, 
                  label = None):
         self.source = source
         self.target = target
