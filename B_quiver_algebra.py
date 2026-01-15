@@ -36,13 +36,13 @@ class Path:
     def is_stationary_path(self) -> bool:
         return self.vertex is not None and not self.arrows
 
-    def source(self):
+    def source(self) -> Vertex:
         """ Returns source vertex of path. If stationary, then returns stationary vertex. """
         if not self.arrows:
             return self.vertex
         return self.arrows[0].source
 
-    def target(self):
+    def target(self) -> Vertex:
         """ Returns source vertex of path. If stationary, then returns stationary vertex. """
         if not self.arrows:
             return self.vertex
