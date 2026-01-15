@@ -282,13 +282,11 @@ class ModuleSubDiagram(ModuleDiagram):
             change_parent.append(ModuleSubDiagram(self.parent, summand.vertex_list))
         return change_parent
 
-    def is_submodule(self) -> bool:
-        dim = self.num_vertices
-        return self.vertex_list in self.parent.all_submodules[dim]
+    def is_submodule_of_parent(self) -> bool:
+        return self.parent.is_submodule(self.vertex_list)
     
-    def is_quotient(self) -> bool:
-        dim = self.num_vertices
-        return self.vertex_list in self.parent.all_quotients[dim]
+    def is_quotient_of_parent(self) -> bool:
+        return self.parent.is_quotient(self.vertex_list)
     
     def __repr__(self):
         return f"MSubD(parent={self.parent}, vertices={self.vertex_labels})"
