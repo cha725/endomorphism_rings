@@ -45,6 +45,22 @@ class ProjectiveDiagram(ModuleDiagram):
             - No two vertices will have the same label.
             - More than one arrow can have the same label.
         """
+        paths = self.algebra.dfs_paths_from_vertex(self.top_vertex)
+        assert paths is not None
+        paths_to_vertex = {
+            path : Vertex(label = path.label(), composition_factor=path.target()) 
+            for path in paths
+        }
+        vertex_list: list[Vertex] = list(paths_to_vertex.values())
+        arrow_list: list[Arrow] = []
+        for path in paths:
+            if path.arrows:
+                final_arrow = path.arrows[-1]
+                previous_path = path.truncate(0,len(path)-1)
+                source = paths_to_vertex[previous_path]
+                target = paths_to_vertex[path]
+                label = final_arrow.label
+                arrow_list.append(Arrow(source, target, label))
         return (vertex_list, arrow_list)
     
 
