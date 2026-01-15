@@ -163,6 +163,7 @@ class ModuleDiagram:
             - rad_layer = radical layer of vertex.
         """
         G = nx.MultiDiGraph()
+        self.update_radical_layer_labels()
         for v in self.vertex_list:
             G.add_node(v, comp_factor = v.composition_factor, label = v.label, rad_layer = v.radical_layer)
         for arrow in self.arrow_list:
