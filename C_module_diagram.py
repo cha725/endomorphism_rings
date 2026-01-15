@@ -120,25 +120,25 @@ class ModuleDiagram:
         """ Return all quotient modules (predeccesor-closed subsets) indexed by size. """
         return self.bitmask.compute_pred_closed_subsets()
 
+    def subdiagram_on_vertices(self, vertex_sublist: list[Vertex]):
+        return ModuleSubDiagram(self, vertex_sublist)
     
-    # def is_submodule(self, vertex_sublist: list[Vertex]) -> bool:
-    #     """
-    #     Check if given vertex sublist forms a submodule of self.
-    #     A submodule corresponds to a subset of vertices that is successor-closed:
-    #         i.e. the successors of every vertex in the subset are also in the subset.
-    #     """
-    #     dim = len(vertex_sublist)
-    #     return vertex_sublist in self.all_submodules[dim]
+    def is_submodule(self, vertex_sublist: list[Vertex]) -> bool:
+        """
+        Check if given vertex sublist forms a submodule of self.
+        A submodule corresponds to a subset of vertices that is successor-closed:
+            i.e. the successors of every vertex in the subset are also in the subset.
+        """
+        return self.bitmask.is_succ_closed(vertex_sublist)
     
-    # def is_quotient(self, vertex_sublist: list[Vertex]) -> bool:
-    #     """
-    #     Check if given vertex sublist forms a quotient module of self.
-    #     A quotient module corresponds to a subset of vertices that is predecessor-closed:
-    #         i.e. the predecessors of every vertex in the subset are also in the subset.
-    #     """
-    #     dim = len(vertex_sublist)
-    #     return vertex_sublist in self.all_quotients[dim]
-    
+    def is_quotient(self, vertex_sublist: list[Vertex]) -> bool:
+        """
+        Check if given vertex sublist forms a quotient module of self.
+        A quotient module corresponds to a subset of vertices that is predecessor-closed:
+            i.e. the predecessors of every vertex in the subset are also in the subset.
+        """
+        return self.bitmask.is_succ_closed(vertex_sublist)
+
     @cached_property
     def radical_submodules(self) -> list["ModuleSubDiagram"]:
         """ Returns list of radical power submodules. """
