@@ -399,8 +399,14 @@ class BitmaskGraph:
                 if u & mask == 0:
                     return False
         return True
-
     
+    def is_pred_closed(self, vertex_sublist: list[Vertex]) -> bool:
+        """ Checks if a list of vertices is closed under predecessors. """
+        mask = 0
+        for vertex in vertex_sublist:
+            mask |= self.vertex_to_mask[vertex]
+        return self._is_pred_closed(mask)
+
     def _is_succ_closed(self, mask: int) -> bool:
         """
         Check if a bitmask is closed under successors.
