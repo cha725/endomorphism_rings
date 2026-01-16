@@ -154,9 +154,9 @@ class Homomorphism:
         )
     
     def __eq__(self, other: "Homomorphism"):
-        dom = self.domain == other.domain
-        codom = self.codomain == other.codomain
-        map = self.mapping == other.mapping
+        dom = (self.domain == other.domain)
+        codom = (self.codomain == other.codomain)
+        map = (self.mapping.items() == other.mapping.items())
         return all([dom,codom,map])
     
     __hash__ = object.__hash__
