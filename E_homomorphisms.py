@@ -357,7 +357,32 @@ class EndoRing:
             comp_homs.append(new_homs)
             previous_homs = new_homs
         return comp_homs
-
+    
+    def _compose_homs(self, previous_homs: list[list[list[Homomorphism]]], new_homs: list[list[list[Homomorphism]]]) -> list[list[list[Homomorphism]]]:
+        """ Return composition of previous_homs then new_homs. """
+        comp_homs: list[list[list[Homomorphism]]] = [[[] for col in range(self.num_summands)] for row in range(self.num_summands)]
+        for i in range(self.num_summands):
+            for j in range(self.num_summands):
+                seen = []
+                for k in range(self.num_summands):
+                    # find compositions i -f-> k -g-> j
+                    for f in previous_homs[i][k]:
+                        if f.is_isomorphism():
+                            continue
+                        for g in new_homs[k][j]:
+                            if g.is_isomorphism():
+                                continue
+                            try:
+                                comp_hom = g.pre_compose(f)
+                                if comp_hom in seen:
+                                    continue
+                                if comp_hom:
+                                    seen.append(comp_hom)
+                                    comp_homs[i][j].append(comp_hom)
+                            except:
+                                continue
+        return comp_homs
+                    
 
 
         
