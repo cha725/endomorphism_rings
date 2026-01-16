@@ -261,6 +261,27 @@ class EndoRing:
             with_labels=True,
             labels=labels
         )
+    
+    def vertices_of_quiver(self):
+        """
+        The vertices of the quiver of the endomorphism ring End(M) are precisely the
+        indecomposable summands of M.
+        """
+        return self.ind_summands
+    
+    def arrows_of_quiver(self) -> list[Homomorphism]:
+        """
+        The arrows of the quiver of the endomorphism ring End(M) are precisely the 
+        indecomposable morphisms between indecomposable summands of M.
+        i.e. the morphisms f such that if f=gh then either g or h is idempotent.
+        """
+        indecomp_homs = self._find_indecomposable_morphisms()
+        arrows = []
+        for row in indecomp_homs:
+            for homs in row:
+                for hom in homs:
+                    arrows.append(hom)
+        return arrows
 
     def _find_indecomposable_morphisms(self) -> list[list[list[Homomorphism]]]:
         """
