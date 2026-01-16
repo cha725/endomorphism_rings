@@ -78,15 +78,23 @@ class Homomorphism:
         """
         return ModuleSubDiagram(self.codomain, list(self.mapping.values()))
     
-    def is_inclusion(self) -> bool:
+    def is_injective(self) -> bool:
+        """ 
+        Check if the map is injective. 
+        i.e. every vertex of the domain is a key in the mapping. 
+        """
         return self.image().vertex_labels == self.domain.vertex_labels
     
-    def is_projection(self) -> bool:
+    def is_surjective(self) -> bool:
+        """ 
+        Check if the map is surjective. 
+        i.e. every vertex of the codomain is a value in the mapping.
+        """
         return self.image().vertex_labels == self.codomain.vertex_labels
     
-    def post_compose(self, other: "Homomorphism") -> Homomorphism | None:
+    def post_compose(self, other: "Homomorphism") -> "Homomorphism | None":
         """
-        Post-compose homomorphism with other.
+        Post-compose homomorphism with other, -self-> -other->.
 
         Args:
             other (Homomorphism): Another homomorphism.
@@ -106,7 +114,7 @@ class Homomorphism:
     
     def pre_compose(self, other: "Homomorphism") -> Homomorphism | None:
         """
-        Pre-compose homomorphism with other.
+        Pre-compose homomorphism with other, -other-> -self->.
 
         Args:
             other (Homomorphism): Another homomorphism.
