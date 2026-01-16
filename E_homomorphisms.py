@@ -309,6 +309,21 @@ class EndoRing:
                         indecomposables[row][col].remove(hom)
         return indecomposables
     
+    def is_indecomposable_hom(self, hom: Homomorphism) -> bool:
+        """ Check whether given hom is indecomposable. """
+        dom = hom.domain
+        codom = hom.codomain
+        try:
+            composed_homs = self.composed_homs(dom, codom)
+        except:
+            raise ValueError(f"Domain {dom} or codomain {codom} of homomorphism is not an indecomposable summand.")
+        for composed in composed_homs[2:]:
+            if hom in composed:
+                return False
+            if hom.is_isomorphism():
+                return False
+        return True
+    
         return composed_homs
                     
 
