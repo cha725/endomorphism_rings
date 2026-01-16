@@ -343,7 +343,20 @@ class EndoRing:
             composed_homs.append(n_composed_homs[dom_idx][codom_idx])
         return composed_homs
     
-
+    def all_composed_homs(self, num_compositions: int | None = None) -> list[list[list[list[Homomorphism]]]]:
+        """
+        Return list of compositions of all homs in starting homs up to n compositions.
+        """
+        num_compositions = num_compositions or self.cut_off
+        previous_homs = self.all_homs
+        comp_homs = [[[[]]], self.all_homs]
+        for _ in range(2, num_compositions + 1):
+            new_homs = self._compose_homs(previous_homs, self.all_homs)
+            if new_homs == [[[] for _ in range(self.num_summands)] for _ in range(self.num_summands)]:
+                break
+            comp_homs.append(new_homs)
+            previous_homs = new_homs
+        return comp_homs
 
 
 
