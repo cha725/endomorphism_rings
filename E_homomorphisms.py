@@ -1,9 +1,12 @@
+import networkx as nx
+import time
+
+from functools import cached_property
+
 from A_bitmask_subgraph import Vertex, Arrow
 from C_module_diagram import ModuleDiagram, ModuleSubDiagram
-import time
-import numpy as np
-from numpy.typing import NDArray
-import networkx as nx
+
+
 
 class Homomorphism:
     def __init__(self,
