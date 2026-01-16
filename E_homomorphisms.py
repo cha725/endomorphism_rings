@@ -383,6 +383,20 @@ class EndoRing:
                                 continue
         return comp_homs
                     
+    @cached_property
+    def all_homs(self) -> list[list[list[Homomorphism]]]:
+        """ 
+        Compute all homomorphisms between indecomposable summands.
+
+        Returns:
+            - list[list[list[Homomorphism]]]:
+                A nested list (like the input for a numpy matrix) whose (i,j)-entry 
+                is the list of homomorphisms from the ith indecomposable summand to 
+                the jth.
+        """
+        return [[HomomorphismGroup(m, n).homs for n in self.ind_summands] for m in self.ind_summands]
+
+
 
 
         
