@@ -290,69 +290,14 @@ class EndoRing:
         i.e. the endomorphisms f such that if f = gh then either g or h is idempotent.
         """
         candidate_homs = self.all_homs
-        indecomposables = [[list(h) for h in row] for row in candidate_homs]
-
-        for i in range(self.num_summands):
-            for j in range(self.num_summands):
-                new_list = []
-                for f in indecomposables[i][j]:
-                    reducible = False
-                    for k in range(self.num_summands):
-                        for g in candidate_homs[i][k]:
-                            if g.is_identity():
-                                continue
-                            for h in candidate_homs[k][j]:
-                                if h.is_identity():
-                                    continue
-                                comp = g.post_compose(h)
-                                if comp is not None and comp.hom_signature() == f.hom_signature():
-                                    reducible = True
-                                    break
-                            if reducible:
-                                break
-                        if reducible:
-                            break
-                    if not reducible:
-                        new_list.append(f)
-                indecomposables[i][j] = new_list
+        indecomposables = [[list(h) for h in row] for row in self.all_homs]
+        for row in range(self.num_summands):
+            for col in range(self.num_summands):
+                for hom in candidate_homs[row][col]:
+                    if not self.is_indecomposable_hom(hom):
+                        indecomposables[row][col].remove(hom)
         return indecomposables
-
-
-    def _compose_homs(self, n):
-        """
-        Return list of compositions of all homs in starting homs up to n compositions.
-        """
-        num_comps = 0
-        starting_homs = self.all_homs.copy()
-        composed_homs = [starting_homs.copy()]
-        current_homs = self.all_homs.copy()
-        while num_comps < n and composed_homs[num_comps] != [[[]]]:
-            num_comps += 1
-            new_homs: list[list[list[Homomorphism]]] = []
-            for i in range(self.num_summands):
-                new_homs_from_i: list[list[Homomorphism]] = []
-                for j in range(self.num_summands):
-                    new_homs_i_to_j: list[Homomorphism] = []
-                    for k in range(self.num_summands):
-                        pre_homs = current_homs[i][k]
-                        post_homs = starting_homs[k][j]
-                        for h in pre_homs:
-                            if h.is_identity():
-                                continue
-                            for g in post_homs:
-                                if g.is_identity():
-                                    continue
-                                try:
-                                    new_hom = h.pre_compose(g)
-                                    if new_hom and new_hom not in new_homs_i_to_j:
-                                        new_homs_i_to_j.append(new_hom)
-                                except:
-                                    continue
-                    new_homs_from_i.append(new_homs_i_to_j)
-                new_homs.append(new_homs_from_i)
-            starting_homs = current_homs
-            current_homs = new_homs
-            composed_homs.append(current_homs)
+    
         return composed_homs
                     
 
