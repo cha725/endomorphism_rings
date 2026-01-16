@@ -46,11 +46,9 @@ class Homomorphism:
                 raise ValueError(f"Invalid mapping. Key {k} not a vertex index of domain.")
             if v not in self.codomain.vertex_list:
                 raise ValueError(f"Invalid mapping. Value {v} not a vertex index of codomain.")
-        dom_im = ModuleSubDiagram(self.domain, list(self.mapping.keys()))
-        if not dom_im.is_quotient():
+        if not self.domain.is_quotient(list(self.mapping.keys())):
             raise ValueError(f"The keys of the mapping are not a quotient diagram of the domain.")
-        codom_im = ModuleSubDiagram(self.codomain, list(self.mapping.values()))
-        if not codom_im.is_submodule():
+        if not self.codomain.is_submodule(list(self.mapping.values())):
             raise ValueError(f"The values of the mapping are not a subdiagram of the codomain.")
         quotient = ModuleSubDiagram(self.domain, list(self.mapping.keys()))
         sub = ModuleSubDiagram(self.codomain, list(self.mapping.values()))
