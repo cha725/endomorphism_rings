@@ -191,7 +191,11 @@ class HomomorphismGroup:
                     if q_mod == s_mod:
                         mapping = q_mod.compute_isomorphism(s_mod)
                         if mapping:
-                            homs.append(Homomorphism(self.domain, self.codomain, mapping))
+                            try:
+                                hom = Homomorphism(self.domain, self.codomain, mapping)
+                                homs.append(hom)
+                            except:
+                                pass
         return homs
     
     def compose_with(self, other: "HomomorphismGroup") -> list[Homomorphism]:
