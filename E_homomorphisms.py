@@ -216,19 +216,17 @@ class EndoRing:
     """
 
     def __init__(self,
-                 modules: list[ModuleDiagram] | ModuleDiagram,
+                 modules: list[ModuleDiagram],
                  cut_off: int = 50):
         self.modules = modules
         self.cut_off = cut_off
-        self.ind_summands = []
-        if isinstance(modules, list):
-            for m in modules:
-                self.ind_summands += m.indecomposable_summands()
-        else:
-            self.ind_summands += modules.indecomposable_summands()
-        self.ind_summands = tuple(set(self.ind_summands))
-        self.num_summands = len(self.ind_summands)
-        self.all_homs: list[list[list[Homomorphism]]] = [[HomomorphismGroup(m, n).homs for n in self.ind_summands] for m in self.ind_summands]
+        ind_summands: list[ModuleSubDiagram] = []
+        for m in self.modules:
+            ind_summands += m.indecomposable_summands()
+        self.ind_summands: tuple[ModuleSubDiagram,...] = tuple(set(ind_summands))
+        self.summand_to_index: dict[ModuleDiagram,int] = {s : idx for idx, s in enumerate(self.ind_summands)}
+        self.num_summands: int = len(self.ind_summands)
+
 
     def _find_indecomposable_morphisms(self) -> list[list[list[Homomorphism]]]:
         """
