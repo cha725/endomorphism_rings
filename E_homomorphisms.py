@@ -227,6 +227,22 @@ class EndoRing:
         self.summand_to_index: dict[ModuleDiagram,int] = {s : idx for idx, s in enumerate(self.ind_summands)}
         self.num_summands: int = len(self.ind_summands)
 
+    def quiver(self):
+        """
+        Create the quiver of the endomorphism ring as a NetworkX MultiDiGraph.
+        The vertices correspond to indecomposable summands of the module M in End(M).
+        The arrows are the indecomposable morphisms between summands of M and not the
+        isomorphisms which represent the stationary paths.
+        """
+        G = nx.MultiDiGraph()
+        vertices = self.vertices_of_quiver()
+        for v in vertices:
+            G.add_node(v)
+        arrows = self.arrows_of_quiver()
+        for arrow in arrows:
+            if not arrow.is_isomorphism():
+                G.add_edge(arrow.domain,arrow.codomain)
+        return G
 
     def _find_indecomposable_morphisms(self) -> list[list[list[Homomorphism]]]:
         """
