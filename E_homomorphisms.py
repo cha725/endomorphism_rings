@@ -324,73 +324,25 @@ class EndoRing:
                 return False
         return True
     
-        return composed_homs
-                    
-
-    def generate_homs_from_ind(self, n: int):
-        ind_homs = self._find_indecomposable_morphisms()
-        num_comps = 0
-        starting_homs = ind_homs
-        composed_homs = [starting_homs]
-        current_homs = ind_homs
-        while num_comps < n and composed_homs[num_comps] != [[[]]]:
-            num_comps += 1
-            new_homs: list[list[list[Homomorphism]]] = []
-            for i in range(self.num_summands):
-                new_homs_from_i: list[list[Homomorphism]] = []
-                for j in range(self.num_summands):
-                    new_homs_i_to_j: list[Homomorphism] = []
-                    for k in range(self.num_summands):
-                        pre_homs = current_homs[i][k]
-                        post_homs = starting_homs[k][j]
-                        for h in pre_homs:
-                            if h.is_identity():
-                                continue
-                            for g in post_homs:
-                                if g.is_identity():
-                                    continue
-                                new_hom = h.pre_compose(g)
-                                if new_hom and new_hom not in new_homs_i_to_j:
-                                    new_homs_i_to_j.append(new_hom)
-                    new_homs_from_i.append(new_homs_i_to_j)
-                new_homs.append(new_homs_from_i)
-            starting_homs = current_homs
-            current_homs = new_homs
-            composed_homs.append(current_homs)
+    def composed_homs(self, domain: ModuleDiagram, codomain: ModuleDiagram) -> list[list[Homomorphism]]:
+        """ 
+        Return list of lists of homomorphisms where the ith entry of the list are the
+        homomorphisms domain to codomain that are compositions of i homs.
+        """
+        try:
+            dom_idx = self.summand_to_index[domain]
+        except:
+            raise ValueError(f"Domain {domain} is not an indecomposable summand of M.")
+        try:
+            codom_idx = self.summand_to_index[codomain]
+        except:
+            raise ValueError(f"Codomain {codomain} is not an indecomposable summand of M.")
+        composed_homs : list[list[Homomorphism]] = []
+        all_composed_homs = self.all_composed_homs()
+        for n_composed_homs in all_composed_homs:
+            composed_homs.append(n_composed_homs[dom_idx][codom_idx])
         return composed_homs
     
-    def quiver(self):
-        G = nx.DiGraph()
-        for m in self.ind_summands:
-            G.add_node(m)
-        M = self._find_indecomposable_morphisms()
-        for row in range(self.num_summands):
-            for col in range(self.num_summands):
-                for hom in M[row][col]:
-                    G.add_edge(hom.domain,hom.codomain)
-        return G
-    
-    def draw_quiver(self, node_size=800, node_color='lightblue', edge_color='black'):
-        """
-        Draw the quiver of the endomorphism ring.
-        The nodes correspond to indecomposable summands of the module M in End(M).
-        The arrows are the indecomposable morphisms between summands of M.
-        """
-        G = self.quiver()
-        pos = nx.spring_layout(G, seed=42)
-
-        # Label each node by its vertex list
-        labels = {n: str(n.vertex_list) for n in G.nodes()}
-
-        nx.draw(
-            G, pos,
-            node_size=node_size,
-            node_color=node_color,
-            edge_color=edge_color,
-            with_labels=True,
-            labels=labels
-        )
-        
 
 
 
