@@ -202,6 +202,18 @@ class HomomorphismGroup:
         return f"Hom({self.domain.vertex_labels, self.codomain.vertex_labels})"
 
 class EndoRing:
+    """
+    Represents the endomorphism ring of a direct sum of modules.
+
+    Takes in a list of module diagrams and computes all morphisms between them.
+    Finds the indecomposable morphisms and produces the quiver of the endomorphism
+    ring.
+
+    Attributes:
+        - modules (list[ModuleDiagram]): list of module diagrams whose direct sum to take
+        - cut_off (int): maximum number of compositions to take in endomorphism ring.
+            If cut_off is low, then many of the endomorphisms could be missing.
+    """
 
     def __init__(self,
                  modules: list[ModuleDiagram] | ModuleDiagram,
