@@ -133,18 +133,14 @@ class Homomorphism:
             except:
                 return None
     
-    def post_compose_with_homs(self, post_homs: list[Homomorphism]):
-        return [self.post_compose(h) for h in post_homs if self.post_compose(h)]
-    
-    def pre_compose_with_homs(self, post_homs: list[Homomorphism]):
-        return [self.pre_compose(h) for h in post_homs if self.pre_compose(h)]
-    
-    def is_identity(self):
-        if len(self.mapping.keys()) == len(self.domain.vertex_list):
-            if len(self.mapping.values()) == len(self.codomain.vertex_list):
-                return all(self.mapping[v] == v for v in self.domain.vertex_list)
+    def is_isomorphism(self):
+        """ Check if the given map is an isomorphism. """
+        if self.domain == self.codomain:
+            if len(self.mapping.keys()) == len(self.domain.vertex_list):
+                if len(self.mapping.values()) == len(self.codomain.vertex_list):
+                    return all(self.mapping[v] == v for v in self.domain.vertex_list)
         return False
-    # TODO: This probably isnt right, need to find an iso between domain and codomain.
+    
     
     def hom_signature(self):
         """
