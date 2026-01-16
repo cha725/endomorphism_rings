@@ -6,9 +6,19 @@ from functools import cached_property
 from A_bitmask_subgraph import Vertex, Arrow
 from C_module_diagram import ModuleDiagram, ModuleSubDiagram
 
-
-
 class Homomorphism:
+    """
+    Represents a homomorphism between two module diagrams by a dictionary
+    mapping between the vertices.
+
+    Attributes:
+        - domain (ModuleDiagram): The source of the homomorphism
+            i.e. the keys in the mapping
+        - codomain (ModuleDiagram): The target of the homomorphism
+            i.e. the values in the mapping
+        - mapping (dict[Vertex, Vertex]): The mapping from vertices in the domain
+            to vertices in the codomain.
+    """
     def __init__(self,
                  domain: ModuleDiagram,
                  codomain: ModuleDiagram,
