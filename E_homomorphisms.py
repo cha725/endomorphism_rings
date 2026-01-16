@@ -283,11 +283,22 @@ class EndoRing:
                     arrows.append(hom)
         return arrows
 
-    def _find_indecomposable_morphisms(self) -> list[list[list[Homomorphism]]]:
+    def find_indecomposable_morphisms(self) -> list[list[list[Homomorphism]]]:
         """
-        Return list of endomorphisms that do not factor non-trivially through
-        another endomorphism. 
-        i.e. the endomorphisms f such that if f = gh then either g or h is idempotent.
+        Identify all homomorphisms between indecomposable summands that do not 
+        factor non-trivially through another homomorphism.
+
+        i.e. find all the morphisms f such that if f = gh then either g or h is
+            idempotent.
+        
+        Returns:
+            - list[list[list[Homomorphism]]]:
+                A nested list (like the input for a numpy matrix) whose (i,j)-entry
+                is the list of indecomposable morphisms from the ith indecomposable
+                summand to the jth.
+        
+        TODO: Is there a better way to find these morphisms that does not require
+        computing all endomorphisms first?
         """
         candidate_homs = self.all_homs
         indecomposables = [[list(h) for h in row] for row in self.all_homs]
