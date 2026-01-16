@@ -397,6 +397,28 @@ class EndoRing:
         return [[HomomorphismGroup(m, n).homs for n in self.ind_summands] for m in self.ind_summands]
 
 
+    def generate_homs_from_ind(self, num_compositions: int | None = None) -> list[list[list[Homomorphism]]]:
+        num_compositions = num_compositions or self.cut_off
+        all_previous_homs = [self.find_indecomposable_morphisms()]
+        ind_homs = self.find_indecomposable_morphisms()
+        for _ in range(2, num_compositions + 1):
+            previous_homs = all_previous_homs[-1]
+            new_homs = self._compose_homs(previous_homs, ind_homs)
+            if new_homs == [[[] for col in range(self.num_summands)] for row in range(self.num_summands)]:
+                break
+            all_previous_homs.append(new_homs)
+        all_homs = [[[] for _ in range(self.num_summands)] for _ in range(self.num_summands)]
+        for dom in range(self.num_summands):
+            for codom in range(self.num_summands):
+                homs_dom_to_codom: list[Homomorphism] = []
+                for matrix in all_previous_homs:
+                    for hom in matrix[dom][codom]:
+                        if hom not in homs_dom_to_codom:
+                            homs_dom_to_codom.append(hom)
+                all_homs[dom][codom] = homs_dom_to_codom
+        return all_homs
+
+
 
 
         
