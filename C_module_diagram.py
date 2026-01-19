@@ -77,6 +77,10 @@ class ModuleDiagram:
         for layer_idx, layer in enumerate(self.radical_layers):
             for v in layer:
                 v.radical_layer = layer_idx
+    
+    def radical_layer_profile(self) -> list[int]:
+        """ Return list where ith entry is how many vertices are on radical layer i. """
+        return [len(layer) for layer in self.radical_layers]
 
     def loewy_length(self) -> int:
         """
@@ -95,6 +99,10 @@ class ModuleDiagram:
         for layer_idx, layer in enumerate(self.socle_layers):
             for v in layer:
                 v.socle_layer = layer_idx
+    
+    def socle_layer_profile(self) -> list[int]:
+        """ Return list where ith entry is how many vertices are on socle layer i. """
+        return [len(layer) for layer in self.socle_layers]
     
     ## Submodules and quotient modules ##
 
