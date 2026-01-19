@@ -66,6 +66,16 @@ class PathModuleDiagram(ModuleDiagram):
             old_arrow_to_new_arrow[arrow] = Arrow(new_source,new_target,arrow.label)
         self.arrow_list = list(old_arrow_to_new_arrow.values())
         return True
+
+    def reduce_labels(self):
+        """ 
+        Returns a set of vertices whose labels have been fully reduced.
+            i.e. They do not have a common first arrow.
+        """
+        while True:
+            changed = self.strip_once()
+            if not changed:
+                break
     """
     A module diagram representing an indecomposable projective module
     of a MonomialQuiverAlgebra.
