@@ -20,6 +20,52 @@ class PathModuleDiagram(ModuleDiagram):
         self.arrow_list = arrow_list or []
         self.reduce_labels()
         super().__init__(self.vertex_list,self.arrow_list)
+
+    def strip_once(self) -> bool:
+        """
+        Each vertex label is a Path object. If each of these paths starts
+        with the same arrow remove that arrow from each vertex label.
+
+        Returns:
+            - True if an arrow was stripped from the front.
+            - False otherwise.
+        """
+        if not self.vertex_list:
+            return False
+        self.vertex_list.sort(key=lambda v:len(v.label))
+        smallest_path: Path = self.vertex_list[0].label
+        if len(smallest_path) == 0:
+            # Then smallest path is a stationary path and cannot be reduced
+            return False
+        arrow_to_remove = smallest_path.first_arrow()
+        old_vertex_to_new_vertex = {}
+        for old_vertex in self.vertex_list:
+            label: Path = old_vertex.label
+            first_arrow = label.first_arrow()
+            if arrow_to_remove != first_arrow:
+                return False
+            if len(label) == 1:
+                new_label = Path(label.target())
+            else:
+                new_label = label.truncate(1)
+            composition_factor = old_vertex.composition_factor
+            radical_layer = old_vertex.radical_layer
+            socle_layer = old_vertex.socle_layer
+            new_vertex = Vertex(
+                new_label,
+                composition_factor,
+                radical_layer,
+                socle_layer
+                )
+            old_vertex_to_new_vertex[old_vertex] = new_vertex
+        self.vertex_list = list(old_vertex_to_new_vertex.values())
+        old_arrow_to_new_arrow = {}
+        for arrow in self.arrow_list:
+            new_source = old_vertex_to_new_vertex[arrow.source]
+            new_target = old_vertex_to_new_vertex[arrow.target]
+            old_arrow_to_new_arrow[arrow] = Arrow(new_source,new_target,arrow.label)
+        self.arrow_list = list(old_arrow_to_new_arrow.values())
+        return True
     """
     A module diagram representing an indecomposable projective module
     of a MonomialQuiverAlgebra.
