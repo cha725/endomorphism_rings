@@ -3,7 +3,6 @@ from B_quiver_algebra import MonomialQuiverAlgebra, Path
 from D_projective_module_diagram import ProjectiveDiagram
 from C_module_diagram import ModuleDiagram
 from E_homomorphisms import EndoRing
-import matplotlib.pyplot as plt
 
 class RadicalEndo:
     def __init__(self,
