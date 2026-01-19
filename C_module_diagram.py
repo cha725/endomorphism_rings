@@ -133,7 +133,7 @@ class ModuleDiagram:
         A quotient module corresponds to a subset of vertices that is predecessor-closed:
             i.e. the predecessors of every vertex in the subset are also in the subset.
         """
-        return self.bitmask.is_succ_closed(vertex_sublist)
+        return self.bitmask.is_pred_closed(vertex_sublist)
 
     @cached_property
     def radical_submodules(self) -> list["ModuleSubDiagram"]:
