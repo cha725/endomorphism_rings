@@ -286,7 +286,6 @@ class MonomialQuiverAlgebra():
 
 if __name__ == "__main__":
 
-    
 
     # TODO: Is this standard practice?
 
