@@ -24,20 +24,36 @@ class RadicalEndo:
         """
         projs = [ProjectiveDiagram(self.quiver_algebra, v) for v in self.quiver_algebra.vertices]
         rad_submods = []
+
+        print("\n== Projectives ==")
         for proj in projs:
             poss_submods = proj.radical_submodules
             for p in poss_submods:
+                p = PathModuleDiagram(p.vertex_list,p.arrow_list)
                 if p not in rad_submods:
                     rad_submods.append(p)
+
+        print(f"\n== Radical Submodules ==")
+        for rad_submod in rad_submods:
+            print(rad_submod.vertex_labels)
         endo = EndoRing(rad_submods)
-        endo.draw_quiver()
-        plt.show()
-        indecomp = endo._find_indecomposable_morphisms()
-        for i, row in enumerate(indecomp):
+
+        print(f"\n== Endomorphisms ==")
+        all_homs = endo.all_homs
+        num_homs = sum(len(col) for row in all_homs for col in row)
+        print(f"There are {num_homs} homomorphisms in total")
+        for i, row in enumerate(all_homs):
             for j, homs in enumerate(row):
-                print(f"  Hom({i},{j}) has:")
-                for h in homs:
-                    print(h)
+                if homs:
+                    dom = endo.ind_summands[i]
+                    codom = endo.ind_summands[j]
+                    print(f"\nHom( {dom.vertex_labels}, {codom.vertex_labels} ) has:")
+                    for h in homs:
+                        print(f"  Hom({h.mapping_str()})")
+
+        print(f"\n== Quiver Arrows ==")
+        for arrow in endo.arrows_of_quiver():
+            print(f"{arrow.mapping_str()}")
         return endo
     
 
