@@ -68,13 +68,13 @@ class ModuleDiagram:
         return self.bitmask.sinks()
 
     @cached_property
-    def radical_layer_list(self) -> list[list[Vertex]]:
+    def radical_layers(self) -> list[list[Vertex]]:
         """ Return list of vertices grouped into radical layers. """
         return self.bitmask.radical_layers()
 
     def update_radical_layer_labels(self):
         """ Update vertex radical layer labels. """
-        for layer_idx, layer in enumerate(self.radical_layer_list):
+        for layer_idx, layer in enumerate(self.radical_layers):
             for v in layer:
                 v.radical_layer = layer_idx
 
@@ -83,7 +83,7 @@ class ModuleDiagram:
         Return Loewy length of module diagram.
         Loewy length is the smallest n such that the nth radical layer is trivial.
         """
-        return len(self.radical_layer_list)
+        return len(self.radical_layers)
     
     @cached_property
     def socle_layers(self) -> list[list[Vertex]]:
