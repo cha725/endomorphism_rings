@@ -85,6 +85,8 @@ class PathModuleDiagram(ModuleDiagram):
         """
         return self.vertex_list == other.vertex_list and self.arrow_list == other.arrow_list
 
+
+class ProjectiveDiagram(PathModuleDiagram):
     """
     A module diagram representing an indecomposable projective module
     of a MonomialQuiverAlgebra.
