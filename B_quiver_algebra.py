@@ -79,12 +79,12 @@ class Path:
             return None       
         return Path((arrow,) + self.arrows)
         
-    def truncate(self, start_idx: int, end_idx: int) -> Path:
+    def truncate(self, start_idx: int | None = None, end_idx: int | None = None) -> Path:
         """ Take subpath of path with indices [start_idx, ..., end_idx-1]. """
-        if len(self) == 1:
+        new_arrows = self.arrows[start_idx:end_idx]
+        if not new_arrows:
             return Path(self.source())
-        arrows = self.arrows[start_idx:end_idx]
-        return Path(arrows)
+        return Path(new_arrows)
     
     def first_arrow(self) -> Arrow | None:
         """ Returns first arrow in the path or None is the path is stationary. """
