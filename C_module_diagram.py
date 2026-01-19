@@ -218,15 +218,18 @@ class ModuleDiagram:
         )      
         plt.show()
 
-
-
     def compute_isomorphism(self, other: "ModuleDiagram") -> dict | None:
+        if self.num_vertices != other.num_vertices:
+            return None
         G = self.graph
         H = other.graph
         matcher = nx.algorithms.isomorphism.DiGraphMatcher(
             G,
             H,
-            node_match = lambda a, b: a.get("comp_factor") == b.get("comp_factor"),
+            node_match = lambda a, b: 
+                a.get("comp_factor") == b.get("comp_factor") and
+                a.get("radical_layer") == b.get("radical_layer") and
+                a.get("socle_layer") == b.get("socle_layer"),
             edge_match = lambda a, b: a.get("label") == b.get("label")
         )
         if not matcher.is_isomorphic():
