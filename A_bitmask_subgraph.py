@@ -170,6 +170,42 @@ class BitmaskGraph:
             remaining &= ~vertex
             dim += 1
         return dim
+    
+    # Numerical invariants
+
+    @cached_property
+    def vertex_to_num_pred(self) -> dict[Vertex, int]:
+        v_to_p = {}
+        for v in self.vertex_list:
+            v_to_p[v] = self.num_predecessors(v)
+        return v_to_p
+
+    def num_predecessors(self, vertex: Vertex) -> int:
+        """ Returns the number of distinct predecessors of the given vertex. """
+        mask = self.vertex_to_mask[vertex]
+        return self._num_predecessors(mask)
+    
+    def _num_predecessors(self, mask: int) -> int:
+        """ Returns the number of distinct predecessors of the given mask. """
+        return self.pred_masks[mask].bit_count()
+    
+    @cached_property
+    def vertex_to_num_succ(self) -> dict[Vertex, int]:
+        v_to_s = {}
+        for v in self.vertex_list:
+            v_to_s[v] = self.num_successors(v)
+        return v_to_s
+    
+    def num_successors(self, vertex: Vertex) -> int:
+        """ Returns the number of distinct succesors of the given vertex. """
+        mask = self.vertex_to_mask[vertex]
+        return self._num_successors(mask)
+    
+    def _num_successors(self, mask: int) -> int:
+        """ Returns the number of distinct successors of the given mask. """
+        return self.succ_masks[mask].bit_count()
+
+
 
     # Radical layers
 
