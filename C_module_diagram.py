@@ -155,7 +155,7 @@ class ModuleDiagram:
 
     ## Drawing the module diagram ##
     @cached_property
-    def _create_radical_layer_graph(self):
+    def graph(self):
         """ 
         Construct a networkx directed graph of module.
         Node labels: 
@@ -184,7 +184,7 @@ class ModuleDiagram:
             for x, v in zip(x_coord, vertices):
                 pos[v] = (x,-layer_idx)
 
-        G = self._create_radical_layer_graph
+        G = self.graph
         nx.draw(G,
                 pos=pos,
                 node_size=1000, 
@@ -213,8 +213,8 @@ class ModuleDiagram:
 
 
     def compute_isomorphism(self, other: "ModuleDiagram") -> dict | None:
-        G = self._create_radical_layer_graph
-        H = other._create_radical_layer_graph
+        G = self.graph
+        H = other.graph
         matcher = nx.algorithms.isomorphism.DiGraphMatcher(
             G,
             H,
@@ -262,8 +262,8 @@ class ModuleSubDiagram(ModuleDiagram):
         Returns a mapping using parent vertex indices if isomorphism is found.
         Or None if an isomorphism is not found.
         """
-        G = self._create_radical_layer_graph
-        H = other._create_radical_layer_graph
+        G = self.graph
+        H = other.graph
 
         matcher = nx.algorithms.isomorphism.DiGraphMatcher(
             G,
@@ -371,8 +371,7 @@ if __name__ == "__main__":
                 start_time = time.time()
                 subs = diagram.all_submodules
                 quotients = diagram.all_quotients
-                subgraph_time = time.time() - start_time
-                print(f"Time to generate sub and quotient modules: {subgraph_time:.4f} seconds")
+                graph = diagram.graph
 
                 if verbose:
                     print("\nVertices:", diagram.vertex_labels)
