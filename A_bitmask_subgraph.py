@@ -27,9 +27,6 @@ class Vertex:
         if self.label is None:
             raise ValueError("Vertex label cannot be None.")
 
-    def update_radical_layer(self, rad_layer: int):
-        self.radical_layer = rad_layer
-
     def __eq__(self, other: "Vertex"):
         return self.label == other.label and self.composition_factor == other.composition_factor
 
