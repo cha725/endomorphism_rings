@@ -3,9 +3,23 @@ from B_quiver_algebra import Path, MonomialQuiverAlgebra
 from C_module_diagram import ModuleDiagram
 
 
+class PathModuleDiagram(ModuleDiagram):
+    """
+    Represents a module diagram whose vertices correspond to paths in a path algebra.
 
-
-class ProjectiveDiagram(ModuleDiagram):
+    Attributes:
+        - vertex_list (list[Vertex]):
+            List of vertices, their labels are assumed to be paths in the path algebra.
+        - arrow_list (list[Arrow]):
+            List of arrows, their labels are assumed to be arrows in the path algebra.
+    """
+    def __init__(self,
+                 vertex_list: list[Vertex],
+                 arrow_list: list[Arrow] | None = None):
+        self.vertex_list = vertex_list
+        self.arrow_list = arrow_list or []
+        self.reduce_labels()
+        super().__init__(self.vertex_list,self.arrow_list)
     """
     A module diagram representing an indecomposable projective module
     of a MonomialQuiverAlgebra.
