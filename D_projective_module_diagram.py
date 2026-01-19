@@ -129,7 +129,7 @@ class ProjectiveDiagram(PathModuleDiagram):
         paths = self.algebra.dfs_paths_from_vertex(self.top_vertex)
         assert paths is not None
         paths_to_vertex = {
-            path : Vertex(label = path.label(), composition_factor=path.target()) 
+            path : Vertex(label = path, composition_factor=path.target()) 
             for path in paths
         }
         vertex_list: list[Vertex] = list(paths_to_vertex.values())
