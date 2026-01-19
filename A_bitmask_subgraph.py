@@ -53,7 +53,7 @@ class Arrow:
                  label = None):
         self.source = source
         self.target = target
-        self.label = label
+        self.label = label or f"({self.source},{self.target})"
 
     def __eq__(self, other: "Arrow") -> bool:
         return (self.source == other.source) and (self.target == other.target) and (self.label == other.label)
