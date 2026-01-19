@@ -802,7 +802,7 @@ if __name__ == "__main__":
 
     examples.collect_time_stats(filename="bitmask_graph_time_stats.csv",
                                 num_runs=20,
-                                min_num_vertices=1,
+                                min_num_vertices=25,
                                 max_num_vertices=50,
                                 num_vertices_increment=1,
                                 min_edge_probability=0.1,
