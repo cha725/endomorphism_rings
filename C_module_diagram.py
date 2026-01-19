@@ -139,7 +139,12 @@ class ModuleDiagram:
     def radical_submodules(self) -> list["ModuleSubDiagram"]:
         """ Returns list of radical power submodules. """
         vertex_lists = self.bitmask.compute_radical_subgraphs()
-        return [ModuleSubDiagram(self, v_list) for v_list in vertex_lists]
+        rad_submods = []
+        for v_list in vertex_lists:
+            mod = ModuleSubDiagram(self, v_list)
+            if mod not in rad_submods:
+                rad_submods.append(mod)
+        return rad_submods
     
     def indecomposable_summands(self) -> "list[ModuleSubDiagram]":
         """ Returns list of indecomposable summands. """
