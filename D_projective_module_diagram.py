@@ -192,7 +192,7 @@ if __name__ == "__main__":
                     print(f"\n=== Projective at {v} ===")
                     proj = ProjectiveDiagram(quiver, v)
                     print(f"\n {proj.nice_print()}")
-                    print(f"\n Radical layers of proj: {[[v.label for v in layer] for layer in proj.radical_layer_list]}")
+                    print(f"\n Radical layers of proj: {[[v.label for v in layer] for layer in proj.radical_layers]}")
                     print(f"\n Radical subgraphs:")
                     for r in proj.radical_submodules:
                         print([v.label for v in r.vertex_list])                
