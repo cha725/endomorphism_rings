@@ -76,6 +76,15 @@ class PathModuleDiagram(ModuleDiagram):
             changed = self.strip_once()
             if not changed:
                 break
+
+    def __eq__(self, other: "PathModuleDiagram"):
+        """ 
+        The arrows of a PathModuleDiagram are determined by the vertex labels.
+        Fix two vertices v with label p and u with label q. There is an arrow
+        p -> q if and only if there q = pa for some arrow a.
+        """
+        return self.vertex_list == other.vertex_list and self.arrow_list == other.arrow_list
+
     """
     A module diagram representing an indecomposable projective module
     of a MonomialQuiverAlgebra.
