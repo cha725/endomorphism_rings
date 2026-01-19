@@ -112,6 +112,11 @@ class Path:
                 return False
         return (self.vertex == other.vertex) and (self.arrows == other.arrows)
 
+    def __str__(self):
+        if self.is_stationary_path():
+            return f"e_{self.vertex}"
+        return f"{self.label()}"
+
     def __repr__(self):
         if self.is_stationary_path():
             return f"Path({self.label()})"
