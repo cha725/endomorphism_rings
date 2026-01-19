@@ -183,7 +183,7 @@ class ModuleDiagram:
     def draw_radical_layers(self):
         """ Draw the module diagram with nodes aligned by radical layer. """
         pos = {}
-        for layer_idx, vertices in enumerate(self.radical_layer_list):
+        for layer_idx, vertices in enumerate(self.radical_layers):
             n = len(vertices)
             if n == 1:
                 x_coord = [0.5]
