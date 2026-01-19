@@ -89,15 +89,12 @@ class ModuleDiagram:
     def socle_layers(self) -> list[list[Vertex]]:
         """ Return list of vertices grouped into socle layers. """
         return self.bitmask.socle_layers()
-
-    @cached_property
-    def socle_layer_of(self) -> dict[Vertex, int]:
-        """ Return dictionary assigning to each vertex its socle layer. """
-        socle_labels = {}
+    
+    def update_socle_layer_labels(self):
+        """ Update vertex socle layer labels. """
         for layer_idx, layer in enumerate(self.socle_layers):
             for v in layer:
-                socle_labels[v] = layer_idx
-        return socle_labels
+                v.socle_layer = layer_idx
     
     ## Submodules and quotient modules ##
 
