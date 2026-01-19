@@ -1,10 +1,16 @@
 from A_bitmask_subgraph import Vertex, Arrow
-from B_quiver_algebra import MonomialQuiverAlgebra, Path
-from D_projective_module_diagram import ProjectiveDiagram
-from C_module_diagram import ModuleDiagram
+from B_quiver_algebra import MonomialQuiverAlgebra
+from D_projective_module_diagram import ProjectiveDiagram, PathModuleDiagram
 from E_homomorphisms import EndoRing
 
 class RadicalEndo:
+    """
+    Represents the endomorphism ring of the radical submodules of an algebra.
+
+    Attributes:
+        - quiver_algebra (MonomialQuiverAlgebra): the algebra to take the endomorphism
+            ring over and that defines the radical submodules.
+    """
     def __init__(self,
                  quiver_algebra: MonomialQuiverAlgebra):
         self.quiver_algebra = quiver_algebra
