@@ -100,5 +100,5 @@ The endomorphism ring itself can also be represented as a graph:
 
 This project:
 - Constructs quiver algebras.  
-- Models projective and injective modules as directed graphs.  
+- Models projective modules as directed graphs.  
 - Computes the endomorphism ring $$\mathrm{End}_A(A \oplus \mathrm{rad}^i(A)  \mid  i > 0)$$ through graph-based homomorphisms.
