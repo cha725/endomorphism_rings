@@ -234,3 +234,15 @@ if __name__ == "__main__":
                                         max_radical_length=3)))
 
     examples.run()
+
+    a = Path(((Arrow(Vertex(0),Vertex(1),'a'),)))
+    ab = Path(((Arrow(Vertex(0),Vertex(1),'a'),
+                Arrow(Vertex(1),Vertex(2),'b'))))
+
+
+    print("\nStrip Vertices")
+
+    P = PathModuleDiagram(vertex_list=[Vertex(a), Vertex(ab)],
+                          arrow_list=[Arrow(Vertex(a),Vertex(ab),'b')])
+    P.reduce_labels()
+    print(P)
