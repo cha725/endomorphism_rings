@@ -107,6 +107,9 @@ class Path:
     def __eq__(self, other: Path):
         if not isinstance(other, Path):
             return False
+        if self.vertex is None or other.vertex is None:
+            if not (self.vertex is None and other.vertex is None):
+                return False
         return (self.vertex == other.vertex) and (self.arrows == other.arrows)
 
     def __repr__(self):
