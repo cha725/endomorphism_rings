@@ -85,6 +85,13 @@ class Path:
             return Path(self.source())
         arrows = self.arrows[start_idx:end_idx]
         return Path(arrows)
+    
+    def first_arrow(self) -> Arrow | None:
+        """ Returns first arrow in the path or None is the path is stationary. """
+        if self.is_stationary_path():
+            return None
+        return self.arrows[0]
+
 
     def is_subpath(self, other: Path) -> bool:
         """ Returns True if self a subpath of other, otherwise False. """
