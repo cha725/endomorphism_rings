@@ -148,6 +148,10 @@ class ProjectiveDiagram(PathModuleDiagram):
         s = f"\nVertices = {[v.label for v in self.vertex_list]}"
         s += f"\nArrows = {[a.label for a in self.arrow_list]}"
         return s
+    
+    
+    def __str__(self):
+        return f"Projective at {self.top_vertex} = {self.vertex_labels}"
 
     def __repr__(self):
         return f"Projective(algebra={self.algebra}, top vertex={self.top_vertex})"
