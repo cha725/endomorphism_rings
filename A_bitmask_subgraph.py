@@ -786,6 +786,7 @@ if __name__ == "__main__":
                                                   num_vertices,
                                                   edge_probability)
                             example_counter += 1
+                            
                             start_run_time = time.time()
                             time_data = list(self.run(print_example_names=False,print_times=False).values())
                             end_run = time.time() - start_run_time
