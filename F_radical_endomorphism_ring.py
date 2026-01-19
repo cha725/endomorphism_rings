@@ -56,35 +56,8 @@ class RadicalEndo:
 
 if __name__ == "__main__":
 
-    quiver = MonomialQuiverAlgebra([Arrow(0,1,"a"), 
-                                    Arrow(1,2,"b")])
+    quiver = MonomialQuiverAlgebra([Arrow(Vertex(0),Vertex(1),"a"), 
+                                    Arrow(Vertex(1),Vertex(2),"b")])
 
     RE = RadicalEndo(quiver)
-    print(RE._create_radical_endo())
-
-
-    # projs = [ModuleDiagram(arrow_list=[Arrow(Vertex(0),Vertex(1)),Arrow(Vertex(1),Vertex(2)),Arrow(Vertex(2),Vertex(3))]),
-    #          ModuleDiagram(arrow_list=[Arrow(Vertex(0),Vertex(1)),Arrow(Vertex(1),Vertex(2))]),
-    #          ModuleDiagram(arrow_list=[Arrow(Vertex(0),Vertex(1))])]
-    # rad_submods = []
-    # for proj in projs:
-    #     poss_submods = proj.radical_submodules
-    #     for p in poss_submods:
-    #         if p not in rad_submods:
-    #             rad_submods.append(p)
-    # endo = EndoRing(rad_submods)
-    # print("created endo")
-
-    # e_quiver = endo.quiver()
-    # print(e_quiver)
-
-    # endo.draw_quiver()
-    # plt.show()
-
-    # print([s.vertex_list for s in endo.ind_summands])
-    # indecomp = endo._find_indecomposable_morphisms()
-    # for i, row in enumerate(indecomp):
-    #     for j, homs in enumerate(row):
-    #         print(f"  Hom({i},{j}) has:")
-    #         for h in homs:
-    #             print(h)
+    RE._create_radical_endo()
