@@ -17,10 +17,12 @@ class Vertex:
     def __init__(self,
                  label,
                  composition_factor = None,
-                 radical_layer: int | None = None):
+                 radical_layer: int | None = None,
+                 socle_layer: int | None = None):
         self.label = label
         self.composition_factor = composition_factor
         self.radical_layer = radical_layer
+        self.socle_layer = socle_layer
 
         if self.label is None:
             raise ValueError("Vertex label cannot be None.")
