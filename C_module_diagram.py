@@ -161,12 +161,20 @@ class ModuleDiagram:
         Node labels: 
             - label = vertex label of vertex (if given).
             - comp_factor = composition factor represented by vertex.
-            - rad_layer = radical layer of vertex.
+            - radical_layer = radical layer of vertex.
+            - socle_layer = socle layer of vertex.
         """
         G = nx.MultiDiGraph()
         self.update_radical_layer_labels()
+        self.update_socle_layer_labels()
         for v in self.vertex_list:
-            G.add_node(v, comp_factor = v.composition_factor, label = v.label, rad_layer = v.radical_layer)
+            G.add_node(
+                v, 
+                label = v.label,
+                comp_factor = v.composition_factor, 
+                radical_layer = v.radical_layer,
+                socle_layer = v.socle_layer
+            )
         for arrow in self.arrow_list:
             G.add_edge(arrow.source, arrow.target, label=arrow.label)
         return G
