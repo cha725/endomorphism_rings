@@ -16,6 +16,12 @@ class RadicalEndo:
         self.quiver_algebra = quiver_algebra
 
     def _create_radical_endo(self):
+        """
+        1. Create the projective modules over the quiver algebra.
+        2. Compute their indecomposable summands.
+            This will be the module to take the endomorphisms of.
+        3. Compute their endomorphism ring.
+        """
         projs = [ProjectiveDiagram(self.quiver_algebra, v) for v in self.quiver_algebra.vertices]
         rad_submods = []
         for proj in projs:
