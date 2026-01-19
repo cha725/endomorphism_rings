@@ -23,7 +23,7 @@ A quiver algebra is a finite-dimensional algebra over a field, constructed from 
 2. Let $kQ$ be the vector space (over a field $k$) whose basis consists of all paths in $Q$.  
    - Each vertex $v_i$ contributes a "stationary path" $e_i$.  
 3. Define multiplication in $kQ$ by concatenation of paths:  
-   - For paths $p$ and $q$, define $p * q = pq$ if concatenation exists, and $0$ otherwise.  
+   - For paths $p$ and $q$, define $p * q = pq$ if concatenation exists in the directed graph $Q$, and $0$ otherwise.  
    - Extend this linearly over $kQ$.  
 4. The space $kQ$ is typically infinite-dimensional.  
    Example: a graph with one vertex and one loop corresponds to the polynomial ring $k[x]$.  
@@ -79,7 +79,7 @@ To compute $$\mathrm{End}_A(A \oplus \mathrm{rad}^i(A)  \mid  i > 0)$$, we find 
 
 A module homomorphism $M \to N$ is uniquely determined by a pair $(Q, S)$, where:
 
-- $Q$ is a quotient submodule of $M$.  
+- $Q$ is a quotient of $M$.  
 - $S$ is a submodule of $N$.  
 - $Q$ and $S$ are isomorphic, representing the image of the homomorphism.
 
