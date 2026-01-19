@@ -235,6 +235,9 @@ class ModuleDiagram:
         if not matcher.is_isomorphic():
             return None
         return dict(matcher.mapping)
+    
+    def __hash__(self) -> int:
+        return hash((self.vertex_list, self.arrow_list))
 
     def __eq__(self, other : "ModuleDiagram") -> bool:
         if self.radical_layer_profile != other.radical_layer_profile:
@@ -245,8 +248,6 @@ class ModuleDiagram:
     
     def __repr__(self):
         return f"MD(vertices = {self.vertex_labels}, arrows = {[str(a) for a in self.arrow_list]})"
-    
-    __hash__ = object.__hash__
 
 
 
