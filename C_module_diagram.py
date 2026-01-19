@@ -237,6 +237,10 @@ class ModuleDiagram:
         return dict(matcher.mapping)
 
     def __eq__(self, other : "ModuleDiagram") -> bool:
+        if self.radical_layer_profile != other.radical_layer_profile:
+            return False
+        if self.socle_layer_profile != other.socle_layer_profile:
+            return False
         return self.compute_isomorphism(other) is not None
     
     def __repr__(self):
