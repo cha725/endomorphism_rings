@@ -52,7 +52,7 @@ class Homomorphism:
             raise ValueError(f"The values of the mapping are not a subdiagram of the codomain.")
         quotient = ModuleSubDiagram(self.domain, list(self.mapping.keys()))
         sub = ModuleSubDiagram(self.codomain, list(self.mapping.values()))
-        if quotient != sub:
+        if not quotient.compute_isomorphism(sub):
             raise ValueError(f"The image of the homomorphism is not well-defined.")
 
     def apply(self, vertex: Vertex) -> Vertex:
