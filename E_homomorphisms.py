@@ -29,10 +29,7 @@ class Homomorphism:
         self.index_mapping = {self.domain.vertex_to_index[k] : self.codomain.vertex_to_index[v]
                                 for k, v in self.mapping.items()}
         self._check_validity()
-        
         self.dimension = len(self.mapping)
-
-        
 
     def _check_validity(self):
         """
@@ -112,7 +109,7 @@ class Homomorphism:
             except:
                 return None
     
-    def pre_compose(self, other: "Homomorphism") -> Homomorphism | None:
+    def pre_compose(self, other: "Homomorphism") -> "Homomorphism | None":
         """
         Pre-compose homomorphism with other, -other-> -self->.
 
@@ -213,7 +210,7 @@ class EndoRing:
         self.cut_off = cut_off
         ind_summands: list[ModuleSubDiagram] = []
         for m in self.modules:
-            ind_summands += m.indecomposable_summands()
+            ind_summands += m.indecomposable_summands
         self.ind_summands: tuple[ModuleSubDiagram,...] = tuple(set(ind_summands))
         self.summand_to_index: dict[ModuleDiagram,int] = {s : idx for idx, s in enumerate(self.ind_summands)}
         self.num_summands: int = len(self.ind_summands)
@@ -266,7 +263,7 @@ class EndoRing:
         indecomposable morphisms between indecomposable summands of M.
         i.e. the morphisms f such that if f=gh then either g or h is idempotent.
         """
-        indecomp_homs = self._find_indecomposable_morphisms()
+        indecomp_homs = self.find_indecomposable_morphisms()
         arrows = []
         for row in indecomp_homs:
             for homs in row:
