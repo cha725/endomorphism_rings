@@ -306,9 +306,9 @@ class EndoRing:
         codom = hom.codomain
         try:
             composed_homs = self.composed_homs(dom, codom)
-        except:
-            raise ValueError(f"Domain {dom} or codomain {codom} of homomorphism is not an indecomposable summand.")
-        for composed in composed_homs[2:]:
+        except Exception as e:
+            raise e
+        for composed in composed_homs[1:]:
             if hom in composed:
                 return False
             if hom.is_isomorphism():
