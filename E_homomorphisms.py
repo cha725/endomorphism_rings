@@ -767,6 +767,29 @@ class ExamplesEndoRing:
                     arrow_list.append(Arrow(idx_to_vertex[i], idx_to_vertex[j]))
         M = ModuleDiagram(vertex_list, arrow_list)
         self.add(name, [M])
+
+    def add_random_DAG_list(self,
+                            name: str,
+                            num_vertices: list[int],
+                            edge_prob: list[float]):
+        if len(num_vertices) != len(edge_prob):
+            raise ValueError("Must have a number of vertices and edge probability for each DAG.")
+        modules = []
+        vertex_idx: int = 0
+        for idx, (n, ep) in enumerate(zip(num_vertices, edge_prob)):
+            idx_to_vertex = {idx: Vertex(label=f"{vertex_idx}", composition_factor="0") for idx in range(n)}
+            vertex_idx += 1
+            vertex_list = list(idx_to_vertex.values())
+            arrow_list = []
+            for i in range(n):
+                for j in range(i+1,n):
+                    if random.random() < ep:
+                        arrow_list.append(Arrow(idx_to_vertex[i], idx_to_vertex[j]))
+            modules.append(ModuleDiagram(vertex_list, arrow_list))
+        self.add(name, modules)
+        
+        
+
     def run(self, verbose=True, compute_indecomposables=False, cut_off=50):
         """
         For each example M, construct EndoRing(M) and optionally
