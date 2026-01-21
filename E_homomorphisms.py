@@ -699,7 +699,7 @@ class ExamplesEndoRing:
     def __init__(self):
         self.examples = {}
 
-    def add(self, name: str, M: ModuleDiagram):
+    def add(self, name: str, M: list[ModuleDiagram]):
         print("add", M)
         self.examples[name] = M
 
@@ -716,7 +716,7 @@ class ExamplesEndoRing:
                 Arrow(Vertex(2),Vertex(3))
             ]
         )
-        self.add(name, M)
+        self.add(name, [M])
 
     def add_short_chain(self, name: str):
         """
@@ -728,7 +728,7 @@ class ExamplesEndoRing:
                 Arrow(Vertex(1),Vertex(2))
             ]
         )
-        self.add(name, M)
+        self.add(name, [M])
 
     def add_double_fork(self, name: str):
         """
@@ -741,7 +741,7 @@ class ExamplesEndoRing:
                 Arrow(Vertex(2),Vertex(3))
             ]
         )
-        self.add(name, M)
+        self.add(name, [M])
 
     def add_custom(self, 
                    name: str,
@@ -752,7 +752,7 @@ class ExamplesEndoRing:
         M = ModuleDiagram(
             arrow_list=arrow_list
         )
-        self.add(name, M)
+        self.add(name, [M])
 
     def run(self, verbose=True, compute_indecomposables=False, cut_off=50):
         """
