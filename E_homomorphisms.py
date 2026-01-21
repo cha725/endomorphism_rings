@@ -340,7 +340,7 @@ class EndoRing:
         """
         num_compositions = num_compositions or self.cut_off
         previous_homs = self.all_homs
-        comp_homs = [[[[]]], self.all_homs]
+        comp_homs = [self.all_homs]
         for _ in range(2, num_compositions + 1):
             new_homs = self._compose_homs(previous_homs, self.all_homs)
             if new_homs == [[[] for _ in range(self.num_summands)] for _ in range(self.num_summands)]:
