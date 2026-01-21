@@ -408,6 +408,11 @@ class EndoRing:
                             homs_dom_to_codom.append(hom)
                 all_homs[dom][codom] = homs_dom_to_codom
         return all_homs
+    
+    def __repr__(self):
+        return f"EndoRing(modules={self.modules})"
+    
+
 
 
 
