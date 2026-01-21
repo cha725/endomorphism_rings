@@ -133,25 +133,13 @@ class Homomorphism:
             except:
                 return None
     
-    def is_isomorphism(self):
-        """ Check if the given map is an isomorphism. """
-        if self.domain == self.codomain:
-            if len(self.mapping.keys()) == len(self.domain.vertex_list):
-                if len(self.mapping.values()) == len(self.codomain.vertex_list):
-                    return all(self.mapping[v] == v for v in self.domain.vertex_list)
-        return False
-    
-    
-    def hom_signature(self):
-        """
-        Canonical immutable signature for a homomorphism.
-        Used for hashing, deduplication, and equality.
-        """
-        return (
-            self.domain,
-            self.codomain,
-            tuple(self.mapping.items())
-        )
+    def is_isomorphism(self) -> bool:
+        """ Check if the map is a bijection between the domain and codomain. """
+        if not self.is_injective():
+            return False
+        if not self.is_surjective():
+            return False
+        return self.domain == self.codomain
     
     def __eq__(self, other: "Homomorphism"):
         dom = (self.domain == other.domain)
