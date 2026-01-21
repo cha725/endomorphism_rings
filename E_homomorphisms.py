@@ -83,14 +83,14 @@ class Homomorphism:
         Check if the map is injective. 
         i.e. every vertex of the domain is a key in the mapping. 
         """
-        return self.image().vertex_labels == self.domain.vertex_labels
+        return set(self.mapping.keys()) == set(self.domain.vertex_list)
     
     def is_surjective(self) -> bool:
         """ 
         Check if the map is surjective. 
         i.e. every vertex of the codomain is a value in the mapping.
         """
-        return self.image().vertex_labels == self.codomain.vertex_labels
+        return set(self.mapping.values()) == set(self.codomain.vertex_list)
     
     def post_compose(self, other: "Homomorphism") -> "Homomorphism | None":
         """
