@@ -801,54 +801,70 @@ class ExamplesEndoRing:
             print(f"\n=== EndoRing Example: {name} ===")
             print(f"Module: {M}")
 
-            #try:
             start = time.time()
             ER = EndoRing(M, cut_off=cut_off)
             elapsed = time.time() - start
             print(f"EndoRing constructed in {elapsed:.5f}s")
 
-            if verbose:
-                print(f"Indecomposable summands: {ER.ind_summands}")
-                print(f"No. summands: {ER.num_summands}")
-                print(f"\nElements:")
-                for i, row in enumerate(ER.all_homs):
-                        for j, homs in enumerate(row):
-                            print(f"  Hom({i},{j}) has:")
-                            for h in homs:
-                                print(h)
+            print("\nAll homs:")
+            all_homs = ER.all_homs
+            num_homs = sum(len(col) for row in all_homs for col in row)
+            print(f"There are {num_homs} homomorphisms in total")
+            for i, row in enumerate(all_homs):
+                for j, homs in enumerate(row):
+                    if homs:
+                        dom = ER.ind_summands[i]
+                        codom = ER.ind_summands[j]
+                        print(f"\nHom( {dom.vertex_labels}, {codom.vertex_labels} ) has:")
+                        for h in homs:
+                            print(f"  Hom({h.mapping_str()})")
 
-            indecomp = None
-            if compute_indecomposables:
-                print("\nComputing indecomposable morphisms...")
-                s = time.time()
-                indecomp = ER._find_indecomposable_morphisms()
+            # print("\nAll composed homs:")
+            # all_composed_homs = ER.all_composed_homs()
+            # for n, matrix in enumerate(all_composed_homs):
+            #     print(f"Homs that are the composition of {n} homs:")
+            #     for i, row in enumerate(matrix):
+            #         for j, homs in enumerate(row):
+            #             if homs:
+            #                 print(f"  Hom({i},{j}) has:")
+            #                 for h in homs:
+            #                     print(h)
                 
-                
-                t = time.time() - s
-                print(f"\nFound indecomposable maps in {t:.5f}s")
-                if verbose:
-                    for i, row in enumerate(indecomp):
-                        for j, homs in enumerate(row):
-                            print(f"  Hom({i},{j}) has:")
-                            for h in homs:
-                                print(h)
+            indecomposable = ER.find_indecomposable_morphisms()
+            print("\nIndecomposable morphisms:")
+            print(f"\nThere are {len(ER.arrows_of_quiver())} indecomposable morphisms.")
+            for i, row in enumerate(indecomposable):
+                for j, homs in enumerate(row):
+                    if homs:
+                        dom = ER.ind_summands[i]
+                        codom = ER.ind_summands[j]
+                        print(f"\nHom( {dom.vertex_labels}, {codom.vertex_labels} ) has:")
+                        for h in homs:
+                            print(f"  Hom({h.mapping_str()})")
+            
+            gen_homs = ER.generate_homs_from_ind()
+            print("\nHoms generated from inds:")
+            for i, row in enumerate(gen_homs):
+                for j, homs in enumerate(row):
+                    if homs:
+                        dom = ER.ind_summands[i]
+                        codom = ER.ind_summands[j]
+                        print(f"\nHom( {dom.vertex_labels}, {codom.vertex_labels} ) has:")
+                        for h in homs:
+                            print(f"  Hom({h.mapping_str()})")
 
             print("\ncompute homs as comps of inds")
-            new_gens = ER.find_ind_homs_as_comp(ER.cut_off)
-            for h in new_gens:
-                print(h)
-            print("\n check generate:", len(ER.all_homs), len(new_gens))
+            new_gens = ER.generate_homs_from_ind(ER.cut_off)
+            print(f"\n check generate: {len(ER.all_homs) == len(new_gens)}")
 
             quiver = ER.quiver()
             print(quiver)
 
             results[name] = {
                 "construction_time": elapsed,
-                "indecomposables": indecomp
+                "indecomposables": indecomposable
             }
 
-            #except Exception as e:
-              #  print(f"EndoRing failed: {e}")
         return results
 
 
