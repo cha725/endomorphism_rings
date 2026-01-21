@@ -147,7 +147,8 @@ class Homomorphism:
         map = (self.mapping.items() == other.mapping.items())
         return all([dom,codom,map])
     
-    __hash__ = object.__hash__
+    def __hash__(self):
+        return hash((self.domain, self.codomain, self.mapping))
 
     def __repr__(self) -> str:
         return f"Hom({self.domain.vertex_labels} -> {self.codomain.vertex_labels} with mapping={dict({k.label : v.label for k,v in self.mapping.items()})})"    
