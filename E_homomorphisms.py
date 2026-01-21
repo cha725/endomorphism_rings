@@ -150,6 +150,9 @@ class Homomorphism:
     def __hash__(self):
         return hash((self.domain, self.codomain, self.mapping))
 
+    def mapping_str(self):
+        return "{" + ", ".join(f"{k.label} : {v.label}" for k, v in self.mapping.items()) + "}"
+
     def __repr__(self) -> str:
         return f"Hom({self.domain.vertex_labels} -> {self.codomain.vertex_labels} with mapping={dict({k.label : v.label for k,v in self.mapping.items()})})"    
 
