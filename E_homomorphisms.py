@@ -180,14 +180,13 @@ class HomomorphismGroup:
                     mapping = {}
                     q_mod = ModuleSubDiagram(self.domain, quotient)
                     s_mod = ModuleSubDiagram(self.codomain, sub)
-                    if q_mod == s_mod:
-                        mapping = q_mod.compute_isomorphism(s_mod)
-                        if mapping:
-                            try:
-                                hom = Homomorphism(self.domain, self.codomain, mapping)
-                                homs.append(hom)
-                            except:
-                                pass
+                    mapping = q_mod.compute_isomorphism(s_mod)
+                    if mapping:
+                        try:
+                            hom = Homomorphism(self.domain, self.codomain, mapping)
+                            homs.append(hom)
+                        except:
+                            pass
         return homs
     
     def __repr__(self):
